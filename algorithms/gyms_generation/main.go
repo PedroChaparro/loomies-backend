@@ -88,8 +88,9 @@ func getBoundedBoxPlaces(left, bottom, right, top float64) []utils.Place {
 	return places
 }
 
-func generatePlaces(minLat, minLong, maxLat, maxLong, step float64) []utils.Place {
-	concurrentPlaces := utils.ConcurrentSlice{}
+func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]utils.Place, []utils.Zone) {
+	concurrentPlaces := utils.ConcurrentPlaces{}
+	concurrentZones := utils.ConcurrentZones{}
 	swg := sizedwaitgroup.New(4)
 
 	for long := minLong; long <= maxLong; long += step {
@@ -98,8 +99,12 @@ func generatePlaces(minLat, minLong, maxLat, maxLong, step float64) []utils.Plac
 
 			go func(lat, long, step float64) {
 				defer swg.Done()
+				// Get places in bounded box
 				boundedPlaces := getBoundedBoxPlaces(lat, long, lat+step, long+step)
 				place, success := utils.GetRandomPlace(&boundedPlaces)
+
+				// Save the new zone
+				concurrentZones.Append(utils.Zone{LeftFrontier: lat, BottomFrontier: long, RightFrontier: lat + step, TopFrontier: long + step})
 
 				if !success {
 					log := fmt.Sprintf("⚠ No place found in bounded box: (%f, %f) and (%f, %f) \n", lat, long, lat+step, long+step)
@@ -115,18 +120,19 @@ func generatePlaces(minLat, minLong, maxLat, maxLong, step float64) []utils.Plac
 	}
 
 	swg.Wait()
-	return concurrentPlaces.Items
+	return concurrentPlaces.Places, concurrentZones.Zones
 }
 
 func main() {
 	start := time.Now()
-	places := generatePlaces(-73.1000, 6.9629, -73.0320, 7.0500, 0.0035)
+	//places, zones := generatePlacesAndZones(-73.1000, 6.9629, -73.0320, 7.0500, 0.0035)
+	places, zones := generatePlacesAndZones(-73.0591, 6.9778, -73.0397, 6.9947, 0.0035)
 	end := time.Now()
 	elapsed := end.Sub(start)
 	log := fmt.Sprintf("Obtained %d places in %f minutes\n", len(places), elapsed.Minutes())
 	color.Green(log)
 
-	// Remove duplicates and save to json file
+	// Remove duplicated places and save to json file
 	uniquePlaces := utils.GetUniquePlaces(&places)
 	file, err := json.MarshalIndent(uniquePlaces, "", "  ")
 	if err != nil {
@@ -136,5 +142,16 @@ func main() {
 	err = ioutil.WriteFile("places.json", file, 0644)
 	if err != nil {
 		color.Red("✖ Error writing places to file: ", err, "\n")
+	}
+
+	// Save zones to json file
+	file, err = json.MarshalIndent(zones, "", "  ")
+	if err != nil {
+		color.Red("✖ Error marshalling zones: ", err, "\n")
+	}
+
+	err = ioutil.WriteFile("zones.json", file, 0644)
+	if err != nil {
+		color.Red("✖ Error writing zones to file: ", err, "\n")
 	}
 }

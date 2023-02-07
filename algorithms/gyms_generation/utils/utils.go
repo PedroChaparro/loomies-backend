@@ -18,15 +18,33 @@ type Place struct {
 	Longitude float64 `json:"longitude"`
 }
 
-type ConcurrentSlice struct {
-	sync.RWMutex
-	Items []Place
+type Zone struct {
+	LeftFrontier   float64 `json:"leftFrontier"`
+	BottomFrontier float64 `json:"bottomFrontier"`
+	RightFrontier  float64 `json:"rightFrontier"`
+	TopFrontier    float64 `json:"topFrontier"`
 }
 
-func (c *ConcurrentSlice) Append(item Place) {
+type ConcurrentPlaces struct {
+	sync.RWMutex
+	Places []Place
+}
+
+type ConcurrentZones struct {
+	sync.RWMutex
+	Zones []Zone
+}
+
+func (c *ConcurrentPlaces) Append(item Place) {
 	c.Lock()
 	defer c.Unlock()
-	c.Items = append(c.Items, item)
+	c.Places = append(c.Places, item)
+}
+
+func (c *ConcurrentZones) Append(item Zone) {
+	c.Lock()
+	defer c.Unlock()
+	c.Zones = append(c.Zones, item)
 }
 
 // -- Helper functions
