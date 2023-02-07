@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -117,4 +118,23 @@ func GetUniquePlaces(places *[]Place) []Place {
 	}
 
 	return uniquePlaces
+}
+
+// SaveStructToFile marshals the given data and saves it to the given file
+func SaveStructToFile(data interface{}, fileName string) {
+	// Marshal data
+	file, err := json.MarshalIndent(data, "", "  ")
+
+	if err != nil {
+		log := fmt.Sprintf("✖ Error marshalling data: %s \n", err)
+		color.Red(log)
+	}
+
+	// Write data to file
+	err = ioutil.WriteFile(fileName, file, 0644)
+
+	if err != nil {
+		log := fmt.Sprintf("✖ Error writing data to file: %s \n", err)
+		color.Red(log)
+	}
 }

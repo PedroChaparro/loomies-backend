@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 	"time"
 
@@ -126,32 +124,17 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 func main() {
 	start := time.Now()
 	//places, zones := generatePlacesAndZones(-73.1000, 6.9629, -73.0320, 7.0500, 0.0035)
-	places, zones := generatePlacesAndZones(-73.0591, 6.9778, -73.0397, 6.9947, 0.0035)
+	// places, zones := generatePlacesAndZones(-73.0591, 6.9778, -73.0397, 6.9947, 0.0035)
+	places, zones := generatePlacesAndZones(-73.0722, 6.9718, -73.0364, 7.0033, 0.0035)
 	end := time.Now()
 	elapsed := end.Sub(start)
-	log := fmt.Sprintf("Obtained %d places in %f minutes\n", len(places), elapsed.Minutes())
+
+	// Log results
+	log := fmt.Sprintf("Obtained %d places and %d zones in %f minutes\n", len(places), len(zones), elapsed.Minutes())
 	color.Green(log)
 
-	// Remove duplicated places and save to json file
+	// Remove duplicated places and save places and zones to JSON files
 	uniquePlaces := utils.GetUniquePlaces(&places)
-	file, err := json.MarshalIndent(uniquePlaces, "", "  ")
-	if err != nil {
-		color.Red("✖ Error marshalling places: ", err, "\n")
-	}
-
-	err = ioutil.WriteFile("places.json", file, 0644)
-	if err != nil {
-		color.Red("✖ Error writing places to file: ", err, "\n")
-	}
-
-	// Save zones to json file
-	file, err = json.MarshalIndent(zones, "", "  ")
-	if err != nil {
-		color.Red("✖ Error marshalling zones: ", err, "\n")
-	}
-
-	err = ioutil.WriteFile("zones.json", file, 0644)
-	if err != nil {
-		color.Red("✖ Error writing zones to file: ", err, "\n")
-	}
+	utils.SaveStructToFile(uniquePlaces, "places.json")
+	utils.SaveStructToFile(zones, "zones.json")
 }
