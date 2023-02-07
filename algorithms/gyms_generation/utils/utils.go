@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -32,6 +33,8 @@ func (c *ConcurrentSlice) Append(item Place) {
 
 // GetXMLResponse makes a GET request to the given URL and returns the response body as a string
 func GetXMLResponse(url string, retried bool) string {
+	// Wait 3 seconds before making the request to avoid being blocked
+	time.Sleep(3 * time.Second)
 	response, err := http.Get(url)
 
 	if err != nil {
@@ -45,6 +48,14 @@ func GetXMLResponse(url string, retried bool) string {
 	if response.StatusCode != 200 {
 		log := fmt.Sprintf("✖ Status code error: %d \n", response.StatusCode)
 		color.Red(log)
+
+		if !retried {
+			// Retry after 1 minute to avoid being blocked
+			color.Magenta("Retrying in 1 minutes... ")
+			time.Sleep(1 * time.Minute)
+			return GetXMLResponse(url, true)
+		}
+
 		return ""
 	}
 
