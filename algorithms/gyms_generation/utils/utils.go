@@ -25,6 +25,7 @@ type Zone struct {
 	BottomFrontier float64 `json:"bottomFrontier"`
 	RightFrontier  float64 `json:"rightFrontier"`
 	TopFrontier    float64 `json:"topFrontier"`
+	Number         int     `json:"number"`
 }
 
 type ConcurrentPlaces struct {
@@ -131,6 +132,12 @@ func GetSortedZones(zones *[]Zone) []Zone {
 		// If top frontiers are equal, sort by left frontier
 		return (*zones)[i].LeftFrontier < (*zones)[j].LeftFrontier
 	})
+
+	// Add the zone number to each zone
+	for i, zone := range *zones {
+		zone.Number = i + 1
+		(*zones)[i] = zone
+	}
 
 	return *zones
 }
