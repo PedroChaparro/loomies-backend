@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -118,6 +119,20 @@ func GetUniquePlaces(places *[]Place) []Place {
 	}
 
 	return uniquePlaces
+}
+
+func GetSortedZones(zones *[]Zone) []Zone {
+	sort.Slice(*zones, func(i, j int) bool {
+		// Try to sort by top frontier
+		if (*zones)[i].BottomFrontier != (*zones)[j].BottomFrontier {
+			return (*zones)[i].BottomFrontier < (*zones)[j].BottomFrontier
+		}
+
+		// If top frontiers are equal, sort by left frontier
+		return (*zones)[i].LeftFrontier < (*zones)[j].LeftFrontier
+	})
+
+	return *zones
 }
 
 // SaveStructToFile marshals the given data and saves it to the given file

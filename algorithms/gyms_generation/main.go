@@ -124,8 +124,7 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 func main() {
 	start := time.Now()
 	//places, zones := generatePlacesAndZones(-73.1000, 6.9629, -73.0320, 7.0500, 0.0035)
-	// places, zones := generatePlacesAndZones(-73.0591, 6.9778, -73.0397, 6.9947, 0.0035)
-	places, zones := generatePlacesAndZones(-73.0722, 6.9718, -73.0364, 7.0033, 0.0035)
+	places, zones := generatePlacesAndZones(-73.0591, 6.9778, -73.0397, 6.9947, 0.0035)
 	end := time.Now()
 	elapsed := end.Sub(start)
 
@@ -136,5 +135,6 @@ func main() {
 	// Remove duplicated places and save places and zones to JSON files
 	uniquePlaces := utils.GetUniquePlaces(&places)
 	utils.SaveStructToFile(uniquePlaces, "places.json")
-	utils.SaveStructToFile(zones, "zones.json")
+	sortedZones := utils.GetSortedZones(&zones)
+	utils.SaveStructToFile(sortedZones, "zones.json")
 }
