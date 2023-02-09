@@ -132,10 +132,10 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 func main() {
 	start := time.Now()
 	// Bucaramanga, Floridablanda, Piedecuesta
-	// places, zones := generatePlacesAndZones(-73.1696, 6.9595, -73.0031, 7.1728, 0.0035)
+	places, zones := generatePlacesAndZones(-73.1696, 6.9595, -73.0031, 7.1728, 0.0035)
 
 	// Piedecuesta small zone
-	places, zones := generatePlacesAndZones(-73.0567, 6.9809, -73.0448, 6.9921, 0.0035)
+	// places, zones := generatePlacesAndZones(-73.0567, 6.9809, -73.0448, 6.9921, 0.0035)
 
 	end := time.Now()
 	elapsed := end.Sub(start)
