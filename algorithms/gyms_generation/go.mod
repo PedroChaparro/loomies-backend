@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/fatih/color v1.14.1
+	github.com/google/uuid v1.3.0
 	github.com/jaswdr/faker v1.16.0
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/subchen/go-xmldom v1.1.2

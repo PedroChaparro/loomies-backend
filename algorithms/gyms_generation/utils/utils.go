@@ -15,9 +15,10 @@ import (
 
 // ---  Types
 type Place struct {
-	Name      string  `json:"name"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	Name           string  `json:"name"`
+	ZoneIdentifier string  `json:"zoneIdentifier"`
+	Latitude       float64 `json:"latitude"`
+	Longitude      float64 `json:"longitude"`
 }
 
 type Zone struct {
@@ -25,6 +26,7 @@ type Zone struct {
 	BottomFrontier float64 `json:"bottomFrontier"`
 	RightFrontier  float64 `json:"rightFrontier"`
 	TopFrontier    float64 `json:"topFrontier"`
+	Identifier     string  `json:"identifier"`
 	Number         int     `json:"number"`
 }
 
@@ -153,7 +155,9 @@ func SaveStructToFile(data interface{}, fileName string) {
 	}
 
 	// Write data to file
-	err = ioutil.WriteFile(fileName, file, 0644)
+	// Crete file on previous directory
+	path := "../../data/" + fileName
+	err = ioutil.WriteFile(path, file, 0644)
 
 	if err != nil {
 		log := fmt.Sprintf("✖ Error writing data to file: %s \n", err)

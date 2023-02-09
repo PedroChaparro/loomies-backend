@@ -7,6 +7,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend-gymsgeneration/utils"
 	"github.com/fatih/color"
+	"github.com/google/uuid"
 	"github.com/jaswdr/faker"
 	"github.com/remeh/sizedwaitgroup"
 	"github.com/subchen/go-xmldom"
@@ -104,17 +105,19 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 				place, success := utils.GetRandomPlace(&boundedPlaces)
 
 				// Save the new zone
-				concurrentZones.Append(utils.Zone{LeftFrontier: lat, BottomFrontier: long, RightFrontier: lat + step, TopFrontier: long + step})
+				zoneIdentifier := uuid.New()
+				concurrentZones.Append(utils.Zone{LeftFrontier: lat, BottomFrontier: long, RightFrontier: lat + step, TopFrontier: long + step, Identifier: zoneIdentifier.String()})
 
 				if !success {
 					randomLat, randomLong := utils.GetRandomPointInZone(lat, lat+step, long, long+step, step)
 					randonName := fake.Address().StreetName()
-					concurrentPlaces.Append(utils.Place{Latitude: randomLat, Longitude: randomLong, Name: randonName})
+					concurrentPlaces.Append(utils.Place{Latitude: randomLat, Longitude: randomLong, Name: randonName, ZoneIdentifier: zoneIdentifier.String()})
 					log := fmt.Sprintf("🎲 Generated random place: %s (%f, %f) \n", randonName, randomLat, randomLong)
 					color.Yellow(log)
 				} else {
 					log := fmt.Sprintf("Found place: %s (%f, %f) \n", place.Name, place.Latitude, place.Longitude)
 					color.Green(log)
+					place.ZoneIdentifier = zoneIdentifier.String()
 					concurrentPlaces.Append(place)
 				}
 			}(lat, long, step)
@@ -129,7 +132,11 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 func main() {
 	start := time.Now()
 	// Bucaramanga, Floridablanda, Piedecuesta
-	places, zones := generatePlacesAndZones(-73.1696, 6.9595, -73.0031, 7.1728, 0.0035)
+	// places, zones := generatePlacesAndZones(-73.1696, 6.9595, -73.0031, 7.1728, 0.0035)
+
+	// Piedecuesta small zone
+	places, zones := generatePlacesAndZones(-73.0567, 6.9809, -73.0448, 6.9921, 0.0035)
+
 	end := time.Now()
 	elapsed := end.Sub(start)
 
