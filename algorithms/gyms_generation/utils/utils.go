@@ -160,3 +160,17 @@ func SaveStructToFile(data interface{}, fileName string) {
 		color.Red(log)
 	}
 }
+
+func GetRandomPointInZone(leftFrontier, rightFrontier, bottomFrontier, topFrontier, step float64) (float64, float64) {
+	// Reduce the zone to avoid getting points too close to the frontier
+	leftFrontier = leftFrontier + step/8
+	rightFrontier = rightFrontier - step/8
+	bottomFrontier = bottomFrontier + step/8
+	topFrontier = topFrontier - step/8
+
+	// Get random point in the zone
+	randomLatitude := rand.Float64()*(topFrontier-bottomFrontier) + bottomFrontier
+	randomLongitude := rand.Float64()*(rightFrontier-leftFrontier) + leftFrontier
+
+	return randomLatitude, randomLongitude
+}

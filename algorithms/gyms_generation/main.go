@@ -7,6 +7,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend-gymsgeneration/utils"
 	"github.com/fatih/color"
+	"github.com/jaswdr/faker"
 	"github.com/remeh/sizedwaitgroup"
 	"github.com/subchen/go-xmldom"
 )
@@ -90,6 +91,7 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 	concurrentPlaces := utils.ConcurrentPlaces{}
 	concurrentZones := utils.ConcurrentZones{}
 	swg := sizedwaitgroup.New(4)
+	fake := faker.New()
 
 	for long := minLong; long <= maxLong; long += step {
 		for lat := minLat; lat <= maxLat; lat += step {
@@ -105,7 +107,10 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 				concurrentZones.Append(utils.Zone{LeftFrontier: lat, BottomFrontier: long, RightFrontier: lat + step, TopFrontier: long + step})
 
 				if !success {
-					log := fmt.Sprintf("⚠ No place found in bounded box: (%f, %f) and (%f, %f) \n", lat, long, lat+step, long+step)
+					randomLat, randomLong := utils.GetRandomPointInZone(lat, lat+step, long, long+step, step)
+					randonName := fake.Address().StreetName()
+					concurrentPlaces.Append(utils.Place{Latitude: randomLat, Longitude: randomLong, Name: randonName})
+					log := fmt.Sprintf("🎲 Generated random place: %s (%f, %f) \n", randonName, randomLat, randomLong)
 					color.Yellow(log)
 				} else {
 					log := fmt.Sprintf("Found place: %s (%f, %f) \n", place.Name, place.Latitude, place.Longitude)
@@ -123,8 +128,8 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 
 func main() {
 	start := time.Now()
-	//places, zones := generatePlacesAndZones(-73.1000, 6.9629, -73.0320, 7.0500, 0.0035)
-	places, zones := generatePlacesAndZones(-73.0591, 6.9778, -73.0397, 6.9947, 0.0035)
+	// places, zones := generatePlacesAndZones(-73.2040, 6.9540, -72.9793, 7.1704, 0.0035)
+	places, zones := generatePlacesAndZones(-73.0773, 6.9675, -73.0272, 7.0118, 0.0035)
 	end := time.Now()
 	elapsed := end.Sub(start)
 
