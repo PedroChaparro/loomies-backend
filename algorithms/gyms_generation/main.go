@@ -133,13 +133,13 @@ func main() {
 	end := time.Now()
 	elapsed := end.Sub(start)
 
-	// Log results
-	log := fmt.Sprintf("Obtained %d places and %d zones in %f minutes\n", len(places), len(zones), elapsed.Minutes())
-	color.Green(log)
-
 	// Remove duplicated places and save places and zones to JSON files
 	uniquePlaces := utils.GetUniquePlaces(&places)
 	utils.SaveStructToFile(uniquePlaces, "places.json")
 	sortedZones := utils.GetSortedZones(&zones)
 	utils.SaveStructToFile(sortedZones, "zones.json")
+
+	// Log results
+	log := fmt.Sprintf("Obtained %d places and %d zones in %f minutes\n", len(uniquePlaces), len(zones), elapsed.Minutes())
+	color.Green(log)
 }
