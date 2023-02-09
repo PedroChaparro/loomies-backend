@@ -128,8 +128,8 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 
 func main() {
 	start := time.Now()
-	// places, zones := generatePlacesAndZones(-73.2040, 6.9540, -72.9793, 7.1704, 0.0035)
-	places, zones := generatePlacesAndZones(-73.0773, 6.9675, -73.0272, 7.0118, 0.0035)
+	// Bucaramanga, Floridablanda, Piedecuesta
+	places, zones := generatePlacesAndZones(-73.1696, 6.9595, -73.0031, 7.1728, 0.0035)
 	end := time.Now()
 	elapsed := end.Sub(start)
 
