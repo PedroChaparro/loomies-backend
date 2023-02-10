@@ -1,6 +1,9 @@
 name: 🚀 Deploy API
 
-on: workflow_dispatch
+on:
+  push:
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   deploy:
@@ -16,13 +19,13 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: 📦 Build the Docker image
-        run: cd api && docker build -t ${{ secrets.DOCKER_USERNAME }}/api .
+        run: cd api && docker build -t ${{ secrets.DOCKER_USERNAME }}/api:${{ github.ref_name }} .
 
       - name: 🚀 Push to Dockerhub
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/api
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/api:${{ github.ref_name } }}
 
       - name: 🔑 End Dockerhub session
         run: docker logout
 
       - name: 🚀 Update Docker Swarm image
-        run: docker service update --image ${{ secrets.DOCKER_USERNAME }}/api api
+        run: docker service update --image ${{ secrets.DOCKER_USERNAME }}/api:${{ github.ref_name }} api
