@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 dotenv.config();
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {});
+mongoose.connect(process.env.MONGO_URI, { dbName: "loomies" });
 
 // Mongo models
 const ZoneSchema = new mongoose.Schema(
