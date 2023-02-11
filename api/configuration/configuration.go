@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -34,7 +35,13 @@ func connectToMongo() *mongo.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGO_URI")))
+	// Connect to mongo db using the user and password from the .env file
+	user := os.Getenv("MONGO_USER")
+	password := os.Getenv("MONGO_PASSWORD")
+	hosts := os.Getenv("MONGO_HOSTS")
+	uri := fmt.Sprintf("mongodb://%s:%s@%s", user, password, hosts)
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Fatal("Error connecting to MongoDB", err)
 	}
