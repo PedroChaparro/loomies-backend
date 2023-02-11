@@ -22,7 +22,7 @@ jobs:
         run: cd api && docker build -t ${{ secrets.DOCKER_USERNAME }}/api:${{ github.ref_name }} .
 
       - name: 🚀 Push to Dockerhub
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/api:${{ github.ref_name } }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/api:${{ github.ref_name }}
 
       - name: 🔑 End Dockerhub session
         run: docker logout
