@@ -1,2 +1,4 @@
+**/node_modules
+**/pnpm-lock.yaml
 **/mongo_volume
 **/.env
