@@ -25,12 +25,12 @@ func CheckExistEmail(email string) error {
 
 }
 
-func CheckExistUser(user string) error {
+func CheckExistUsername(Username string) error {
 	var userU interfaces.User
 
 	err := Collection.FindOne(
 		context.TODO(),
-		bson.D{{"user", user}},
+		bson.D{{"username", Username}},
 	).Decode(&userU)
 
 	return err

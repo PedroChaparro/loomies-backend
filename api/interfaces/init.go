@@ -13,14 +13,16 @@ type Zone struct {
 }
 
 type SignUpForm struct {
-	User     string `json:"user"`
+	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
 type User struct {
-	User     string               `json:"user"      bson:"user"`
-	Email    string               `json:"email"     bson:"email"`
-	Password string               `json:"password"  bson:"password"`
-	Items    []interface{}        `json:"items"     bson:"items"`
-	Loomies  []primitive.ObjectID `json:"loomies"   bson:"loomies"`
+	Username   string               `json:"username"      bson:"username"`
+	Email      string               `json:"email"     bson:"email"`
+	Password   string               `json:"password"  bson:"password"`
+	Items      []interface{}        `json:"items"     bson:"items"`
+	Loomies    []primitive.ObjectID `json:"loomies"   bson:"loomies"`
+	IsVerified bool                 `json:"isVerified"   bson:"isVerified"`
 }

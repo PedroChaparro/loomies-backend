@@ -32,18 +32,18 @@ func HandleSignUp(c *gin.Context) {
 		}
 	}
 
-	err = models.CheckExistUser(form.User)
+	err = models.CheckExistUsername(form.Username)
 
 	if !(err != nil) {
 		if !(err == mongo.ErrNoDocuments) {
 			c.AbortWithStatusJSON(http.StatusConflict,
-				gin.H{"message": "User already exists"})
+				gin.H{"message": "Username already exists"})
 			return
 		}
 	}
 
-	if form.User == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "User cannot be empty"})
+	if form.Username == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Username cannot be empty"})
 		return
 	}
 
@@ -80,7 +80,7 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
-	data := interfaces.User{User: form.User, Email: form.Email, Password: string(hashed)}
+	data := interfaces.User{Username: form.Username, Email: form.Email, Password: string(hashed), IsVerified: false}
 
 	err = models.InsertUser(data)
 
