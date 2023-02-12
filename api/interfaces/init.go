@@ -11,3 +11,18 @@ type Zone struct {
 	Number         int                `json:"number" bson:"number"`
 	Gym            primitive.ObjectID `json:"gym" bson:"gym"`
 }
+
+type SignUpForm struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type User struct {
+	Username   string               `json:"username"      bson:"username"`
+	Email      string               `json:"email"     bson:"email"`
+	Password   string               `json:"password"  bson:"password"`
+	Items      []interface{}        `json:"items"     bson:"items"`
+	Loomies    []primitive.ObjectID `json:"loomies"   bson:"loomies"`
+	IsVerified bool                 `json:"isVerified"   bson:"isVerified"`
+}
