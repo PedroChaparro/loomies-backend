@@ -1,8 +1,9 @@
 name: 💾 Backup database
 
 on:
-  schedule:
-    - cron: "0 20 * * 1,3,5" # Every Monday, Wednesday and Friday at 20:00
+  workflow_dispatch
+  # schedule:
+    # - cron: "0 20 * * 1,3,5" # Every Monday, Wednesday and Friday at 20:00
 
 jobs:
   backup:
