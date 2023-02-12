@@ -12,25 +12,26 @@ import (
 )
 
 var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
-var User interfaces.User
 
 func CheckExistEmail(email string) error {
+	var userE interfaces.User
 
 	err := Collection.FindOne(
 		context.TODO(),
 		bson.D{{"email", email}},
-	).Decode(&User)
+	).Decode(&userE)
 
 	return err
 
 }
 
 func CheckExistUser(user string) error {
+	var userU interfaces.User
 
 	err := Collection.FindOne(
 		context.TODO(),
 		bson.D{{"user", user}},
-	).Decode(&User)
+	).Decode(&userU)
 
 	return err
 
