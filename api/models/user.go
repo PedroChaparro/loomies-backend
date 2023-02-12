@@ -36,7 +36,7 @@ func CheckExistUser(user string) error {
 
 }
 
-func InsertUser(data map[string]interface{}) error {
+func InsertUser(data interfaces.User) error {
 
 	_, err := Collection.InsertOne(context.TODO(), data)
 

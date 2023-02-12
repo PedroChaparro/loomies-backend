@@ -12,13 +12,12 @@ type Zone struct {
 	Gym            primitive.ObjectID `json:"gym" bson:"gym"`
 }
 
-type SigninForm struct {
+type SignUpForm struct {
 	User     string `json:"user"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 type User struct {
-	Id       primitive.ObjectID   `json:"_id"       bson:"_id"`
 	User     string               `json:"user"      bson:"user"`
 	Email    string               `json:"email"     bson:"email"`
 	Password string               `json:"password"  bson:"password"`

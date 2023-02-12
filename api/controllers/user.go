@@ -1,47 +1,20 @@
 package controllers
 
 import (
-	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"net/mail"
-	"os"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
-const uri = "mongodb://root:development@localhost:27017/"
-
-func Pruebas() {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-
-	if err != nil {
-		fmt.Println("Mongo.connect() error: ", err)
-		os.Exit(1)
-	}
-	// Obtain the DB, by name. db will have the type
-	// *mongo.Database
-	db := client.Database("loomies")
-
-	// use a filter to only select capped collections
-	command := bson.D{{"create", "users"}}
-	var result bson.M
-	if err := db.RunCommand(context.TODO(), command).Decode(&result); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func HandleSignin(c *gin.Context) {
-	//Pruebas()
+func HandleSignUp(c *gin.Context) {
 	var err error
-	var form interfaces.SigninForm
+	var form interfaces.SignUpForm
 
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
@@ -53,7 +26,7 @@ func HandleSignin(c *gin.Context) {
 
 	if !(err != nil) {
 		if !(err == mongo.ErrNoDocuments) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized,
+			c.AbortWithStatusJSON(http.StatusConflict,
 				gin.H{"message": "Email already exists"})
 			return
 		}
@@ -63,7 +36,7 @@ func HandleSignin(c *gin.Context) {
 
 	if !(err != nil) {
 		if !(err == mongo.ErrNoDocuments) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized,
+			c.AbortWithStatusJSON(http.StatusConflict,
 				gin.H{"message": "User already exists"})
 			return
 		}
@@ -107,13 +80,7 @@ func HandleSignin(c *gin.Context) {
 		return
 	}
 
-	data := map[string]interface{}{
-		"user":     form.User,
-		"email":    form.Email,
-		"password": string(hashed),
-		"items":    [][]string{},
-		"loomies":  []string{},
-	}
+	data := interfaces.User{User: form.User, Email: form.Email, Password: string(hashed)}
 
 	err = models.InsertUser(data)
 

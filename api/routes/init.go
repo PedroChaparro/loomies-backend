@@ -7,5 +7,5 @@ import (
 
 func SetupRoutes(engine *gin.Engine) {
 	engine.GET("/zones", controllers.HandleZonesGet)
-	engine.POST("/signin", controllers.HandleSignin)
+	engine.POST("/signup", controllers.HandleSignUp)
 }
