@@ -1,0 +1,23 @@
+name: 💾 Backup database
+
+on:
+  schedule:
+    - cron: "0 20 * * 1,3,5" # Every Monday, Wednesday and Friday at 20:00
+
+jobs:
+  backup:
+    runs-on: self-hosted
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🏃🏽 Make the backup script executable
+        run: cd algorithms/bakups_automation && chmod u+x backup.sh
+
+      - name: 💾 Run backup script
+        run: |
+          cd algorithms/bakups_automation
+          ./backup.sh ${{ secrets.MONGO_BACKUP_HOST }} ${{ secrets.MONGO_BACKUP_DIRECTORY }} ${{ secrets.MONGO_BACKUP_USERNAME }} ${{ secrets.MONGO_BACKUP_SECRET }} ${{ secrets.MONGO_BACKUP_DATABASE }}
+
+    - name: 🙊 Remove commands history
+      run: history -c
