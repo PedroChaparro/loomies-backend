@@ -23,13 +23,13 @@ var fake = faker.New()
 
 // ### Helper functions ###
 // SetupGinRouter creates a new gin router to be used in the tests
-func SetupGinRouter() *gin.Engine {
+func setupGinRouter() *gin.Engine {
 	router := gin.Default()
 	return router
 }
 
 // SetupPostRequest creates a new POST request with the given payload
-func SetupPostRequest(endpoint string, payload interface{}) (*httptest.ResponseRecorder, *http.Request) {
+func setupPostRequest(endpoint string, payload interface{}) (*httptest.ResponseRecorder, *http.Request) {
 	payloadBytes, _ := json.Marshal(payload)
 	req, _ := http.NewRequest("POST", endpoint, bytes.NewReader(payloadBytes))
 	req.Header.Set("Content-Type", "application/json")
@@ -37,31 +37,37 @@ func SetupPostRequest(endpoint string, payload interface{}) (*httptest.ResponseR
 	return w, req
 }
 
+// GenerateRandomUser generates a random and valid user
+func generateRandomUser() interfaces.User {
+	var user interfaces.User
+	user.Email = fake.Internet().Email()
+	user.Password = fake.Internet().Password() + "A1!" // Adding uppercase, number and special character
+	user.Username = fake.Internet().User()
+	return user
+}
+
 // ### Tests ###
-// TestSignupSuccess tests the signup endpoint with a valid payload
-func TestSignupSuccess(t *testing.T) {
+// TestSignupSuccessAndConflict tests the signup endpoint with a valid payload and a payload with an already existing email / username
+func TestSignupSuccessAndConflict(t *testing.T) {
 	c := require.New(t)
 	ctx := context.Background()
 	defer ctx.Done()
 
 	// Create random payload
-	var payload interfaces.SignUpForm
-	payload.Email = fake.Internet().Email()
-	payload.Password = fake.Internet().Password() + "A1!" // Adding uppercase, number and special character
-	payload.Username = fake.Internet().User()
+	payload := generateRandomUser()
 
 	// Setup router to create the requests
-	router := SetupGinRouter()
+	router := setupGinRouter()
 	router.POST("/signup", HandleSignUp)
 
 	// Make the request and get the JSON response
-	w, req := SetupPostRequest("/signup", payload)
+	w, req := setupPostRequest("/signup", payload)
 	_, err := ioutil.ReadAll(w.Body)
 	router.ServeHTTP(w, req)
 	var response map[string]string
 	json.Unmarshal(w.Body.Bytes(), &response)
 
-	// Check the response
+	// 1. Success request
 	c.NoError(err)
 	c.Equal(http.StatusOK, w.Code)
 	c.Equal("User created successfully", response["message"])
@@ -73,7 +79,29 @@ func TestSignupSuccess(t *testing.T) {
 	c.Equal(payload.Email, user.Email)
 	c.Equal(payload.Username, user.Username)
 
-	// Delete user
+	// 2. Conflict request with the same email
+	w, req = setupPostRequest("/signup", payload)
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.NoError(err)
+	c.Equal(http.StatusConflict, w.Code)
+	c.Equal("Email already exists", response["message"])
+
+	// 3. Conflict request with the same username
+	oldEmail := payload.Email
+	payload.Email = fake.Internet().Email()
+	w, req = setupPostRequest("/signup", payload)
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.NoError(err)
+	c.Equal(http.StatusConflict, w.Code)
+	c.Equal("Username already exists", response["message"])
+
+	// Delete users
+	_, err = usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: oldEmail}})
+	c.NoError(err)
 	_, err = usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: payload.Email}})
 	c.NoError(err)
 }
