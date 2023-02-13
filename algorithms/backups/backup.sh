@@ -9,7 +9,7 @@ PASSWORD=$5
 
 # Get current date in format YYYY-MM-DD
 DATE=`date +%Y-%m-%d`
-echo "Creating $DATE backup ⏳"
+echo "Creating backup ⏳"
 
 # Execute mongo dump command
 mongodump --host $HOSTS --out $BACKUP_DIR/$DATE --username $USER --password $PASSWORD
@@ -20,7 +20,7 @@ if [ $STATUS -ne 0 ]; then
   exit 1
 fi
 
-echo "$DATE Backup created ✅"
+echo "Backup created ✅"
 
 # Compress backup folder
 cd $BACKUP_DIR
@@ -32,7 +32,7 @@ if [ $STATUS -ne 0 ]; then
   exit 1
 fi
 
-echo "$DATE Backup compressed 📥"
+echo "Backup compressed 📥"
 
 # Run gdrive upload command
 gdrive files upload $BACKUP_DIR/$DATE.tar.gz --parent $DRIVE_FOLDER_ID
@@ -43,4 +43,4 @@ if [ $STATUS -ne 0 ]; then
   exit 1
 fi
 
-echo "$DATE Backup uploaded to Google Drive ☁️"
+echo "Backup uploaded to Google Drive ☁️"
