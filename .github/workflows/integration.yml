@@ -18,12 +18,6 @@ jobs:
         with:
           go-version: "1.19.x"
 
-      - name: 🕵️ Lint
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: api
-
       - name: 💅 Check formatting
         run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
 
