@@ -20,6 +20,11 @@ jobs:
 
       - name: 💅 Check formatting
         run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
+      
+      - name: 📦 Build binary
+        run: |
+          cd api
+          go build -o loomies
 
       - name: 🛫 Setup environment
         run: |
@@ -29,11 +34,6 @@ jobs:
           echo "MONGO_PASSWORD = development" >> .env
           echo "MONGO_HOST = 127.0.0.1:27017" >> .env
           echo "MONGO_DATABASE = loomies" >> .env
-      
-      - name: 📦 Build binary
-        run: |
-          cd api
-          go build -o loomies
 
       - name: 🧪 Run tests
         run: |
