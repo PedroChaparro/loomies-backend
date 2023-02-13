@@ -25,7 +25,7 @@ echo "$DATE Backup created ✅"
 # Compress backup folder
 cd $BACKUP_DIR
 tar -zcvf $DATE.tar.gz $DATE
-STATUS = $?
+STATUS=$?
 
 if [ $STATUS -ne 0 ]; then
   echo "🚨 Error compressing backup"
@@ -36,7 +36,7 @@ echo "$DATE Backup compressed 📥"
 
 # Run gdrive upload command
 gdrive files upload $BACKUP_DIR/$DATE.tar.gz --parent $DRIVE_FOLDER_ID
-STATUS = $?
+STATUS=$?
 
 if [ $STATUS -ne 0 ]; then
   echo "🚨 Error uploading backup to Google Drive"
