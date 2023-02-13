@@ -7,8 +7,8 @@ USER=$3
 DRIVE_FOLDER_ID=$4
 PASSWORD=$5
 
-# Get current date in format YYYY-MM-DD
-DATE=`date +%Y-%m-%d`
+# Get current date in format YYYY-MM-DD:HH:MM:SS
+DATE=$(date +"%Y-%m-%d:%H:%M:%S")
 echo "Creating backup ⏳"
 
 # Execute mongo dump command
