@@ -34,6 +34,9 @@ fi
 
 echo "Backup compressed 📥"
 
+# Remove uncrompressed backup folder
+rm -rf $DATE
+
 # Run gdrive upload command
 gdrive files upload $BACKUP_DIR/$DATE.tar.gz --parent $DRIVE_FOLDER_ID
 STATUS=$?
