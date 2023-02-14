@@ -7,6 +7,7 @@ import (
 
 func main() {
 	// Setup server
+	// Adding some useless comment
 	engine := gin.Default()
 	routes.SetupRoutes(engine)
 	engine.Run()
