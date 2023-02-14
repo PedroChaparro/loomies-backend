@@ -22,6 +22,7 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
+	//Check if exists empty fields
 	if form.Username == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Username cannot be empty"})
 		return
@@ -32,7 +33,7 @@ func HandleSignUp(c *gin.Context) {
 	if form.Email == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
 		return
-	} else if err != nil {
+	} else if err != nil { //Check email format
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email is invalid"})
 		return
 	}
@@ -42,6 +43,7 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
+	//Check password format
 	if len(form.Password) >= 8 {
 		message := models.ValidPassword(form.Password)
 		if message != nil {
@@ -55,6 +57,7 @@ func HandleSignUp(c *gin.Context) {
 
 	_, err = models.CheckExistEmail(form.Email)
 
+	//Check if exists email
 	if !(err != nil) {
 		if !(err == mongo.ErrNoDocuments) {
 			c.AbortWithStatusJSON(http.StatusConflict,
@@ -65,6 +68,7 @@ func HandleSignUp(c *gin.Context) {
 
 	err = models.CheckExistUsername(form.Username)
 
+	//Check if exists username
 	if !(err != nil) {
 		if !(err == mongo.ErrNoDocuments) {
 			c.AbortWithStatusJSON(http.StatusConflict,
@@ -73,6 +77,7 @@ func HandleSignUp(c *gin.Context) {
 		}
 	}
 
+	//encrypt password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(form.Password), 8)
 
 	if err != nil {
@@ -82,6 +87,7 @@ func HandleSignUp(c *gin.Context) {
 
 	data := interfaces.User{Username: form.Username, Email: form.Email, Password: string(hashed), IsVerified: false}
 
+	//Insert user in database
 	err = models.InsertUser(data)
 
 	if err != nil {
@@ -106,10 +112,11 @@ func HandleLogIn(c *gin.Context) {
 
 	_, err = mail.ParseAddress(form.Email)
 
+	//Check if exists empty fields
 	if form.Email == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
 		return
-	} else if err != nil {
+	} else if err != nil { //Check email format
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email is invalid"})
 		return
 	}
@@ -121,6 +128,7 @@ func HandleLogIn(c *gin.Context) {
 
 	user, err = models.CheckExistEmail(form.Email)
 
+	//Check if exists email
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.AbortWithStatusJSON(http.StatusUnauthorized,
@@ -133,6 +141,7 @@ func HandleLogIn(c *gin.Context) {
 		}
 	}
 
+	//Check if the password is correct
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)); err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized,
 			gin.H{"message": "Wrong Email/Password"})
