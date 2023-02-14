@@ -141,6 +141,12 @@ func HandleLogIn(c *gin.Context) {
 		}
 	}
 
+	//Check if user is verified
+	if !user.IsVerified {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "User has not been verified"})
+		return
+	}
+
 	//Check if the password is correct
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)); err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized,
