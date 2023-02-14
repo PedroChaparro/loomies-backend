@@ -2,8 +2,9 @@ name: 💾 Backup database
 
 on:
   schedule:
-    # Every monday, wednesday and friday at 20:00 utc-5
-    - cron: '0 1 * * 1,3,5' 
+    # Every tuesday, thursday and saturday at 20:20 utc-5 
+    # Every monday, wednesday and friday at 20:20 utc-5
+    - cron: '20 1 * * 2,4,6'
 
 jobs:
   backup:
