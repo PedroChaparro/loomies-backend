@@ -13,7 +13,7 @@ import (
 
 var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
 
-func CheckExistEmail(email string) error {
+func CheckExistEmail(email string) (interfaces.User, error) {
 	var userE interfaces.User
 
 	err := Collection.FindOne(
@@ -21,7 +21,7 @@ func CheckExistEmail(email string) error {
 		bson.D{{"email", email}},
 	).Decode(&userE)
 
-	return err
+	return userE, err
 
 }
 

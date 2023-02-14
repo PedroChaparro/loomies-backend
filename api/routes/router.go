@@ -7,4 +7,5 @@ import (
 
 func SetupRoutes(engine *gin.Engine) {
 	engine.POST("/signup", controllers.HandleSignUp)
+	engine.POST("/login", controllers.HandleLogIn)
 }

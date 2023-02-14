@@ -53,7 +53,7 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
-	err = models.CheckExistEmail(form.Email)
+	_, err = models.CheckExistEmail(form.Email)
 
 	if !(err != nil) {
 		if !(err == mongo.ErrNoDocuments) {
@@ -91,4 +91,53 @@ func HandleSignUp(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User created successfully"})
+}
+
+func HandleLogIn(c *gin.Context) {
+	var err error
+	var form interfaces.LogInForm
+	var user interfaces.User
+
+	if err := c.BindJSON(&form); err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+
+	_, err = mail.ParseAddress(form.Email)
+
+	if form.Email == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
+		return
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email is invalid"})
+		return
+	}
+
+	if form.Password == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Password cannot be empty"})
+		return
+	}
+
+	user, err = models.CheckExistEmail(form.Email)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusUnauthorized,
+				gin.H{"message": "Wrong Email/Password"})
+			return
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError,
+				gin.H{"message": "Internal server error"})
+			return
+		}
+	}
+
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)); err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized,
+			gin.H{"message": "Wrong Email/Password"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully logged in"})
 }

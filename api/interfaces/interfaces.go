@@ -18,6 +18,11 @@ type SignUpForm struct {
 	Password string `json:"password"`
 }
 
+type LogInForm struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type User struct {
 	Username   string               `json:"username"      bson:"username"`
 	Email      string               `json:"email"     bson:"email"`
