@@ -34,7 +34,7 @@ jobs:
           docker-compose up -d
           echo "MONGO_USER = root" >> .env
           echo "MONGO_PASSWORD = development" >> .env
-          echo "MONGO_HOST = 127.0.0.1:27017" >> .env
+          echo "MONGO_HOSTS = 127.0.0.1:27017" >> .env
           echo "MONGO_DATABASE = loomies" >> .env
 
       - name: 🧪 Run tests
