@@ -1,10 +1,11 @@
 name: 💾 Backup database
 
 on:
-  schedule:
+  workflow_dispatch
+  #schedule:
     # Every tuesday, thursday and saturday at 20:20 utc-5 
     # Every monday, wednesday and friday at 20:20 utc-5
-    - cron: '20 1 * * 2,4,6'
+    #- cron: '20 1 * * 2,4,6'
 
 jobs:
   backup:
