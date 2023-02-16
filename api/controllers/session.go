@@ -156,10 +156,13 @@ func HandleLogIn(c *gin.Context) {
 	}
 
 	accessTokenS, accessToken, err := utils.CreateAccessToken(user.Id.Hex())
+	refreshTokenS, refreshToken, err := utils.CreateRefreshToken(user.Id.Hex())
 
 	c.IndentedJSON(http.StatusOK, gin.H{
-		"message":           "Successfully logged in",
-		"accessTokenString": accessTokenS,
-		"accessTokenJWT":    accessToken,
+		"message":            "Successfully logged in",
+		"accessTokenString":  accessTokenS,
+		"accessTokenJWT":     accessToken,
+		"refreshTokenString": refreshTokenS,
+		"refreshTokenJWT":    refreshToken,
 	})
 }

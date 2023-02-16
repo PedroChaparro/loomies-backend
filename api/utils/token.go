@@ -20,7 +20,7 @@ func CreateAccessToken(userID string) (string, *jwt.Token, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userid":    userID,
 		"notBefore": time.Now(),
-		"expire":    time.Now().Add(time.Hour * 720),
+		"expire":    time.Now().Add(time.Minute * 30),
 	})
 
 	// sign with secret
@@ -41,7 +41,7 @@ func CreateRefreshToken(userID string) (string, *jwt.Token, error) {
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userid":    userID,
 		"notBefore": time.Now(),
-		"expire":    time.Now().AddDate(0, 0, 31),
+		"expire":    time.Now().AddDate(0, 5, 0),
 	})
 
 	// sign with secret
