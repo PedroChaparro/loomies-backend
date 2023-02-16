@@ -85,7 +85,7 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
-	data := interfaces.UserInsert{Username: form.Username, Email: form.Email, Password: string(hashed), IsVerified: false}
+	data := interfaces.User{Username: form.Username, Email: form.Email, Password: string(hashed), IsVerified: false}
 
 	//Insert user in database
 	err = models.InsertUser(data)

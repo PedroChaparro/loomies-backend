@@ -25,17 +25,8 @@ type LogInForm struct {
 	Password string `json:"password"`
 }
 
-type UserInsert struct {
-	Username   string               `json:"username"      bson:"username"`
-	Email      string               `json:"email"     bson:"email"`
-	Password   string               `json:"password"  bson:"password"`
-	Items      []interface{}        `json:"items"     bson:"items"`
-	Loomies    []primitive.ObjectID `json:"loomies"   bson:"loomies"`
-	IsVerified bool                 `json:"isVerified"   bson:"isVerified"`
-}
-
 type User struct {
-	Id         primitive.ObjectID   `json:"_id"       bson:"_id"`
+	Id         primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Username   string               `json:"username"      bson:"username"`
 	Email      string               `json:"email"     bson:"email"`
 	Password   string               `json:"password"  bson:"password"`
