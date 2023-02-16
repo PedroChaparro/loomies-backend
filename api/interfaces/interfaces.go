@@ -1,6 +1,8 @@
 package interfaces
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Zone struct {
 	Id             primitive.ObjectID `json:"_id" bson:"_id"`
@@ -24,10 +26,15 @@ type LogInForm struct {
 }
 
 type User struct {
+	Id         primitive.ObjectID   `json:"_id"       bson:"_id"`
 	Username   string               `json:"username"      bson:"username"`
 	Email      string               `json:"email"     bson:"email"`
 	Password   string               `json:"password"  bson:"password"`
 	Items      []interface{}        `json:"items"     bson:"items"`
 	Loomies    []primitive.ObjectID `json:"loomies"   bson:"loomies"`
 	IsVerified bool                 `json:"isVerified"   bson:"isVerified"`
+}
+
+type TokenInfo struct {
+	UserID string `json:"userid"`
 }

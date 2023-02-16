@@ -154,5 +154,18 @@ func HandleLogIn(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully logged in"})
+	//Information for the token
+	var tokeninfo interfaces.TokenInfo = interfaces.TokenInfo{
+		UserID: user.Id.Hex(),
+	}
+
+	accessTokenS, refreshTokenS, accessToken, refreshToken, err := models.CreateToken(tokeninfo)
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"message":            "Successfully logged in",
+		"accessTokenString":  accessTokenS,
+		"refreshTokenString": refreshTokenS,
+		"accessTokenJWT":     accessToken,
+		"refreshTokenJWT":    refreshToken,
+	})
 }
