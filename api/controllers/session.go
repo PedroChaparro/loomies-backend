@@ -7,6 +7,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -85,7 +86,7 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
-	data := interfaces.User{Username: form.Username, Email: form.Email, Password: string(hashed), IsVerified: false}
+	data := interfaces.UserInsert{Username: form.Username, Email: form.Email, Password: string(hashed), IsVerified: false}
 
 	//Insert user in database
 	err = models.InsertUser(data)
@@ -141,12 +142,6 @@ func HandleLogIn(c *gin.Context) {
 		}
 	}
 
-	//Check if user is verified
-	if !user.IsVerified {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "User has not been verified"})
-		return
-	}
-
 	//Check if the password is correct
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)); err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized,
@@ -154,18 +149,17 @@ func HandleLogIn(c *gin.Context) {
 		return
 	}
 
-	//Information for the token
-	var tokeninfo interfaces.TokenInfo = interfaces.TokenInfo{
-		UserID: user.Id.Hex(),
+	//Check if user is verified
+	if !user.IsVerified {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "User has not been verified"})
+		return
 	}
 
-	accessTokenS, refreshTokenS, accessToken, refreshToken, err := models.CreateToken(tokeninfo)
+	accessTokenS, accessToken, err := utils.CreateAccessToken(user.Id.Hex())
 
 	c.IndentedJSON(http.StatusOK, gin.H{
-		"message":            "Successfully logged in",
-		"accessTokenString":  accessTokenS,
-		"refreshTokenString": refreshTokenS,
-		"accessTokenJWT":     accessToken,
-		"refreshTokenJWT":    refreshToken,
+		"message":           "Successfully logged in",
+		"accessTokenString": accessTokenS,
+		"accessTokenJWT":    accessToken,
 	})
 }

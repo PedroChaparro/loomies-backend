@@ -39,7 +39,7 @@ func CheckExistUsername(Username string) error {
 
 }
 
-func InsertUser(data interfaces.User) error {
+func InsertUser(data interfaces.UserInsert) error {
 
 	//Insert User in database
 	_, err := Collection.InsertOne(context.TODO(), data)

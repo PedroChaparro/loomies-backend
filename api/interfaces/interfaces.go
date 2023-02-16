@@ -25,8 +25,7 @@ type LogInForm struct {
 	Password string `json:"password"`
 }
 
-type User struct {
-	Id         primitive.ObjectID   `json:"_id"       bson:"_id"`
+type UserInsert struct {
 	Username   string               `json:"username"      bson:"username"`
 	Email      string               `json:"email"     bson:"email"`
 	Password   string               `json:"password"  bson:"password"`
@@ -35,6 +34,12 @@ type User struct {
 	IsVerified bool                 `json:"isVerified"   bson:"isVerified"`
 }
 
-type TokenInfo struct {
-	UserID string `json:"userid"`
+type User struct {
+	Id         primitive.ObjectID   `json:"_id"       bson:"_id"`
+	Username   string               `json:"username"      bson:"username"`
+	Email      string               `json:"email"     bson:"email"`
+	Password   string               `json:"password"  bson:"password"`
+	Items      []interface{}        `json:"items"     bson:"items"`
+	Loomies    []primitive.ObjectID `json:"loomies"   bson:"loomies"`
+	IsVerified bool                 `json:"isVerified"   bson:"isVerified"`
 }
