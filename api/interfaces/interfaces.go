@@ -14,17 +14,6 @@ type Zone struct {
 	Gym            primitive.ObjectID `json:"gym" bson:"gym"`
 }
 
-type SignUpForm struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type LogInForm struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type User struct {
 	Id         primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Username   string               `json:"username"      bson:"username"`
