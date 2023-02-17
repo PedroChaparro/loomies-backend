@@ -13,21 +13,23 @@ import (
 
 var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
 
-func CheckExistEmail(email string) error {
+func CheckExistEmail(email string) (interfaces.User, error) {
 	var userE interfaces.User
 
+	//Query in the database where the email
 	err := Collection.FindOne(
 		context.TODO(),
 		bson.D{{"email", email}},
 	).Decode(&userE)
 
-	return err
+	return userE, err
 
 }
 
 func CheckExistUsername(Username string) error {
 	var userU interfaces.User
 
+	//Query in the database where the username
 	err := Collection.FindOne(
 		context.TODO(),
 		bson.D{{"username", Username}},
@@ -39,6 +41,7 @@ func CheckExistUsername(Username string) error {
 
 func InsertUser(data interfaces.User) error {
 
+	//Insert User in database
 	_, err := Collection.InsertOne(context.TODO(), data)
 
 	return err
