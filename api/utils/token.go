@@ -22,7 +22,7 @@ func CreateAccessToken(userID string) (string, error) {
 
 	// sign with secret and get encoded token
 	var err error
-	accessTokenString, err := accessToken.SignedString(JWTKeyAC)
+	accessTokenString, err := accessToken.SignedString([]byte(JWTKeyAC))
 	if err != nil {
 		return "", errors.New("Could not create access token")
 	}
@@ -40,7 +40,7 @@ func CreateRefreshToken(userID string) (string, error) {
 
 	// sign with secret and get encoded token
 	var err error
-	refreshTokenString, err := refreshToken.SignedString(JWTKeyRF)
+	refreshTokenString, err := refreshToken.SignedString([]byte(JWTKeyRF))
 	if err != nil {
 		return "", errors.New("Could not create refresh token")
 	}
