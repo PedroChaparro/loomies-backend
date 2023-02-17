@@ -37,6 +37,13 @@ jobs:
           echo "MONGO_HOSTS = 127.0.0.1:27017" >> .env
           echo "MONGO_DATABASE = loomies" >> .env
 
+      - name: 💾 Insert data
+        run: |
+          cd algorithms/gyms_insertion
+          echo "MONGO_URI = mongodb://root:development@127.0.0.1:27017" >> .env
+          npm install
+          npm run bulk
+
       - name: 🧪 Run tests
         run: |
           cd api
