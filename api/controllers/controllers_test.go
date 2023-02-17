@@ -42,6 +42,7 @@ func TestLoginForbidden(t *testing.T) {
 	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
 }
 
+// TestSignupSuccess tests the signup endpoint with a verified user
 func TestLoginSuccess(t *testing.T) {
 	c := require.New(t)
 	var response map[string]string
