@@ -30,6 +30,40 @@ func load() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	Globals.Loaded = true
+}
+
+func getEnvironmentVariable(name string) string {
+	if Globals.Loaded == false {
+		load()
+	}
+
+	value := os.Getenv(name)
+
+	if value == "" {
+		log.Fatal(name + " not set")
+	}
+
+	return value
+}
+
+func GetAccessTokenSecret() string {
+	if Globals.AccessTokenSecret == "" {
+		accessTokenSecret := getEnvironmentVariable("ACCESS_TOKEN_SECRET")
+		Globals.AccessTokenSecret = accessTokenSecret
+	}
+
+	return Globals.AccessTokenSecret
+}
+
+func GetRefreshTokenSecret() string {
+	if Globals.RefreshTokenSecret == "" {
+		refreshTokenSecret := getEnvironmentVariable("REFRESH_TOKEN_SECRET")
+		Globals.RefreshTokenSecret = refreshTokenSecret
+	}
+
+	return Globals.RefreshTokenSecret
 }
 
 // connectToMongo returns a MongoDB client
@@ -41,9 +75,9 @@ func getMongoClient() *mongo.Client {
 		defer cancel()
 
 		// Connect to mongo db using the user and password from the .env file
-		user := os.Getenv("MONGO_USER")
-		password := os.Getenv("MONGO_PASSWORD")
-		hosts := os.Getenv("MONGO_HOSTS")
+		user := getEnvironmentVariable("MONGO_USER")
+		password := getEnvironmentVariable("MONGO_PASSWORD")
+		hosts := getEnvironmentVariable("MONGO_HOSTS")
 		uri := fmt.Sprintf("mongodb://%s:%s@%s", user, password, hosts)
 
 		client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))

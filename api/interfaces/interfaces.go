@@ -6,6 +6,7 @@ import (
 )
 
 type Globals struct {
+	Loaded             bool
 	MongoClient        *mongo.Client
 	AccessTokenSecret  string
 	RefreshTokenSecret string

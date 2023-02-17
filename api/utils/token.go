@@ -2,15 +2,15 @@ package utils
 
 import (
 	"errors"
-	"os"
 	"time"
 
+	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/golang-jwt/jwt/v4"
 )
 
 // secret keys
-var JWTKeyAC = []byte(os.Getenv("SECRET_AC"))
-var JWTKeyRF = []byte(os.Getenv("SECRET_RF"))
+var JWTKeyAC = configuration.GetAccessTokenSecret()
+var JWTKeyRF = configuration.GetRefreshTokenSecret()
 
 func CreateAccessToken(userID string) (string, error) {
 	// 30 minutes short lived token
