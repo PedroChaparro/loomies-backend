@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/PedroChaparro/loomies-backend/configuration"
+	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/tests"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -54,8 +57,10 @@ func TestLoginSuccess(t *testing.T) {
 	router := tests.SetupGinRouter()
 	tests.InsertUser(randomUser, router, HandleSignUp)
 
-	// Verify the user
+	// Verify the user and save the database document
 	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	var databaseUser interfaces.User
+	usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
 
 	// Try to login with the random user
 	loginForm := map[string]string{
@@ -68,11 +73,28 @@ func TestLoginSuccess(t *testing.T) {
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
-	// Check if the response is correct
+	// 1. Check if the response fields are correct
 	c.Equal(http.StatusOK, w.Code)
 	c.Equal("Successfully logged in", response["message"])
 	c.NotEmpty(response["accessToken"])
 	c.NotEmpty(response["refreshToken"])
+
+	// 2. Check tokens claims
+	accessTokenClaims := jwt.MapClaims{}
+	refreshTokenClaims := jwt.MapClaims{}
+
+	_, err := jwt.ParseWithClaims(response["accessToken"], accessTokenClaims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(configuration.GetAccessTokenSecret()), nil
+	})
+	c.NoError(err)
+
+	_, err = jwt.ParseWithClaims(response["refreshToken"], refreshTokenClaims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(configuration.GetRefreshTokenSecret()), nil
+	})
+	c.NoError(err)
+
+	c.Equal(databaseUser.Id.Hex(), accessTokenClaims["userid"])
+	c.Equal(databaseUser.Id.Hex(), refreshTokenClaims["userid"])
 
 	// Delete the user from the database
 	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
