@@ -14,7 +14,6 @@ import (
 )
 
 var Globals = interfaces.Globals{}
-var client *mongo.Client
 
 // load loads the .env file if the environment is not production and create connections
 func load() {
@@ -93,6 +92,6 @@ func getMongoClient() *mongo.Client {
 
 // connectToMongoCollection returns a MongoDB collection
 func ConnectToMongoCollection(collectionName string) *mongo.Collection {
-	client = getMongoClient()
+	client := getMongoClient()
 	return client.Database(os.Getenv("MONGO_DATABASE")).Collection(collectionName)
 }
