@@ -2,3 +2,4 @@
 **/pnpm-lock.yaml
 **/mongo_volume
 **/.env
+**/tmp
