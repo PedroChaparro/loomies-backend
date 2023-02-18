@@ -11,6 +11,12 @@ import (
 	"github.com/jaswdr/faker"
 )
 
+// ### Types / Structs
+type CustomHeader struct {
+	Name  string
+	Value string
+}
+
 // Fake: faker instance to generate random data
 var FakerInstance = faker.New()
 
@@ -21,9 +27,17 @@ func SetupGinRouter() *gin.Engine {
 }
 
 // SetupPostRequest creates a new POST request with the given payload
-func SetupPostRequest(endpoint string, payload interface{}) (*httptest.ResponseRecorder, *http.Request) {
+func SetupPostRequest(endpoint string, payload interface{}, headers ...CustomHeader) (*httptest.ResponseRecorder, *http.Request) {
 	payloadBytes, _ := json.Marshal(payload)
 	req, _ := http.NewRequest("POST", endpoint, bytes.NewReader(payloadBytes))
+
+	// Set the custom headers
+	if len(headers) > 0 {
+		for _, header := range headers {
+			req.Header.Set(header.Name, header.Value)
+		}
+	}
+
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	return w, req
