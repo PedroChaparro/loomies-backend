@@ -78,3 +78,34 @@ func ValidateAccessToken(accessToken string) (string, error) {
 		return "", errors.New("Invalid access token (claims)")
 	}
 }
+
+// ValidateRefreshToken validates the refresh token is valid and not expired and returns the user id
+func ValidateRefreshToken(refreshToken string) (string, error) {
+	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("Unexpected signing method")
+		}
+		return []byte(JWTKeyRF), nil
+	})
+
+	if err != nil {
+		return "", errors.New("Invalid refresh token (parse)")
+	}
+
+	// validate token
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		exp, err := time.Parse(time.RFC3339, claims["expire"].(string))
+
+		if err != nil {
+			return "", errors.New("Invalid refresh token (expire format)")
+		}
+
+		if exp.Before(time.Now()) {
+			return "", errors.New("Refresh token expired")
+		}
+
+		return claims["userid"].(string), nil
+	} else {
+		return "", errors.New("Invalid refresh token (claims)")
+	}
+}

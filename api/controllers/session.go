@@ -99,3 +99,19 @@ func HandleWhoami(c *gin.Context) {
 		"user":    gin.H{"username": user.Username, "email": user.Email},
 	})
 }
+
+// HandleRefresh returns a new access token
+func HandleRefresh(c *gin.Context) {
+	userid, _ := c.Get("userid")
+
+	accessToken, err := utils.CreateAccessToken(userid.(string))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"message":     "Successfully refreshed access token",
+		"accessToken": accessToken,
+	})
+}

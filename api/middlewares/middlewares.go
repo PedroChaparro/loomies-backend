@@ -29,3 +29,26 @@ func MustProvideAccessToken() gin.HandlerFunc {
 		c.Set("userid", id)
 	}
 }
+
+// MustProvideRefreshToken checks if a valid refresh token was provided in the header
+func MustProvideRefreshToken() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Get refresh token from header
+		refreshToken := c.GetHeader("Refresh-Token")
+
+		if refreshToken == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Refresh token is required"})
+			return
+		}
+
+		// Check if refresh token is valid
+		id, error := utils.ValidateRefreshToken(refreshToken)
+		if error != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": error.Error()})
+			return
+		}
+
+		// Set user id to context
+		c.Set("userid", id)
+	}
+}
