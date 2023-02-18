@@ -78,3 +78,24 @@ func HandleLogIn(c *gin.Context) {
 		"refreshToken": refreshToken,
 	})
 }
+
+// HandleWhoami returns the user information (to recover the user session in the frontend)
+func HandleWhoami(c *gin.Context) {
+	userid, _ := c.Get("userid")
+	user, err := models.GetUserById(userid.(string))
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "User was not found"})
+			return
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+			return
+		}
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"message": "Successfully retrieved user",
+		"user":    gin.H{"username": user.Username, "email": user.Email},
+	})
+}
