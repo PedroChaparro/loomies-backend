@@ -73,6 +73,7 @@ func HandleLogIn(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"message":      "Successfully logged in",
+		"user":         gin.H{"username": user.Username, "email": user.Email},
 		"accessToken":  accessToken,
 		"refreshToken": refreshToken,
 	})
