@@ -2,7 +2,15 @@ package interfaces
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+type Globals struct {
+	Loaded             bool
+	MongoClient        *mongo.Client
+	AccessTokenSecret  string
+	RefreshTokenSecret string
+}
 
 type Zone struct {
 	Id             primitive.ObjectID `json:"_id" bson:"_id"`
