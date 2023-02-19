@@ -40,6 +40,8 @@ jobs:
           echo "MONGO_PASSWORD = development" >> .env
           echo "MONGO_HOSTS = 127.0.0.1:27017" >> .env
           echo "MONGO_DATABASE = loomies" >> .env
+          echo "REFRESH_TOKEN_SECRET = dummy_refresh_secret" >> .env
+          echo "ACCESS_TOKEN_SECRET = dummy_access_secret" >> .env
 
       - name: 🧪 Run tests
         run: |
