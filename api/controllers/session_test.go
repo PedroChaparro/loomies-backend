@@ -133,8 +133,8 @@ func TestLoginSuccess(t *testing.T) {
 	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
 }
 
-// TestWhoamiSuccess tests the whoami endpoint with a valid access token
-func TestWhoamiSuccess(t *testing.T) {
+// TestRefreshSuccess tests the whoami endpoint with a valid access token
+func TestRefreshSuccess(t *testing.T) {
 	c := require.New(t)
 	ctx := context.Background()
 	defer ctx.Done()
