@@ -15,38 +15,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// ## Helper functions
-
-// loginWithRandomUser creates a random user, inserts it into the database,
-// verifies it and tries to login with it
-func loginWithRandomUser() (interfaces.User, map[string]string) {
-	ctx := context.Background()
-
-	// Create a random user
-	randomUser := tests.GenerateRandomUser()
-	router := tests.SetupGinRouter()
-	tests.InsertUser(randomUser, router, HandleSignUp)
-
-	// Verify the user and save the database document
-	var databaseUser interfaces.User
-	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
-	usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
-
-	// Try to login with the random user
-	var response map[string]string
-	loginForm := map[string]string{
-		"email":    randomUser.Email,
-		"password": randomUser.Password,
-	}
-
-	router.POST("/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/login", loginForm)
-	router.ServeHTTP(w, req)
-	json.Unmarshal(w.Body.Bytes(), &response)
-
-	return databaseUser, response
-}
-
 // TestSignupSuccess tests the signup endpoint with a non verified user
 func TestLoginForbidden(t *testing.T) {
 	c := require.New(t)
@@ -133,20 +101,37 @@ func TestLoginSuccess(t *testing.T) {
 	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
 }
 
-// TestWhoamiSuccess tests the whoami endpoint with a valid access token
 func TestWhoamiSuccess(t *testing.T) {
 	c := require.New(t)
 	ctx := context.Background()
 	defer ctx.Done()
-	router := tests.SetupGinRouter()
 
-	// Login with a random user
-	databaseUser, loginResponse := loginWithRandomUser()
+	// Create a random user
+	randomUser := tests.GenerateRandomUser()
+	router := tests.SetupGinRouter()
+	tests.InsertUser(randomUser, router, HandleSignUp)
+
+	// Verify the user and save the database document
+	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	var databaseUser interfaces.User
+	usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
+
+	// Login with the random user
+	var loginResponse map[string]interface{}
+	loginForm := map[string]string{
+		"email":    randomUser.Email,
+		"password": randomUser.Password,
+	}
+
+	router.POST("/login", HandleLogIn)
+	w, req := tests.SetupPostRequest("/login", loginForm)
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &loginResponse)
 
 	// Get a new access token from the refresh token
 	var refreshResponse map[string]string
 	router.POST("/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
-	w, req := tests.SetupPostRequest("/refresh", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"]})
+	w, req = tests.SetupPostRequest("/refresh", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"].(string)})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &refreshResponse)
 
@@ -165,5 +150,5 @@ func TestWhoamiSuccess(t *testing.T) {
 	c.Equal(databaseUser.Id.Hex(), accessTokenClaims["userid"])
 
 	// Remove the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: databaseUser.Email}})
+	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
 }
