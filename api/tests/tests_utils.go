@@ -26,10 +26,26 @@ func SetupGinRouter() *gin.Engine {
 	return router
 }
 
-// SetupPostRequest creates a new POST request with the given payload
+// SetupPostRequest creates a new POST request with the given payload and headers (if any)
 func SetupPostRequest(endpoint string, payload interface{}, headers ...CustomHeader) (*httptest.ResponseRecorder, *http.Request) {
 	payloadBytes, _ := json.Marshal(payload)
 	req, _ := http.NewRequest("POST", endpoint, bytes.NewReader(payloadBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	// Set the custom headers
+	if len(headers) > 0 {
+		for _, header := range headers {
+			req.Header.Set(header.Name, header.Value)
+		}
+	}
+
+	w := httptest.NewRecorder()
+	return w, req
+}
+
+// SetupGetRequest creates a new GET request with the given headers (if any)
+func SetupGetRequest(endpoint string, headers ...CustomHeader) (*httptest.ResponseRecorder, *http.Request) {
+	req, _ := http.NewRequest("GET", endpoint, nil)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Set the custom headers
