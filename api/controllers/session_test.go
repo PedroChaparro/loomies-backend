@@ -46,6 +46,8 @@ func loginWithRandomUser() (interfaces.User, map[string]string) {
 	return databaseUser, response
 }
 
+// ## Tests
+
 // TestSignupSuccess tests the signup endpoint with a non verified user
 func TestLoginForbidden(t *testing.T) {
 	c := require.New(t)
@@ -130,6 +132,23 @@ func TestLoginSuccess(t *testing.T) {
 
 	// Delete the user from the database
 	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
+}
+
+// TestRefreshUnauthorized tests the refresh endpoint without a refresh token
+func TestRefreshUnauthorized(t *testing.T) {
+	c := require.New(t)
+	router := tests.SetupGinRouter()
+
+	// Try to refresh without a refresh token
+	var refreshResponse map[string]string
+	router.POST("/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
+	w, req := tests.SetupPostRequest("/refresh", nil)
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &refreshResponse)
+
+	// Check if the response is correct
+	c.Equal(http.StatusUnauthorized, w.Code)
+	c.Equal("Refresh token is required", refreshResponse["message"])
 }
 
 // TestRefreshSuccess tests the refresh endpoint with a valid refresh token
