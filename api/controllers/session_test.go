@@ -203,3 +203,20 @@ func TestRefreshSuccess(t *testing.T) {
 	// Remove the user from the database
 	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
 }
+
+// TestWhoamiUnauthorized tests the whoami endpoint without a valid access token
+func TestWhoamiUnauthorized(t *testing.T) {
+	c := require.New(t)
+	router := tests.SetupGinRouter()
+
+	// Try to get the user without a valid access token
+	var whoamiResponse map[string]string
+	router.GET("/whoami", middlewares.MustProvideAccessToken(), HandleWhoami)
+	w, req := tests.SetupGetRequest("/whoami")
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &whoamiResponse)
+
+	// Check if the response is correct
+	c.Equal(http.StatusUnauthorized, w.Code)
+	c.Equal("Access token is required", whoamiResponse["message"])
+}
