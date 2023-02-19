@@ -202,3 +202,32 @@ func TestWhoamiUnauthorized(t *testing.T) {
 	c.Equal(http.StatusUnauthorized, w.Code)
 	c.Equal("Access token is required", whoamiResponse["message"])
 }
+
+// TestWhoamiSuccess tests the whoami endpoint with a valid access token
+func TestWhoamiSuccess(t *testing.T) {
+	c := require.New(t)
+	router := tests.SetupGinRouter()
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	databaseUser, loginResponse := loginWithRandomUser()
+
+	// Make a request to the whoami endpoint
+	var whoamiResponse map[string]interface{}
+	router.GET("/whoami", middlewares.MustProvideAccessToken(), HandleWhoami)
+	w, req := tests.SetupGetRequest("/whoami", tests.CustomHeader{Name: "Access-Token", Value: loginResponse["accessToken"]})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &whoamiResponse)
+
+	// 1. Check if the response fields are correct
+	c.Equal(http.StatusOK, w.Code)
+	c.Equal("Successfully retrieved user", whoamiResponse["message"])
+
+	whoamiResponseUser := whoamiResponse["user"].(map[string]interface{})
+	c.Equal(databaseUser.Email, whoamiResponseUser["email"])
+	c.Equal(databaseUser.Username, whoamiResponseUser["username"])
+
+	// Remove the user from the database
+	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: databaseUser.Email}})
+}
