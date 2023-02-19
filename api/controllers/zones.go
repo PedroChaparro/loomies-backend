@@ -27,13 +27,7 @@ func HandleNearGyms(c *gin.Context) {
 		return
 	}
 
-	if nearGyms == nil {
-		c.IndentedJSON(http.StatusOK, gin.H{"message": "Gyms have been found",
-			"nearGyms": nearGyms,
-		})
-	} else {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Nothing found here",
-			"nearGyms": nearGyms,
-		})
-	}
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Gyms in near areas",
+		"nearGyms": nearGyms,
+	})
 }
