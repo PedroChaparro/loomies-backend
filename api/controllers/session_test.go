@@ -154,35 +154,17 @@ func TestRefreshUnauthorized(t *testing.T) {
 // TestRefreshSuccess tests the refresh endpoint with a valid refresh token
 func TestRefreshSuccess(t *testing.T) {
 	c := require.New(t)
+	router := tests.SetupGinRouter()
 	ctx := context.Background()
 	defer ctx.Done()
 
 	// Create a random user
-	randomUser := tests.GenerateRandomUser()
-	router := tests.SetupGinRouter()
-	tests.InsertUser(randomUser, router, HandleSignUp)
-
-	// Verify the user and save the database document
-	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
-	var databaseUser interfaces.User
-	usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
-
-	// Login with the random user
-	var loginResponse map[string]interface{}
-	loginForm := map[string]string{
-		"email":    randomUser.Email,
-		"password": randomUser.Password,
-	}
-
-	router.POST("/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/login", loginForm)
-	router.ServeHTTP(w, req)
-	json.Unmarshal(w.Body.Bytes(), &loginResponse)
+	databaseUser, loginResponse := loginWithRandomUser()
 
 	// Get a new access token from the refresh token
 	var refreshResponse map[string]string
 	router.POST("/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
-	w, req = tests.SetupPostRequest("/refresh", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"].(string)})
+	w, req := tests.SetupPostRequest("/refresh", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"]})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &refreshResponse)
 
@@ -201,7 +183,7 @@ func TestRefreshSuccess(t *testing.T) {
 	c.Equal(databaseUser.Id.Hex(), accessTokenClaims["userid"])
 
 	// Remove the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
+	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: databaseUser.Email}})
 }
 
 // TestWhoamiUnauthorized tests the whoami endpoint without a valid access token
