@@ -15,6 +15,37 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// ## Helper functions
+
+// loginWithRandomUser creates a random user, inserts it into the database, verifies it and tries to login with it
+func loginWithRandomUser() (interfaces.User, map[string]string) {
+	ctx := context.Background()
+
+	// Create a random user
+	randomUser := tests.GenerateRandomUser()
+	router := tests.SetupGinRouter()
+	tests.InsertUser(randomUser, router, HandleSignUp)
+
+	// Verify the user and save the database document
+	var databaseUser interfaces.User
+	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
+
+	// Try to login with the random user
+	var response map[string]string
+	loginForm := map[string]string{
+		"email":    randomUser.Email,
+		"password": randomUser.Password,
+	}
+
+	router.POST("/login", HandleLogIn)
+	w, req := tests.SetupPostRequest("/login", loginForm)
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	return databaseUser, response
+}
+
 // TestSignupSuccess tests the signup endpoint with a non verified user
 func TestLoginForbidden(t *testing.T) {
 	c := require.New(t)
