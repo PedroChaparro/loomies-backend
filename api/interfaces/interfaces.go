@@ -2,7 +2,15 @@ package interfaces
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+type Globals struct {
+	Loaded             bool
+	MongoClient        *mongo.Client
+	AccessTokenSecret  string
+	RefreshTokenSecret string
+}
 
 type Coordinates struct {
 	Latitude  float64 `json:"latitude" bson:"latitude"`
@@ -38,13 +46,8 @@ type Gym struct {
 	Name      string             `json:"name"      bson:"name"`
 }
 
-type SignUpForm struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type User struct {
+	Id         primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Username   string               `json:"username"      bson:"username"`
 	Email      string               `json:"email"     bson:"email"`
 	Password   string               `json:"password"  bson:"password"`

@@ -3,3 +3,6 @@
 **/mongo_volume
 **/.env
 **/tmp
+**/coverage.out
+**/go.work
+**/go.work.sum
