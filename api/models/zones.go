@@ -20,19 +20,19 @@ func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfa
 	const initialLongitude = -73.1696
 	const sizeMinZone = 0.0035
 
-	initialX := math.Floor((currentLongitude - initialLongitude) / sizeMinZone)
-	initialY := math.Floor((currentLatitude - (initialLatitude)) / sizeMinZone)
+	coordX := math.Floor((currentLongitude - initialLongitude) / sizeMinZone)
+	coordY := math.Floor((currentLatitude - (initialLatitude)) / sizeMinZone)
 
 	var mZonesCoord []string
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", initialX-1, initialY+1)) // Box Top Left
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", initialX, initialY+1))   // Box Top - North
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", initialX+1, initialY+1)) // Box Top Right
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", initialX-1, initialY))   // Box Left
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", initialX, initialY))     // current zone box
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", initialX+1, initialY))   // Box Right
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", initialX-1, initialY-1)) // Box Bottom Left
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", initialX, initialY-1))   // Box Bottom - South
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", initialX+1, initialY-1)) // Box Bottom Right
+	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX-1, coordY+1)) // Box Top Left
+	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX, coordY+1))   // Box Top - North
+	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX+1, coordY+1)) // Box Top Right
+	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX-1, coordY))   // Box Left
+	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX, coordY))     // current zone box
+	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX+1, coordY))   // Box Right
+	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX-1, coordY-1)) // Box Bottom Left
+	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX, coordY-1))   // Box Bottom - South
+	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX+1, coordY-1)) // Box Bottom Right
 
 	// filters for aggregation and lookup into gyms collection
 	zonesFilter := bson.M{"coordinates": bson.M{"$in": mZonesCoord}}
@@ -51,12 +51,7 @@ func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfa
 
 	var gyms []interfaces.Gym
 
-	if !cursor.Next(context.Background()) {
-		return []interfaces.Gym{}, err
-	}
-
 	for cursor.Next(context.Background()) {
-
 		var surroundZones interfaces.ZoneWithGyms
 		cursor.Decode(&surroundZones)
 		// some zones don't have gyms

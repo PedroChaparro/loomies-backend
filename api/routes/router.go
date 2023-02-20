@@ -11,5 +11,5 @@ func SetupRoutes(engine *gin.Engine) {
 	engine.POST("/login", controllers.HandleLogIn)
 	engine.GET("/whoami", middlewares.MustProvideAccessToken(), controllers.HandleWhoami)
 	engine.GET("/refresh", middlewares.MustProvideRefreshToken(), controllers.HandleRefresh)
-	engine.POST("/near_gyms", controllers.HandleNearGyms)
+	engine.POST("/near_gyms", middlewares.MustProvideAccessToken(), controllers.HandleNearGyms)
 }

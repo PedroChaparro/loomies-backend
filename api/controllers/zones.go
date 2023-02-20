@@ -29,7 +29,7 @@ func HandleNearGyms(c *gin.Context) {
 
 	if len(nearGyms) == 0 {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Gyms Not Found",
-			"nearGyms": nearGyms,
+			"nearGyms": []interfaces.Gym{},
 		})
 	} else {
 		c.IndentedJSON(http.StatusOK, gin.H{"message": "Gyms have been found in near areas",
