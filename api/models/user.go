@@ -14,26 +14,28 @@ import (
 
 var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
 
+// CheckExistEmail returns a user by its email and an error (if any)
 func CheckExistEmail(email string) (interfaces.User, error) {
 	var userE interfaces.User
 
-	//Query in the database where the email
+	// Find the user with the given email (case insensitive)
 	err := Collection.FindOne(
 		context.TODO(),
-		bson.D{{Key: "email", Value: email}},
+		bson.M{"email": bson.M{"$regex": email, "$options": "i"}},
 	).Decode(&userE)
 
 	return userE, err
 
 }
 
+// CheckExistUsername returns an mongodb errror if the username already exists
 func CheckExistUsername(Username string) error {
 	var userU interfaces.User
 
-	//Query in the database where the username
+	//Find the user with the given username (case insensitive)
 	err := Collection.FindOne(
 		context.TODO(),
-		bson.D{{Key: "username", Value: Username}},
+		bson.M{"username": bson.M{"$regex": Username, "$options": "i"}},
 	).Decode(&userU)
 
 	return err
