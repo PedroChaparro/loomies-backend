@@ -1,0 +1,50 @@
+name: 🧪 Integration
+
+on: 
+  pull_request:
+    branches: 
+      - main
+      - development
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+jobs:
+  integration: 
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🛫 Golang setup
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.19.x"
+
+      - name: 💅 Check formatting
+        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
+      
+      - name: 📦 Build binary
+        run: |
+          cd api
+          go build -o loomies
+
+      - name: 🛫 Setup environment
+        run: |
+          cd api
+          docker-compose up -d
+          echo "MONGO_USER = root" >> .env
+          echo "MONGO_PASSWORD = development" >> .env
+          echo "MONGO_HOSTS = 127.0.0.1:27017" >> .env
+          echo "MONGO_DATABASE = loomies" >> .env
+          echo "REFRESH_TOKEN_SECRET = dummy_refresh_secret" >> .env
+          echo "ACCESS_TOKEN_SECRET = dummy_access_secret" >> .env
+
+      - name: 🧪 Run tests
+        run: |
+          cd api
+          cp .env controllers/.env
+          go test ./...
