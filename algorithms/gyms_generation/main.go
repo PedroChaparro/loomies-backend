@@ -8,7 +8,6 @@ import (
 	"github.com/PedroChaparro/loomies-backend-gymsgeneration/utils"
 	"github.com/fatih/color"
 	"github.com/google/uuid"
-	"github.com/jaswdr/faker"
 	"github.com/remeh/sizedwaitgroup"
 	"github.com/subchen/go-xmldom"
 )
@@ -92,7 +91,6 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 	concurrentPlaces := utils.ConcurrentPlaces{}
 	concurrentZones := utils.ConcurrentZones{}
 	swg := sizedwaitgroup.New(4)
-	fake := faker.New()
 
 	for long := minLong; long <= maxLong; long += step {
 		for lat := minLat; lat <= maxLat; lat += step {
@@ -110,7 +108,7 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 
 				if !success {
 					randomLat, randomLong := utils.GetRandomPointInZone(lat, lat+step, long, long+step, step)
-					randonName := fake.Address().StreetName()
+					randonName := utils.GetRandomPlaceName()
 					concurrentPlaces.Append(utils.Place{Latitude: randomLat, Longitude: randomLong, Name: randonName, ZoneIdentifier: zoneIdentifier.String()})
 					log := fmt.Sprintf("🎲 Generated random place: %s (%f, %f) \n", randonName, randomLat, randomLong)
 					color.Yellow(log)
@@ -130,18 +128,20 @@ func generatePlacesAndZones(minLat, minLong, maxLat, maxLong, step float64) ([]u
 }
 
 func main() {
+	step := 0.0035
 	start := time.Now()
 	// Bucaramanga, Floridablanda, Piedecuesta
-	places, zones := generatePlacesAndZones(-73.1696, 6.9595, -73.0031, 7.1728, 0.0035)
+	places, zones := generatePlacesAndZones(-73.1696, 6.9595, -73.0031, 7.1728, step)
 
-	// Piedecuesta small zone
-	// places, zones := generatePlacesAndZones(-73.0567, 6.9809, -73.0448, 6.9921, 0.0035)
+	// Piedecuesta (center)
+	// places, zones := generatePlacesAndZones(-73.0744, 6.9758, -73.0384, 7.0075, step)
 
 	end := time.Now()
 	elapsed := end.Sub(start)
 
 	// Remove duplicated places and save places and zones to JSON files
-	uniquePlaces := utils.GetUniquePlaces(&places)
+	fmt.Println("Obtaining unique places...")
+	uniquePlaces := utils.GetUniquePlaces(&places, &zones, step)
 	utils.SaveStructToFile(uniquePlaces, "places.json")
 	sortedZones := utils.GetSortedZones(&zones)
 	utils.SaveStructToFile(sortedZones, "zones.json")

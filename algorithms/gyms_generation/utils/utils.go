@@ -11,7 +11,11 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/jaswdr/faker"
 )
+
+// --- Globals
+var fake = faker.New()
 
 // ---  Types
 type Place struct {
@@ -103,27 +107,66 @@ func GetRandomPlace(places *[]Place) (Place, bool) {
 }
 
 // GetUniquePlaces returns a slice with the non-duplicated places comparing the names
-func GetUniquePlaces(places *[]Place) []Place {
+func GetUniquePlaces(places *[]Place, zones *[]Zone, step float64) []Place {
 	uniquePlaces := []Place{}
 
 	for _, place := range *places {
 		isUnique := true
 
 		for _, uniquePlace := range uniquePlaces {
-			if place.Name == uniquePlace.Name {
+			if place.Name == uniquePlace.Name && place.Latitude == uniquePlace.Latitude && place.Longitude == uniquePlace.Longitude {
 				isUnique = false
 				break
 			}
 		}
 
 		if isUnique {
+			// If the place is unique, add it to the unique places slice
 			uniquePlaces = append(uniquePlaces, place)
+		} else {
+			// Get the zone of the duplicated place and generate a new gym for that zone
+			log := fmt.Sprintf("ℹ Duplicated place: %s \n", place.Name)
+			color.Blue(log)
+			zone, finded := GetZoneByIdentifier(place.ZoneIdentifier, zones)
+
+			if !finded {
+				log := fmt.Sprintf("✖ Zone not found: %s \n", place.ZoneIdentifier)
+				color.Red(log)
+				continue
+			}
+
+			// Generate a new place
+			randomLat, randomLong := GetRandomPointInZone(zone.LeftFrontier, zone.RightFrontier, zone.BottomFrontier, zone.TopFrontier, step)
+			randomName := GetRandomPlaceName()
+			newPlace := Place{
+				Name:           randomName,
+				ZoneIdentifier: place.ZoneIdentifier,
+				Latitude:       randomLat,
+				Longitude:      randomLong,
+			}
+
+			uniquePlaces = append(uniquePlaces, newPlace)
+
+			log = fmt.Sprintf("🎲 Generated random place: %s (%f, %f) \n", randomName, randomLat, randomLong)
+			color.Yellow(log)
 		}
 	}
 
 	return uniquePlaces
 }
 
+// GetZoneByIdentifier returns the zone with the given identifier and a boolean indicating if it was found
+func GetZoneByIdentifier(identifier string, zones *[]Zone) (Zone, bool) {
+	for _, zone := range *zones {
+		if zone.Identifier == identifier {
+			return zone, true
+		}
+	}
+
+	return Zone{}, false
+}
+
+// GetSortedZones sorts the given zones by top frontier and then by left frontier
 func GetSortedZones(zones *[]Zone) []Zone {
 	sort.Slice(*zones, func(i, j int) bool {
 		// Try to sort by top frontier
@@ -165,6 +208,7 @@ func SaveStructToFile(data interface{}, fileName string) {
 	}
 }
 
+// GetRandomPointInZone returns a random point between the given frontiers
 func GetRandomPointInZone(leftFrontier, rightFrontier, bottomFrontier, topFrontier, step float64) (float64, float64) {
 	// Reduce the zone to avoid getting points too close to the frontier
 	leftFrontier = leftFrontier + step/8
@@ -177,4 +221,9 @@ func GetRandomPointInZone(leftFrontier, rightFrontier, bottomFrontier, topFronti
 	randomLongitude := rand.Float64()*(rightFrontier-leftFrontier) + leftFrontier
 
 	return randomLatitude, randomLongitude
+}
+
+// GetRandomPlaceName returns a random place name
+func GetRandomPlaceName() string {
+	return fake.Address().StreetName()
 }
