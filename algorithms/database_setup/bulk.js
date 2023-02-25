@@ -1,39 +1,20 @@
 import dotenv from "dotenv";
 import fs from "fs";
 import mongoose from "mongoose";
-dotenv.config();
+import { ZoneModel, GymModel, BaseLoomieModel } from "./models/mongoose.js";
 
 // Connect to MongoDB
+dotenv.config();
+mongoose.set("strictQuery", true);
 mongoose.connect(process.env.MONGO_URI, { dbName: "loomies" });
-
-// Mongo models
-const ZoneSchema = new mongoose.Schema(
-  {
-    leftFrontier: Number,
-    rightFrontier: Number,
-    topFrontier: Number,
-    bottomFrontier: Number,
-    number: Number,
-    coordinates: String,
-    gym: { type: mongoose.Schema.Types.ObjectId, ref: "Gym" },
-  },
-  { versionKey: false }
-);
-const ZoneModel = mongoose.model("Zones", ZoneSchema);
-
-const GymSchema = new mongoose.Schema(
-  {
-    latitude: Number,
-    longitude: Number,
-    name: String,
-  },
-  { versionKey: false }
-);
-const GymModel = mongoose.model("Gyms", GymSchema);
 
 // Read data from json files
 const zones = JSON.parse(fs.readFileSync("../../data/zones.json"));
 const gyms = JSON.parse(fs.readFileSync("../../data/places.json"));
+const loomies = JSON.parse(fs.readFileSync("../../data/loomies.json"));
+
+// --- Zones and Gyms ---
+console.log("🏟️ Inserting gyms and zones...");
 const coordinates = { x: 0, y: 0 };
 let currentLongitude;
 
@@ -85,7 +66,33 @@ for await (const zone of zones) {
 }
 
 console.log("Zones inserted: ", await ZoneModel.countDocuments());
-console.log("Gyms inserted: ", await GymModel.countDocuments());
+console.log("Gyms inserted: ", await GymModel.countDocuments(), "\n");
+
+// --- Loomies ---
+console.log("🐄 Inserting loomies...");
+
+for await (const loomie of loomies) {
+  const BASE_ATTRIBUTES = {
+    hp: 100,
+    deffense: 10,
+    attack: 20,
+  };
+
+  const { serial, name, types, rarity, extra_hp, extra_def, extra_atk } =
+    loomie;
+
+  const newLoomie = new BaseLoomieModel({
+    serial,
+    name,
+    types,
+    rarity,
+    base_hp: BASE_ATTRIBUTES.hp + extra_hp,
+    base_attack: BASE_ATTRIBUTES.attack + extra_atk,
+    base_defense: BASE_ATTRIBUTES.deffense + extra_def,
+  });
+
+  await newLoomie.save();
+}
 
 // Close connection
 mongoose.connection.close();
