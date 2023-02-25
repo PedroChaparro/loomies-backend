@@ -29,7 +29,7 @@ const loomieRarities = JSON.parse(
 );
 
 // --- Tests ---
-describe("Testing documents count", () => {
+describe.concurrent("Testing documents count", () => {
   it(`Should have ${zones.length} zones`, async () => {
     expect(zones.length).toBe(await ZoneModel.countDocuments());
   });
@@ -56,3 +56,30 @@ describe("Testing documents count", () => {
     expect(items.length).toBe(await ItemModel.countDocuments());
   });
 });
+
+describe(
+  "Testing zones and gyms",
+  () => {
+    it("Should have the same number of zones and gyms", async () => {
+      const zonesCount = await ZoneModel.countDocuments();
+      const gymsCount = await GymModel.countDocuments();
+      expect(zonesCount).toBe(gymsCount);
+    });
+
+    it("Should not have any zone without gym", async () => {
+      const zonesWithoutGym = await ZoneModel.find({ gym: null });
+      expect(zonesWithoutGym.length).toBe(0);
+    });
+
+    it("Should not have zones with the zame gym", async () => {
+      const Gyms = await GymModel.find();
+
+      for await (const gym of Gyms) {
+        const zones = await ZoneModel.find({ gym: gym._id });
+        expect(zones.length).toBe(1);
+      }
+    });
+  },
+  // 15 seconds timeout
+  { timeout: 15000 }
+);
