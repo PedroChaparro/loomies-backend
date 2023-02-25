@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Water",
+    "strong_against": ["Fire", "Rock"]
+  },
+  {
+    "name": "Fire",
+    "strong_against": ["Plant", "Bug", "Iron"]
+  },
+  {
+    "name": "Plant",
+    "strong_against": ["Water", "Rock"]
+  },
+  {
+    "name": "Flying",
+    "strong_against": ["Plant", "Bug"]
+  },
+  {
+    "name": "Psychic",
+    "strong_against": ["Poison"]
+  },
+  {
+    "name": "Bug",
+    "strong_against": ["Plant", "Psychic"]
+  },
+  {
+    "name": "Poison",
+    "strong_against": ["Water", "Plant"]
+  },
+  {
+    "name": "Electric",
+    "strong_against": ["Water", "Flying", "Iron"]
+  },
+  {
+    "name": "Rock",
+    "strong_against": ["Fire", "Electric"]
+  },
+  {
+    "name": "Iron",
+    "strong_against": ["Flying", "Rock"]
+  }
+]
