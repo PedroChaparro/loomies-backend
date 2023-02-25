@@ -19,3 +19,10 @@ pnpm i
 pnpm bulk
 # npm run bulk
 ```
+
+4. Run `test` script to ensure the insertion was correct:
+
+```bash
+pnpm test
+# npm run test
+```
