@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import {
   ZoneModel,
   GymModel,
+  LoomieTypeModel,
+  LoomieRarityModel,
   BaseLoomieModel,
   ItemModel,
 } from "./models/mongoose.js";
@@ -18,6 +20,12 @@ const zones = JSON.parse(fs.readFileSync("../../data/zones.json"));
 const gyms = JSON.parse(fs.readFileSync("../../data/places.json"));
 const loomies = JSON.parse(fs.readFileSync("../../data/loomies.json"));
 const items = JSON.parse(fs.readFileSync("../../data/items.json"));
+const loomieTypes = JSON.parse(
+  fs.readFileSync("../../data/loomies_types.json")
+);
+const loomieRarities = JSON.parse(
+  fs.readFileSync("../../data/loomies_rarities.json")
+);
 
 // --- Zones and Gyms ---
 console.log("🏟️ Inserting gyms and zones...");
@@ -74,6 +82,89 @@ for await (const zone of zones) {
 console.log("Zones inserted: ", await ZoneModel.countDocuments());
 console.log("Gyms inserted: ", await GymModel.countDocuments(), "\n");
 
+// --- Loomies types ---
+console.log("✨ Inserting loomie types...");
+const globalLoomiesTypesIds = [];
+
+// 1. Insert loomie types without the strong_against attribute
+for await (const loomieType of loomieTypes) {
+  const { name } = loomieType;
+  const newLoomieType = new LoomieTypeModel({ name });
+
+  // Save the id to populate the strong_against attribute later
+  const { _id } = await newLoomieType.save();
+  globalLoomiesTypesIds.push({
+    name: loomieType.name,
+    id: _id,
+  });
+}
+
+// 2. Update strong_against attribute
+for await (const loomieType of loomieTypes) {
+  const { name, strong_against } = loomieType;
+  const strongAgainstIds = [];
+
+  // Get the current loomie
+  const currentLoomie = globalLoomiesTypesIds.find(
+    (loomie_type) => loomie_type.name === name
+  );
+
+  if (!currentLoomie) {
+    console.log("⚠️ Loomie was not found:", name);
+    continue;
+  }
+
+  // Get the ids of the strong_against loomies
+  for await (const strongAgainst of strong_against) {
+    const strongAgainstId = globalLoomiesTypesIds.find(
+      (loomie_type) => loomie_type.name === strongAgainst
+    );
+
+    if (!strongAgainstId) {
+      console.log(
+        `⚠️ Strong against loomie was not found: ${currentLoomie.name} --> ${strongAgainst}`
+      );
+      continue;
+    }
+
+    strongAgainstIds.push(strongAgainstId.id);
+  }
+
+  // Update the current loomie
+  await LoomieTypeModel.updateOne(
+    { _id: currentLoomie.id },
+    { strong_against: strongAgainstIds }
+  );
+}
+
+console.log(
+  "Inserted loomie types: ",
+  await LoomieTypeModel.countDocuments(),
+  "\n"
+);
+
+// --- Loomies rarities ---
+console.log("📊 Inserting loomie rarities...");
+const globalLoomiesRaritiesIds = [];
+
+for await (const loomieRarity of loomieRarities) {
+  const { name, spawn_chance } = loomieRarity;
+  const newLoomieRarity = new LoomieRarityModel({ name, spawn_chance });
+
+  // Save the id to populate the loomies.rarity attribute later
+  const { _id } = await newLoomieRarity.save();
+  globalLoomiesRaritiesIds.push({
+    name: loomieRarity.name,
+    id: _id,
+  });
+}
+
+console.log(
+  "Inserted loomie rarities: ",
+  await LoomieRarityModel.countDocuments(),
+  "\n"
+);
+
 // --- Loomies ---
 console.log("🐄 Inserting loomies...");
 
@@ -87,11 +178,37 @@ for await (const loomie of loomies) {
   const { serial, name, types, rarity, extra_hp, extra_def, extra_atk } =
     loomie;
 
+  // Get the ids of the types
+  const typesIds = [];
+
+  for await (const type of types) {
+    const typeId = globalLoomiesTypesIds.find(
+      (loomie_type) => loomie_type.name === type
+    );
+
+    if (!typeId) {
+      console.log("⚠️ Loomie type was not found:", type);
+      continue;
+    }
+
+    typesIds.push(typeId.id);
+  }
+
+  // Get the id of the rarity
+  const rarityId = globalLoomiesRaritiesIds.find(
+    (loomie_rarity) => loomie_rarity.name === rarity
+  );
+
+  if (!rarityId) {
+    console.log("⚠️ Loomie rarity was not found:", rarity);
+    continue;
+  }
+
   const newLoomie = new BaseLoomieModel({
     serial,
     name,
-    types,
-    rarity,
+    types: typesIds,
+    rarity: rarityId.id,
     base_hp: BASE_ATTRIBUTES.hp + extra_hp,
     base_attack: BASE_ATTRIBUTES.attack + extra_atk,
     base_defense: BASE_ATTRIBUTES.deffense + extra_def,

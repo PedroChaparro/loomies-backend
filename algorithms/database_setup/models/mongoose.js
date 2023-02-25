@@ -27,28 +27,38 @@ const GymSchema = new Schema(
   { versionKey: false }
 );
 
+const LoomieTypeSchema = new Schema(
+  {
+    name: String,
+    strong_against: {
+      // Types that this rarity is strong against
+      // Reference another document in the same collection
+      type: [Schema.Types.ObjectId],
+      ref: "loomie_types",
+    },
+  },
+  { versionKey: false }
+);
+
+const LoomieRaritySchema = new Schema(
+  {
+    name: String,
+    spawn_chance: Number,
+  },
+  { versionKey: false }
+);
+
 const BaseLoomieSchema = new Schema(
   {
     serial: Number,
     name: String,
     types: {
-      type: [String],
-      enum: [
-        "Water",
-        "Fire",
-        "Plant",
-        "Flying",
-        "Psychic",
-        "Bug",
-        "Poison",
-        "Electric",
-        "Rock",
-        "Iron",
-      ],
+      type: [Schema.Types.ObjectId],
+      ref: "loomie_types",
     },
     rarity: {
-      type: String,
-      enum: ["Common", "Normal", "Rare"],
+      type: Schema.Types.ObjectId,
+      ref: "loomie_rarities",
     },
     base_hp: Number,
     base_attack: Number,
@@ -73,5 +83,7 @@ const ItemsSchema = new Schema(
 // Models
 export const ZoneModel = model("zones", ZoneSchema);
 export const GymModel = model("gyms", GymSchema);
+export const LoomieTypeModel = model("loomie_types", LoomieTypeSchema);
+export const LoomieRarityModel = model("loomie_rarities", LoomieRaritySchema);
 export const BaseLoomieModel = model("base_loomies", BaseLoomieSchema);
 export const ItemModel = model("items", ItemsSchema);
