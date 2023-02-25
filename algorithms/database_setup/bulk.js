@@ -1,7 +1,12 @@
 import dotenv from "dotenv";
 import fs from "fs";
 import mongoose from "mongoose";
-import { ZoneModel, GymModel, BaseLoomieModel } from "./models/mongoose.js";
+import {
+  ZoneModel,
+  GymModel,
+  BaseLoomieModel,
+  ItemModel,
+} from "./models/mongoose.js";
 
 // Connect to MongoDB
 dotenv.config();
@@ -12,6 +17,7 @@ mongoose.connect(process.env.MONGO_URI, { dbName: "loomies" });
 const zones = JSON.parse(fs.readFileSync("../../data/zones.json"));
 const gyms = JSON.parse(fs.readFileSync("../../data/places.json"));
 const loomies = JSON.parse(fs.readFileSync("../../data/loomies.json"));
+const items = JSON.parse(fs.readFileSync("../../data/items.json"));
 
 // --- Zones and Gyms ---
 console.log("🏟️ Inserting gyms and zones...");
@@ -93,6 +99,26 @@ for await (const loomie of loomies) {
 
   await newLoomie.save();
 }
+
+console.log("Inserted loomies: ", await BaseLoomieModel.countDocuments(), "\n");
+
+// --- Items ---
+console.log("📦 Inserting items...");
+
+for await (const item of items) {
+  const { name, description, target, is_combat_item } = item;
+
+  const newItem = new ItemModel({
+    name,
+    description,
+    target,
+    is_combat_item,
+  });
+
+  await newItem.save();
+}
+
+console.log("Inserted items: ", await ItemModel.countDocuments(), "\n");
 
 // Close connection
 mongoose.connection.close();

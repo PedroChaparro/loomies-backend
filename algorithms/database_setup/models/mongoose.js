@@ -53,7 +53,21 @@ const BaseLoomieSchema = new Schema(
   { versionKey: false }
 );
 
+const ItemsSchema = new Schema(
+  {
+    name: String,
+    description: String,
+    target: {
+      type: String,
+      enum: ["Loomie"], // Currently items only target loomies
+    },
+    is_combat_item: Boolean,
+  },
+  { versionKey: false }
+);
+
 // Models
 export const ZoneModel = model("zones", ZoneSchema);
 export const GymModel = model("gyms", GymSchema);
 export const BaseLoomieModel = model("base_loomies", BaseLoomieSchema);
+export const ItemModel = model("items", ItemsSchema);
