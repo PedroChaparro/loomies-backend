@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Pain Killers",
+    "description": "Heals 50 HP",
+    "target": "loomie",
+    "is_combat_item": true
+  },
+  {
+    "name": "Small Aid Kit",
+    "description": "Heals 100 HP",
+    "target": "loomie",
+    "is_combat_item": true
+  },
+  {
+    "name": "Big Aid Kit",
+    "description": "Heals all the HP",
+    "target": "loomie",
+    "is_combat_item": true
+  },
+  {
+    "name": "Defibrillator",
+    "description": "Revives a dead loomie with half HP",
+    "target": "loomie",
+    "is_combat_item": true
+  },
+  {
+    "name": "Steroids Injection",
+    "description": "Increases the loomie's attack by 20%",
+    "target": "loomie",
+    "is_combat_item": true
+  },
+  {
+    "name": "Vitamins",
+    "description": "Increases the loomie's max HP by 20%",
+    "target": "loomie",
+    "is_combat_item": true
+  },
+  {
+    "name": "Unknown Bevarage",
+    "description": "Increate the loomie's level by 1",
+    "target": "loomie",
+    "is_combat_item": false
+  }
+]
