@@ -108,3 +108,19 @@ describe("Testing loomies types", () => {
     }
   });
 });
+
+describe("Test loomies rarities", () => {
+  it("Should have the corrects spawn chances", async () => {
+    const loomieRaritiesDocuments = await LoomieRarityModel.find();
+
+    for await (const loomieRarityDoc of loomieRaritiesDocuments) {
+      // Get the loomie spawn chance from the json file
+      const { spawn_chance } = loomieRarities.find(
+        (loomie_rarity) => loomie_rarity.name === loomieRarityDoc.name
+      );
+
+      // Validate spawn chance
+      expect(spawn_chance).toBe(loomieRarityDoc.spawn_chance);
+    }
+  });
+});
