@@ -83,3 +83,28 @@ describe(
   // 15 seconds timeout
   { timeout: 15000 }
 );
+
+describe("Testing loomies types", () => {
+  it("Should have the corrects strong against ids", async () => {
+    const loomieTypesDocuments = await LoomieTypeModel.find().populate(
+      "strong_against"
+    );
+
+    for await (const loomieTypeDoc of loomieTypesDocuments) {
+      // Get the loomie strong against names from the json file
+      const { strong_against } = loomieTypes.find(
+        (loomie_type) => loomie_type.name === loomieTypeDoc.name
+      ); // ["Fire", "Water"...]
+
+      // Validate count
+      expect(strong_against.length).toBe(loomieTypeDoc.strong_against.length);
+
+      // Every name in the json file should be in the document
+      const isEveryNameIncluded = strong_against.every((name) => {
+        return loomieTypeDoc.strong_against.some((type) => type.name === name);
+      });
+
+      expect(isEveryNameIncluded).toBe(true);
+    }
+  });
+});
