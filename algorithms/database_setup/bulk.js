@@ -121,4 +121,5 @@ for await (const item of items) {
 console.log("Inserted items: ", await ItemModel.countDocuments(), "\n");
 
 // Close connection
+await ZoneModel.ensureIndexes();
 mongoose.connection.close();

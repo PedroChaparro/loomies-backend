@@ -14,6 +14,10 @@ const ZoneSchema = new Schema(
   { versionKey: false }
 );
 
+// Create hash and unique index for coordinates
+ZoneSchema.set("autoIndex", false);
+ZoneSchema.index({ coordinates: "hashed" });
+
 const GymSchema = new Schema(
   {
     latitude: Number,
