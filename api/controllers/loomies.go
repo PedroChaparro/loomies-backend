@@ -54,6 +54,7 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 	weightedChooses := []weightedrand.Choice[interfaces.BaseLoomiesWithPopulatedRarity, int]{}
 
 	// Create the weighted choices
+	// Read: https://pkg.go.dev/github.com/mroth/weightedrand/v2
 	for _, loomie := range baseLoomies {
 		// The chance is a float between 0 and 1, so we multiply it by 100 to get a percentage
 		chance := int(loomie.PopulatedRarity.SpawnChance * 100)
@@ -94,9 +95,9 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 	}
 
 	// 4. Update the generation time and timeout in the user doc
-	// minTimeout, maxTimeout := configuration.GetLoomiesGenerationTimeouts()
-	// randomTimeout := utils.GetRandomInt(minTimeout, maxTimeout)
-	err = models.UpdateUserGenerationTimes(userId, currentTimestamp, 0)
+	minTimeout, maxTimeout := configuration.GetLoomiesGenerationTimeouts()
+	randomTimeout := utils.GetRandomInt(minTimeout, maxTimeout)
+	err = models.UpdateUserGenerationTimes(userId, currentTimestamp, int64(randomTimeout))
 
 	return nil
 }
