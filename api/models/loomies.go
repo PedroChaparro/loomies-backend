@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -10,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var zonesCollection = configuration.ConnectToMongoCollection("zones")
 var baseLoomiesCollection = configuration.ConnectToMongoCollection("base_loomies")
 var wildLoomiesCollection = configuration.ConnectToMongoCollection("wild_loomies")
 
@@ -86,6 +88,7 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 	})
 
 	// Get the zone from the database
+	// fmt.Println("Getting zone from coordinates", coordX, coordY)
 	zone, err := GetZoneFromCoordinates(coordX, coordY)
 
 	if err != nil {
@@ -104,6 +107,67 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 	// Insert the wild loomie into the database
 	loomie.ZoneId = zone.Id
 	result, err := wildLoomiesCollection.InsertOne(context.Background(), loomie)
+
+	if err != nil {
+		return interfaces.WildLoomie{}, false
+	}
+
+	// Update the loomies array in the zone
+	_, err = zonesCollection.UpdateOne(context.Background(), bson.M{"_id": zone.Id}, bson.M{"$push": bson.M{"loomies": result.InsertedID}})
 	loomie.Id = result.InsertedID.(primitive.ObjectID)
+
+	// Clear the llomies array on all the zones
+	// zonesCollection.UpdateMany(context.Background(), bson.M{}, bson.M{"$set": bson.M{"loomies": []primitive.ObjectID{}}})
+	// wildLoomiesCollection.DeleteMany(context.Background(), bson.M{})
+
 	return loomie, err == nil
+}
+
+// GetNearWildLoomies returns the wild loomies that are near the coordinates
+func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLoomie, error) {
+	loomies := []interfaces.WildLoomie{}
+
+	// Get the zone coordinates
+	coordX, coordY := utils.GetZoneCoordinatesFromGPS(coordinates)
+
+	// Get the zones that are near the current zone
+	var nearZonesCoordinates []string
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY+1)) // Box Top Left
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY+1))   // Box Top - North
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY+1)) // Box Top Right
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY))   // Box Left
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY))     // current zone box
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY))   // Box Right
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY-1)) // Box Bottom Left
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY-1))   // Box Bottom - South
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY-1)) // Box Bottom Right
+
+	// Filter
+	zonesFilter := bson.M{"coordinates": bson.M{"$in": nearZonesCoordinates}}
+	matchFilter := bson.M{"$match": zonesFilter}
+
+	// Aggregation to populate zone's loomies
+	lookupIntoLoomies := bson.M{
+		"$lookup": bson.M{
+			"from":         "wild_loomies",
+			"localField":   "loomies",
+			"foreignField": "_id",
+			"as":           "populated_loomies",
+		},
+	}
+
+	// Make the query
+	cursor, err := zonesCollection.Aggregate(context.Background(), []bson.M{matchFilter, lookupIntoLoomies})
+
+	if err != nil {
+		return []interfaces.WildLoomie{}, err
+	}
+
+	for cursor.Next(context.Background()) {
+		var zone interfaces.ZoneWithPopulatedLoomies
+		cursor.Decode(&zone)
+		loomies = append(loomies, zone.PopulatedLoomies...)
+	}
+
+	return loomies, nil
 }

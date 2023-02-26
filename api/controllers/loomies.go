@@ -12,6 +12,7 @@ import (
 	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/mroth/weightedrand/v2"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // generateLoomies "private" function to generate loomies for the user
@@ -98,9 +99,9 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 	}
 
 	// 4. Update the generation time and timeout in the user doc
-	minTimeout, maxTimeout := configuration.GetLoomiesGenerationTimeouts()
-	randomTimeout := utils.GetRandomInt(minTimeout, maxTimeout)
-	err = models.UpdateUserGenerationTimes(userId, currentTimestamp, int64(randomTimeout))
+	// minTimeout, maxTimeout := configuration.GetLoomiesGenerationTimeouts()
+	// randomTimeout := utils.GetRandomInt(minTimeout, maxTimeout)
+	err = models.UpdateUserGenerationTimes(userId, currentTimestamp, 0)
 
 	return nil
 }
@@ -135,8 +136,27 @@ func HandleNearLoomies(c *gin.Context) {
 	}
 
 	// 2. Return the loomies near the user coordinates
+	wildLoomies, err := models.GetNearWildLoomies(coordinates)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"error":   true,
+				"message": "No loomies found",
+			})
+		}
+
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error":   true,
+			"message": "Error getting the loomies. Please try again later.",
+		})
+
+		return
+	}
+
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"error":   false,
-		"message": "Working on int...",
+		"message": "Loomies were retrieved successfully",
+		"loomies": wildLoomies,
 	})
 }

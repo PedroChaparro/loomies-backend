@@ -24,26 +24,41 @@ type Coordinates struct {
 }
 
 type Zone struct {
-	Id             primitive.ObjectID `json:"_id" bson:"_id"`
-	LeftFrontier   float64            `json:"leftFrontier" bson:"leftFrontier"`
-	RightFrontier  float64            `json:"rightFrontier" bson:"rightFrontier"`
-	TopFrontier    float64            `json:"topFrontier" bson:"topFrontier"`
-	BottomFrontier float64            `json:"bottomFrontier" bson:"bottomFrontier"`
-	Number         int                `json:"number" bson:"number"`
-	Coordinates    string             `json:"coordinates" bson:"coordinates"`
-	Gym            primitive.ObjectID `json:"gym" bson:"gym"`
+	Id             primitive.ObjectID   `json:"_id" bson:"_id"`
+	LeftFrontier   float64              `json:"leftFrontier" bson:"leftFrontier"`
+	RightFrontier  float64              `json:"rightFrontier" bson:"rightFrontier"`
+	TopFrontier    float64              `json:"topFrontier" bson:"topFrontier"`
+	BottomFrontier float64              `json:"bottomFrontier" bson:"bottomFrontier"`
+	Number         int                  `json:"number" bson:"number"`
+	Coordinates    string               `json:"coordinates" bson:"coordinates"`
+	Gym            primitive.ObjectID   `json:"gym" bson:"gym"`
+	Loomies        []primitive.ObjectID `json:"loomies" bson:"loomies"`
 }
 
 type ZoneWithGyms struct {
-	Id             primitive.ObjectID `json:"_id" bson:"_id"`
-	LeftFrontier   float64            `json:"leftFrontier" bson:"leftFrontier"`
-	RightFrontier  float64            `json:"rightFrontier" bson:"rightFrontier"`
-	TopFrontier    float64            `json:"topFrontier" bson:"topFrontier"`
-	BottomFrontier float64            `json:"bottomFrontier" bson:"bottomFrontier"`
-	Number         int                `json:"number" bson:"number"`
-	Coordinates    string             `json:"coordinates" bson:"coordinates"`
-	Gym            primitive.ObjectID `json:"gym" bson:"gym"`
-	Gyms           []Gym              `json:"gyms" bson:"gyms"`
+	Id             primitive.ObjectID   `json:"_id" bson:"_id"`
+	LeftFrontier   float64              `json:"leftFrontier" bson:"leftFrontier"`
+	RightFrontier  float64              `json:"rightFrontier" bson:"rightFrontier"`
+	TopFrontier    float64              `json:"topFrontier" bson:"topFrontier"`
+	BottomFrontier float64              `json:"bottomFrontier" bson:"bottomFrontier"`
+	Number         int                  `json:"number" bson:"number"`
+	Coordinates    string               `json:"coordinates" bson:"coordinates"`
+	Gym            primitive.ObjectID   `json:"gym" bson:"gym"`
+	Gyms           []Gym                `json:"gyms" bson:"gyms"`
+	Loomies        []primitive.ObjectID `json:"loomies" bson:"loomies"`
+}
+
+type ZoneWithPopulatedLoomies struct {
+	Id               primitive.ObjectID   `json:"_id" bson:"_id"`
+	LeftFrontier     float64              `json:"leftFrontier" bson:"leftFrontier"`
+	RightFrontier    float64              `json:"rightFrontier" bson:"rightFrontier"`
+	TopFrontier      float64              `json:"topFrontier" bson:"topFrontier"`
+	BottomFrontier   float64              `json:"bottomFrontier" bson:"bottomFrontier"`
+	Number           int                  `json:"number" bson:"number"`
+	Coordinates      string               `json:"coordinates" bson:"coordinates"`
+	Gym              primitive.ObjectID   `json:"gym" bson:"gym"`
+	Loomies          []primitive.ObjectID `json:"loomies" bson:"loomies"`
+	PopulatedLoomies []WildLoomie         `json:"populated_loomies" bson:"populated_loomies"`
 }
 
 type Gym struct {
