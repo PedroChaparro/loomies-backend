@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -106,6 +107,7 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 
 	// Insert the wild loomie into the database
 	loomie.ZoneId = zone.Id
+	loomie.GeneratedAt = time.Now().Unix()
 	result, err := wildLoomiesCollection.InsertOne(context.Background(), loomie)
 
 	if err != nil {

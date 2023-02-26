@@ -121,15 +121,16 @@ type BaseLoomiesWithPopulatedRarity struct {
 
 // WildLoomie is a global loomie that can be found in the wild to be caught by any user
 type WildLoomie struct {
-	Id        primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Serial    int                  `json:"serial"      bson:"serial"`
-	Name      string               `json:"name"      bson:"name"`
-	Types     []primitive.ObjectID `json:"types"     bson:"types"`
-	Rarity    primitive.ObjectID   `json:"rarity"     bson:"rarity"`
-	HP        int                  `json:"hp"     bson:"hp"`
-	Attack    int                  `json:"attack"     bson:"attack"`
-	Defense   int                  `json:"defense"     bson:"defense"`
-	ZoneId    primitive.ObjectID   `json:"zone_id"     bson:"zone_id"`
-	Latitude  float64              `json:"latitude"     bson:"latitude"`
-	Longitude float64              `json:"longitude"     bson:"longitude"`
+	Id          primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial      int                  `json:"serial"      bson:"serial"`
+	Name        string               `json:"name"      bson:"name"`
+	Types       []primitive.ObjectID `json:"types"     bson:"types"`
+	Rarity      primitive.ObjectID   `json:"rarity"     bson:"rarity"`
+	HP          int                  `json:"hp"     bson:"hp"`
+	Attack      int                  `json:"attack"     bson:"attack"`
+	Defense     int                  `json:"defense"     bson:"defense"`
+	ZoneId      primitive.ObjectID   `json:"zone_id"     bson:"zone_id"`
+	Latitude    float64              `json:"latitude"     bson:"latitude"`
+	Longitude   float64              `json:"longitude"     bson:"longitude"`
+	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
 }
