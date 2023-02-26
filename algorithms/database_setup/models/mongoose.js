@@ -10,6 +10,7 @@ const ZoneSchema = new Schema(
     number: Number,
     coordinates: String,
     gym: { type: Schema.Types.ObjectId, ref: "Gym" },
+    loomies: [{ type: Schema.Types.ObjectId, ref: "wild_loomies" }],
   },
   { versionKey: false }
 );

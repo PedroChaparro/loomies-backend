@@ -67,6 +67,7 @@ for await (const zone of zones) {
     number,
     coordinates: `${coordinates.x},${coordinates.y}`,
     gym: GymMongoId ? GymMongoId : null,
+    loomies: [], // Empty loomies array
   });
 
   await newZone.save();
