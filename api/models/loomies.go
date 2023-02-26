@@ -116,10 +116,6 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 	_, err = zonesCollection.UpdateOne(context.Background(), bson.M{"_id": zone.Id}, bson.M{"$push": bson.M{"loomies": result.InsertedID}})
 	loomie.Id = result.InsertedID.(primitive.ObjectID)
 
-	// Clear the llomies array on all the zones
-	// zonesCollection.UpdateMany(context.Background(), bson.M{}, bson.M{"$set": bson.M{"loomies": []primitive.ObjectID{}}})
-	// wildLoomiesCollection.DeleteMany(context.Background(), bson.M{})
-
 	return loomie, err == nil
 }
 

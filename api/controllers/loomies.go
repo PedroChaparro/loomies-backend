@@ -21,7 +21,6 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 		"USER_NOT_FOUND":            errors.New("User was not found"),
 		"USER_TIMEOUT":              errors.New("User can't generate loomies yet"),
 		"SERVER_BASE_LOOMIES_ERROR": errors.New("Error getting the base loomies. Please try again later."),
-		"SERVER_WILD_LOOMIES_ERROR": errors.New("Error saving the wild loomies. Please try again later."),
 		"SERVER_UPDATE_TIMES_ERROR": errors.New("Error updating the user times. Please try again later."),
 	}
 
@@ -90,12 +89,8 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 			Defense: result.BaseDefense + utils.GetRandomInt(-5, 5),
 		}
 
-		// Insert the new loomie in the database and append it to the generated loomies if it was inserted
-		_, success := models.InsertWildLoomie(wildLoomie)
-
-		if !success {
-			return errors["SERVER_WILD_LOOMIES_ERROR"]
-		}
+		// Insert the new loomie in the database
+		models.InsertWildLoomie(wildLoomie)
 	}
 
 	// 4. Update the generation time and timeout in the user doc
