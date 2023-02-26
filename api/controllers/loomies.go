@@ -19,7 +19,6 @@ import (
 func generateLoomies(userId string, userCoordinates interfaces.Coordinates) error {
 	errors := map[string]error{
 		"USER_NOT_FOUND":            errors.New("User was not found"),
-		"USER_TIMEOUT":              errors.New("User can't generate loomies yet"),
 		"SERVER_BASE_LOOMIES_ERROR": errors.New("Error getting the base loomies. Please try again later."),
 		"SERVER_UPDATE_TIMES_ERROR": errors.New("Error updating the user times. Please try again later."),
 	}
@@ -37,8 +36,10 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 	previousGenerationTime := time.Unix(user.LastLoomieGenerationTime, 0)
 	nextGenerationTime := previousGenerationTime.Add(time.Minute * time.Duration(user.CurrentLoomiesGenerationTimeout))
 
+	// If the current time is before the next generation time, the user can't generate loomies
 	if currentTime.Before(nextGenerationTime) {
-		return errors["USER_TIMEOUT"]
+		// Just return nil, it isn't necessary to return an error (the controller will return the same loomies)
+		return nil
 	}
 
 	// 3. Generate loomies
