@@ -47,11 +47,16 @@ type Gym struct {
 }
 
 type User struct {
-	Id         primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Username   string               `json:"username"      bson:"username"`
-	Email      string               `json:"email"     bson:"email"`
-	Password   string               `json:"password"  bson:"password"`
-	Items      []interface{}        `json:"items"     bson:"items"`
-	Loomies    []primitive.ObjectID `json:"loomies"   bson:"loomies"`
-	IsVerified bool                 `json:"isVerified"   bson:"isVerified"`
+	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Username string             `json:"username"      bson:"username"`
+	Email    string             `json:"email"     bson:"email"`
+	Password string             `json:"password"  bson:"password"`
+
+	// tODO: Change this to a struct
+	Items []interface{} `json:"items"     bson:"items"`
+
+	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
+	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
+	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
+	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
 }

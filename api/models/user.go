@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"time"
 	"unicode"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -43,6 +44,13 @@ func CheckExistUsername(Username string) error {
 }
 
 func InsertUser(data interfaces.User) error {
+	// Set the current time as the "last time the user generated loomies"
+	data.LastLoomieGenerationTime = time.Now().Unix()
+
+	// Set the items and loomies as empty arrays
+	data.Items = []interface{}{} // TODO: Change this to a struct
+	data.Loomies = []primitive.ObjectID{}
+
 	//Insert User in database
 	_, err := Collection.InsertOne(context.TODO(), data)
 	return err
