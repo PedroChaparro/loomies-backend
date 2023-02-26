@@ -6,11 +6,21 @@ import (
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
+	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/gin-gonic/gin"
 )
 
+// HandleNearLoomies generates loomies for the user
 func HandleNearLoomies(c *gin.Context) {
+	// 0. Get the coordinates from the request body
+	coordinates := interfaces.Coordinates{}
+
+	if err := c.BindJSON(&coordinates); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Latitude and longitude are required"})
+		return
+	}
+
 	// 1. Get the user doc from the database to validate the generation times
 	id, _ := c.Get("userid")
 	user, err := models.GetUserById(id.(string))
@@ -33,7 +43,6 @@ func HandleNearLoomies(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error":   true,
 			"message": "You can't generate loomies yet",
-			"time":    previousGenerationTime,
 		})
 		return
 	}
