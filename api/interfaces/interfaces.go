@@ -18,6 +18,7 @@ type Coordinates struct {
 	Latitude  float64 `json:"latitude" bson:"latitude"`
 	Longitude float64 `json:"longitude" bson:"longitude"`
 }
+
 type Zone struct {
 	Id             primitive.ObjectID `json:"_id" bson:"_id"`
 	LeftFrontier   float64            `json:"leftFrontier" bson:"leftFrontier"`
@@ -61,4 +62,39 @@ type User struct {
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
+}
+
+type BaseLoomies struct {
+	Id          primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial      int                  `json:"serial"      bson:"serial"`
+	Name        string               `json:"name"      bson:"name"`
+	Types       []primitive.ObjectID `json:"types"     bson:"types"`
+	Rarity      primitive.ObjectID   `json:"rarity"     bson:"rarity"`
+	BaseHp      int                  `json:"base_hp"     bson:"base_hp"`
+	BaseAttack  int                  `json:"base_attack"     bson:"base_attack"`
+	BaseDefense int                  `json:"base_defense"     bson:"base_defense"`
+}
+
+type BaseLoomiesWithPopulatedRarity struct {
+	Id              primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial          int                  `json:"serial"      bson:"serial"`
+	Name            string               `json:"name"      bson:"name"`
+	Types           []primitive.ObjectID `json:"types"     bson:"types"`
+	BaseHp          int                  `json:"base_hp"     bson:"base_hp"`
+	BaseAttack      int                  `json:"base_attack"     bson:"base_attack"`
+	BaseDefense     int                  `json:"base_defense"     bson:"base_defense"`
+	Rarity          primitive.ObjectID   `json:"rarity"     bson:"rarity"`
+	PopulatedRarity LoomieRarity         `json:"populated_rarity"     bson:"populated_rarity"`
+}
+
+type LoomieRarity struct {
+	Id          primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name        string             `json:"name"      bson:"name"`
+	SpawnChance float64            `json:"spawn_chance"      bson:"spawn_chance"`
+}
+
+type LoomieType struct {
+	Id            primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name          string               `json:"name"      bson:"name"`
+	StrongAgainst []primitive.ObjectID `json:"strong_against"      bson:"strong_against"`
 }
