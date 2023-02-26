@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -12,6 +13,97 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mroth/weightedrand/v2"
 )
+
+// generateLoomies "private" function to generate loomies for the user
+func generateLoomies(userId string, userCoordinates interfaces.Coordinates) error {
+	errors := map[string]error{
+		"USER_NOT_FOUND":            errors.New("User was not found"),
+		"USER_TIMEOUT":              errors.New("User can't generate loomies yet"),
+		"SERVER_BASE_LOOMIES_ERROR": errors.New("Error getting the base loomies. Please try again later."),
+		"SERVER_WILD_LOOMIES_ERROR": errors.New("Error saving the wild loomies. Please try again later."),
+		"SERVER_UPDATE_TIMES_ERROR": errors.New("Error updating the user times. Please try again later."),
+	}
+
+	// 1. Get the user doc from the database to validate the generation times
+	user, err := models.GetUserById(userId)
+
+	if err != nil {
+		return errors["USER_NOT_FOUND"]
+	}
+
+	// 2. Check if the user can generate loomies
+	currentTimestamp := time.Now().Unix()
+	currentTime := time.Unix(currentTimestamp, 0)
+	previousGenerationTime := time.Unix(user.LastLoomieGenerationTime, 0)
+	nextGenerationTime := previousGenerationTime.Add(time.Minute * time.Duration(user.CurrentLoomiesGenerationTimeout))
+
+	if currentTime.Before(nextGenerationTime) {
+		return errors["USER_TIMEOUT"]
+	}
+
+	// 3. Generate loomies
+	baseLoomies, err := models.GetBaseLoomies() // All the possible loomies to generate
+
+	if err != nil {
+		return errors["SERVER_BASE_LOOMIES_ERROR"]
+	}
+
+	// Get the amount of loomies to generate between the min and max
+	minAmount, maxAmount := configuration.GetLoomiesGenerationAmounts()
+	loomiesAmount := utils.GetRandomInt(minAmount, maxAmount)
+	weightedChooses := []weightedrand.Choice[interfaces.BaseLoomiesWithPopulatedRarity, int]{}
+
+	// Create the weighted choices
+	for _, loomie := range baseLoomies {
+		// The chance is a float between 0 and 1, so we multiply it by 100 to get a percentage
+		chance := int(loomie.PopulatedRarity.SpawnChance * 100)
+		weightedChooses = append(weightedChooses, weightedrand.NewChoice(loomie, chance))
+	}
+
+	weightedChooser, _ := weightedrand.NewChooser(
+		weightedChooses...,
+	)
+
+	// Generate the loomies
+	for i := 0; i < loomiesAmount; i++ {
+		result := weightedChooser.Pick()
+
+		// Get random coordinates to spawn the new loomie
+		randomCoordinates := utils.GetRandomCoordinatesNear(userCoordinates)
+
+		/* fmt.Printf("Picked: %v \n", gin.H{
+			"Name":   result.Name,
+			"Rarity": result.PopulatedRarity.Name,
+		}) */
+
+		wildLoomie := interfaces.WildLoomie{
+			Serial:    result.Serial,
+			Name:      result.Name,
+			Types:     result.Types,
+			Rarity:    result.Rarity,
+			Latitude:  randomCoordinates.Latitude,
+			Longitude: randomCoordinates.Longitude,
+			// Randomly increase or decrease the stats
+			HP:      result.BaseHp + utils.GetRandomInt(-5, 5),
+			Attack:  result.BaseAttack + utils.GetRandomInt(-5, 5),
+			Defense: result.BaseDefense + utils.GetRandomInt(-5, 5),
+		}
+
+		// Insert the new loomie in the database and append it to the generated loomies if it was inserted
+		_, success := models.InsertWildLoomie(wildLoomie)
+
+		if !success {
+			return errors["SERVER_WILD_LOOMIES_ERROR"]
+		}
+	}
+
+	// 4. Update the generation time and timeout in the user doc
+	minTimeout, maxTimeout := configuration.GetLoomiesGenerationTimeouts()
+	randomTimeout := utils.GetRandomInt(minTimeout, maxTimeout)
+	err = models.UpdateUserGenerationTimes(userId, currentTimestamp, int64(randomTimeout))
+
+	return nil
+}
 
 // HandleNearLoomies generates loomies for the user
 func HandleNearLoomies(c *gin.Context) {
@@ -23,115 +115,28 @@ func HandleNearLoomies(c *gin.Context) {
 		return
 	}
 
-	// 1. Get the user doc from the database to validate the generation times
+	// 1. Try to generate new loomies
 	id, _ := c.Get("userid")
-	user, err := models.GetUserById(id.(string))
+	err := generateLoomies(id.(string), coordinates)
 
 	if err != nil {
-		c.AbortWithStatusJSON(400, gin.H{
-			"error":   true,
-			"message": "User not found",
-		})
-		return
-	}
+		statusCode := http.StatusInternalServerError
 
-	// 2. Check if the user can generate loomies
-	currentTimestamp := time.Now().Unix()
-	currentTime := time.Unix(currentTimestamp, 0)
-	previousGenerationTime := time.Unix(user.LastLoomieGenerationTime, 0)
-	nextGenerationTime := previousGenerationTime.Add(time.Minute * time.Duration(user.CurrentLoomiesGenerationTimeout))
-
-	if currentTime.Before(nextGenerationTime) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error":   true,
-			"message": "You can't generate loomies yet",
-		})
-		return
-	}
-
-	// 3. Generate loomies
-	baseLoomies, err := models.GetBaseLoomies()   // All the possible loomies to generate
-	generatedLoomies := []interfaces.WildLoomie{} // The loomies that will be generated
-
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error":   true,
-			"message": "Error getting the base loomies. Please try again later.",
-		})
-		return
-	}
-
-	// Get the amount of loomies to generate between the min and max
-	minAmount, maxAmount := configuration.GetLoomiesGenerationAmounts()
-	loomiesAmount := utils.GetRandomInt(minAmount, maxAmount)
-
-	weightedChooses := []weightedrand.Choice[interfaces.BaseLoomiesWithPopulatedRarity, int]{}
-	for _, loomie := range baseLoomies {
-		// The chance is a float between 0 and 1, so we multiply it by 100 to get a percentage
-		chance := int(loomie.PopulatedRarity.SpawnChance * 100)
-		weightedChooses = append(weightedChooses, weightedrand.NewChoice(loomie, chance))
-	}
-
-	weightedChooser, _ := weightedrand.NewChooser(
-		weightedChooses...,
-	)
-
-	for i := 0; i < loomiesAmount; i++ {
-		result := weightedChooser.Pick()
-
-		// Get random coordinates to spawn the new loomie
-		randomCoordinates := utils.GetRandomCoordinatesNear(coordinates)
-
-		/* fmt.Printf("Picked: %v \n", gin.H{
-			"Name":   result.Name,
-			"Rarity": result.PopulatedRarity.Name,
-		}) */
-
-		wildLoomie := interfaces.WildLoomie{
-			Serial: result.Serial,
-			Name:   result.Name,
-			Types:  result.Types,
-			Rarity: result.Rarity,
-			// Randomly increase or decrease the stats
-			HP:        result.BaseHp + utils.GetRandomInt(-5, 5),
-			Attack:    result.BaseAttack + utils.GetRandomInt(-5, 5),
-			Defense:   result.BaseDefense + utils.GetRandomInt(-5, 5),
-			Latitude:  randomCoordinates.Latitude,
-			Longitude: randomCoordinates.Longitude,
+		if strings.Split(err.Error(), "_")[0] == "USER" {
+			statusCode = http.StatusBadRequest
 		}
 
-		// Insert the new loomie in the database and append it to the generated loomies if it was inserted
-		insertedLoomie, success := models.InsertWildLoomie(wildLoomie)
-		if success {
-			generatedLoomies = append(generatedLoomies, insertedLoomie)
-		}
-	}
-
-	// 4. Update the generation time and timeout in the user doc
-	minTimeout, maxTimeout := configuration.GetLoomiesGenerationTimeouts()
-	randomTimeout := utils.GetRandomInt(minTimeout, maxTimeout)
-	err = models.UpdateUserGenerationTimes(id.(string), currentTimestamp, int64(randomTimeout))
-
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		c.AbortWithStatusJSON(statusCode, gin.H{
 			"error":   true,
-			"message": "Error updating the loomies generation times",
+			"message": err.Error(),
 		})
+
 		return
 	}
 
-	// 5. Return the generated loomies
-	if len(generatedLoomies) == 0 {
-		c.AbortWithStatusJSON(http.StatusOK, gin.H{
-			"error":   false,
-			"message": "Zones has reached the maximum amount of loomies. Please try again later.",
-		})
-		return
-	}
-
-	c.IndentedJSON(http.StatusCreated, gin.H{
+	// 2. Return the loomies near the user coordinates
+	c.IndentedJSON(http.StatusOK, gin.H{
 		"error":   false,
-		"message": fmt.Sprintf("%d loomies were generated", len(generatedLoomies)),
-		"loomies": generatedLoomies,
+		"message": "Working on int...",
 	})
 }
