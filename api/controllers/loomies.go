@@ -101,14 +101,17 @@ func HandleNearLoomies(c *gin.Context) {
 			Longitude: randomCoordinates.Longitude,
 		}
 
-		models.InsertWildLoomie(wildLoomie)
-		generatedLoomies = append(generatedLoomies, wildLoomie)
+		// Insert the new loomie in the database and append it to the generated loomies if it was inserted
+		insertedLoomie, success := models.InsertWildLoomie(wildLoomie)
+		if success {
+			generatedLoomies = append(generatedLoomies, insertedLoomie)
+		}
 	}
 
 	// 4. Update the generation time and timeout in the user doc
 	minTimeout, maxTimeout := configuration.GetLoomiesGenerationTimeouts()
 	randomTimeout := utils.GetRandomInt(minTimeout, maxTimeout)
-	err = models.UpdateUserGenerationTimes(id.(string), currentTimestamp, 0)
+	err = models.UpdateUserGenerationTimes(id.(string), currentTimestamp, int64(randomTimeout))
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -118,10 +121,18 @@ func HandleNearLoomies(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(200, gin.H{
+	// 5. Return the generated loomies
+	if len(generatedLoomies) == 0 {
+		c.AbortWithStatusJSON(http.StatusOK, gin.H{
+			"error":   false,
+			"message": "Zones has reached the maximum amount of loomies. Please try again later.",
+		})
+		return
+	}
+
+	c.IndentedJSON(http.StatusCreated, gin.H{
 		"error":   false,
-		"message": "Working on it :)",
-		"time":    currentTimestamp,
-		"timeout": randomTimeout,
+		"message": fmt.Sprintf("%d loomies were generated", len(generatedLoomies)),
+		"loomies": generatedLoomies,
 	})
 }

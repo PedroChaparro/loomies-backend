@@ -79,7 +79,7 @@ func GetLoomiesFromZoneId(id primitive.ObjectID) ([]interfaces.WildLoomie, error
 }
 
 // InsertWildLoomie inserts a wild loomie into the database if the zone doesn't have the maximum amount of loomies
-func InsertWildLoomie(loomie interfaces.WildLoomie) bool {
+func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool) {
 	// Get the zone coordinates
 	coordX, coordY := utils.GetZoneCoordinatesFromGPS(interfaces.Coordinates{
 		Latitude:  loomie.Latitude,
@@ -90,7 +90,7 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) bool {
 	zone, err := GetZoneFromCoordinates(coordX, coordY)
 
 	if err != nil {
-		return false
+		return interfaces.WildLoomie{}, false
 	}
 
 	// Check if the zone has the maximum amount of loomies
@@ -99,11 +99,12 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) bool {
 
 	if err != nil || len(currentLoomies) >= configuration.GetMaxLoomiesPerZone() {
 		// fmt.Println("Zone has the maximum amount of loomies")
-		return false
+		return interfaces.WildLoomie{}, false
 	}
 
 	// Insert the wild loomie into the database
 	loomie.ZoneId = zone.Id
-	_, err = wildLoomiesCollection.InsertOne(context.Background(), loomie)
-	return err == nil
+	result, err := wildLoomiesCollection.InsertOne(context.Background(), loomie)
+	loomie.Id = result.InsertedID.(primitive.ObjectID)
+	return loomie, err == nil
 }
