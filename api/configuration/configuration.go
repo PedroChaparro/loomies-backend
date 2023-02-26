@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -63,6 +64,24 @@ func GetRefreshTokenSecret() string {
 	}
 
 	return Globals.RefreshTokenSecret
+}
+
+func GetLoomiesGenerationTimeouts() (int, int) {
+	if Globals.MinLoomiesGenerationTimeout == 0 || Globals.MaxLoomiesGenerationTimeout == 0 {
+		// Get values (as strings) from the environment
+		minLoomiesGenerationTimeoutString := getEnvironmentVariable("GAME_MIN_LOOMIES_GENERATION_TIMEOUT")
+		maxLoomiesGenerationTimeoutString := getEnvironmentVariable("GAME_MAX_LOOMIES_GENERATION_TIMEOUT")
+
+		// Convert the strings to integers
+		minLoomiesGenerationTimeout, _ := strconv.Atoi(minLoomiesGenerationTimeoutString)
+		maxLoomiesGenerationTimeout, _ := strconv.Atoi(maxLoomiesGenerationTimeoutString)
+
+		// Set the values in the globals
+		Globals.MinLoomiesGenerationTimeout = minLoomiesGenerationTimeout
+		Globals.MaxLoomiesGenerationTimeout = maxLoomiesGenerationTimeout
+	}
+
+	return Globals.MinLoomiesGenerationTimeout, Globals.MaxLoomiesGenerationTimeout
 }
 
 // connectToMongo returns a MongoDB client
