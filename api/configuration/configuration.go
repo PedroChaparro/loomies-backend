@@ -102,6 +102,21 @@ func GetLoomiesGenerationAmounts() (int, int) {
 	return Globals.MinLoomiesGenerationAmount, Globals.MaxLoomiesGenerationAmount
 }
 
+func GetLoomiesGenerationRadius() float64 {
+	if Globals.LoomiesGenerationRadius == 0 {
+		// Get value (as string) from the environment
+		loomiesGenerationRadiusString := getEnvironmentVariable("GAME_LOOMIES_GENERATION_RADIUS")
+
+		// Convert the string to float64
+		loomiesGenerationRadius, _ := strconv.ParseFloat(loomiesGenerationRadiusString, 64)
+
+		// Set the value in the globals
+		Globals.LoomiesGenerationRadius = loomiesGenerationRadius
+	}
+
+	return Globals.LoomiesGenerationRadius
+}
+
 // connectToMongo returns a MongoDB client
 func getMongoClient() *mongo.Client {
 	// Create the connection if it does not exist

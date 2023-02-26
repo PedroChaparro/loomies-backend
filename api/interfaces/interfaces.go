@@ -14,6 +14,7 @@ type Globals struct {
 	MaxLoomiesGenerationTimeout int
 	MinLoomiesGenerationAmount  int
 	MaxLoomiesGenerationAmount  int
+	LoomiesGenerationRadius     float64
 }
 
 type Coordinates struct {

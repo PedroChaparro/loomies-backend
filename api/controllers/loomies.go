@@ -81,6 +81,9 @@ func HandleNearLoomies(c *gin.Context) {
 	for i := 0; i < loomiesAmount; i++ {
 		result := weightedChooser.Pick()
 
+		// Get random coordinates to spawn the new loomie
+		randomCoordinates := utils.GetRandomCoordinatesNear(coordinates)
+
 		fmt.Printf("Picked: %v \n", gin.H{
 			"Name":   result.Name,
 			"Rarity": result.PopulatedRarity.Name,
@@ -91,9 +94,11 @@ func HandleNearLoomies(c *gin.Context) {
 			Types:  result.Types,
 			Rarity: result.Rarity,
 			// Randomly increase or decrease the stats
-			HP:      result.BaseHp + utils.GetRandomInt(-5, 5),
-			Attack:  result.BaseAttack + utils.GetRandomInt(-5, 5),
-			Defense: result.BaseDefense + utils.GetRandomInt(-5, 5),
+			HP:        result.BaseHp + utils.GetRandomInt(-5, 5),
+			Attack:    result.BaseAttack + utils.GetRandomInt(-5, 5),
+			Defense:   result.BaseDefense + utils.GetRandomInt(-5, 5),
+			Latitude:  randomCoordinates.Latitude,
+			Longitude: randomCoordinates.Longitude,
 		}
 
 		generatedLoomies = append(generatedLoomies, wildLoomie)
