@@ -107,6 +107,7 @@ type BaseLoomiesWithPopulatedRarity struct {
 // WildLoomie is a global loomie that can be found in the wild to be caught by any user
 type WildLoomie struct {
 	Id        primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial    int                  `json:"serial"      bson:"serial"`
 	Name      string               `json:"name"      bson:"name"`
 	Types     []primitive.ObjectID `json:"types"     bson:"types"`
 	Rarity    primitive.ObjectID   `json:"rarity"     bson:"rarity"`

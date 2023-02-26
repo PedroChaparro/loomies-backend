@@ -88,6 +88,7 @@ func HandleNearLoomies(c *gin.Context) {
 		}) */
 
 		wildLoomie := interfaces.WildLoomie{
+			Serial: result.Serial,
 			Name:   result.Name,
 			Types:  result.Types,
 			Rarity: result.Rarity,
