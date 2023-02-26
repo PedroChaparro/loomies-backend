@@ -15,6 +15,7 @@ type Globals struct {
 	MinLoomiesGenerationAmount  int
 	MaxLoomiesGenerationAmount  int
 	LoomiesGenerationRadius     float64
+	MaxLoomiesPerZone           int
 }
 
 type Coordinates struct {
@@ -112,6 +113,7 @@ type WildLoomie struct {
 	HP        int                  `json:"hp"     bson:"hp"`
 	Attack    int                  `json:"attack"     bson:"attack"`
 	Defense   int                  `json:"defense"     bson:"defense"`
+	ZoneId    primitive.ObjectID   `json:"zone_id"     bson:"zone_id"`
 	Latitude  float64              `json:"latitude"     bson:"latitude"`
 	Longitude float64              `json:"longitude"     bson:"longitude"`
 }

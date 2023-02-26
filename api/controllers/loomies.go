@@ -84,10 +84,10 @@ func HandleNearLoomies(c *gin.Context) {
 		// Get random coordinates to spawn the new loomie
 		randomCoordinates := utils.GetRandomCoordinatesNear(coordinates)
 
-		fmt.Printf("Picked: %v \n", gin.H{
+		/* fmt.Printf("Picked: %v \n", gin.H{
 			"Name":   result.Name,
 			"Rarity": result.PopulatedRarity.Name,
-		})
+		}) */
 
 		wildLoomie := interfaces.WildLoomie{
 			Name:   result.Name,
@@ -101,6 +101,7 @@ func HandleNearLoomies(c *gin.Context) {
 			Longitude: randomCoordinates.Longitude,
 		}
 
+		models.InsertWildLoomie(wildLoomie)
 		generatedLoomies = append(generatedLoomies, wildLoomie)
 	}
 
@@ -120,7 +121,6 @@ func HandleNearLoomies(c *gin.Context) {
 	c.IndentedJSON(200, gin.H{
 		"error":   false,
 		"message": "Working on it :)",
-		"loomies": generatedLoomies,
 		"time":    currentTimestamp,
 		"timeout": randomTimeout,
 	})

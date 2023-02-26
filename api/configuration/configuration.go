@@ -117,6 +117,21 @@ func GetLoomiesGenerationRadius() float64 {
 	return Globals.LoomiesGenerationRadius
 }
 
+func GetMaxLoomiesPerZone() int {
+	if Globals.MaxLoomiesPerZone == 0 {
+		// Get value (as string) from the environment
+		maxLoomiesPerZoneString := getEnvironmentVariable("GAME_MAX_LOOMIES_PER_ZONE")
+
+		// Convert the string to integer
+		maxLoomiesPerZone, _ := strconv.Atoi(maxLoomiesPerZoneString)
+
+		// Set the value in the globals
+		Globals.MaxLoomiesPerZone = maxLoomiesPerZone
+	}
+
+	return Globals.MaxLoomiesPerZone
+}
+
 // connectToMongo returns a MongoDB client
 func getMongoClient() *mongo.Client {
 	// Create the connection if it does not exist

@@ -2,13 +2,17 @@ package models
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var baseLoomiesCollection = configuration.ConnectToMongoCollection("base_loomies")
+var wildLoomiesCollection = configuration.ConnectToMongoCollection("wild_loomies")
 
 // GetBaseLoomies returns the base loomies
 func GetBaseLoomies() ([]interfaces.BaseLoomiesWithPopulatedRarity, error) {
@@ -52,4 +56,54 @@ func GetBaseLoomies() ([]interfaces.BaseLoomiesWithPopulatedRarity, error) {
 	cursor.All(context.Background(), &baseLoomies)
 
 	return baseLoomies, err
+}
+
+// GetLoomiesFromZoneId returns the loomies that are in a zone
+func GetLoomiesFromZoneId(id primitive.ObjectID) ([]interfaces.WildLoomie, error) {
+	loomies := []interfaces.WildLoomie{}
+
+	// Find all the loomies that are in the zone
+	filter := bson.M{
+		"zone_id": id,
+	}
+
+	cursor, err := wildLoomiesCollection.Find(context.Background(), filter)
+
+	if err != nil {
+		return []interfaces.WildLoomie{}, err
+	}
+
+	cursor.All(context.Background(), &loomies)
+
+	return loomies, err
+}
+
+// InsertWildLoomie inserts a wild loomie into the database if the zone doesn't have the maximum amount of loomies
+func InsertWildLoomie(loomie interfaces.WildLoomie) bool {
+	// Get the zone coordinates
+	coordX, coordY := utils.GetZoneCoordinatesFromGPS(interfaces.Coordinates{
+		Latitude:  loomie.Latitude,
+		Longitude: loomie.Longitude,
+	})
+
+	// Get the zone from the database
+	zone, err := GetZoneFromCoordinates(coordX, coordY)
+
+	if err != nil {
+		return false
+	}
+
+	// Check if the zone has the maximum amount of loomies
+	currentLoomies, err := GetLoomiesFromZoneId(zone.Id)
+	fmt.Println("Zone has", len(currentLoomies), "loomies")
+
+	if err != nil || len(currentLoomies) >= configuration.GetMaxLoomiesPerZone() {
+		// fmt.Println("Zone has the maximum amount of loomies")
+		return false
+	}
+
+	// Insert the wild loomie into the database
+	loomie.ZoneId = zone.Id
+	_, err = wildLoomiesCollection.InsertOne(context.Background(), loomie)
+	return err == nil
 }
