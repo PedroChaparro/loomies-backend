@@ -88,3 +88,27 @@ func GetUserById(id string) (interfaces.User, error) {
 
 	return user, err
 }
+
+// UpdateUserGenerationTimes updates the last time the user generated loomies and the current timeout
+func UpdateUserGenerationTimes(userId string, lastGenerated int64, newTimeout int64) error {
+	// Convert the string id to a mongo id
+	mongoid, err := primitive.ObjectIDFromHex(userId)
+
+	if err != nil {
+		return err
+	}
+
+	// Update the user document
+	_, err = Collection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: mongoid}},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "lastLoomieGenerationTime", Value: lastGenerated},
+				{Key: "currentLoomiesGenerationTimeout", Value: newTimeout},
+			}},
+		},
+	)
+
+	return err
+}
