@@ -6,10 +6,12 @@ import (
 )
 
 type Globals struct {
-	Loaded             bool
-	MongoClient        *mongo.Client
-	AccessTokenSecret  string
-	RefreshTokenSecret string
+	Loaded                      bool
+	MongoClient                 *mongo.Client
+	AccessTokenSecret           string
+	RefreshTokenSecret          string
+	MinLoomiesGenerationTimeout int
+	MaxLoomiesGenerationTimeout int
 }
 
 type Coordinates struct {
