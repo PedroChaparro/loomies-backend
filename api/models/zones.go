@@ -3,10 +3,10 @@ package models
 import (
 	"context"
 	"fmt"
-	"math"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -14,14 +14,10 @@ import (
 var ZonesCollection *mongo.Collection = configuration.ConnectToMongoCollection("zones")
 
 func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfaces.Gym, e error) {
-
-	// initial zones calculations
-	const initialLatitude = 6.9595
-	const initialLongitude = -73.1696
-	const sizeMinZone = 0.0035
-
-	coordX := math.Floor((currentLongitude - initialLongitude) / sizeMinZone)
-	coordY := math.Floor((currentLatitude - (initialLatitude)) / sizeMinZone)
+	coordX, coordY := utils.GetZoneCoordinatesFromGPS(interfaces.Coordinates{
+		Latitude:  currentLatitude,
+		Longitude: currentLongitude,
+	})
 
 	var mZonesCoord []string
 	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX-1, coordY+1)) // Box Top Left
@@ -61,5 +57,12 @@ func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfa
 	}
 
 	return gyms, err
+}
 
+// GetZoneFromCoordinates returns a zone from the given coordinates
+func GetZoneFromCoordinates(coordX int, coordY int) (interfaces.Zone, error) {
+	var zone interfaces.Zone
+	zoneFilter := bson.M{"coordinates": fmt.Sprintf("%v,%v", coordX, coordY)}
+	err := ZonesCollection.FindOne(context.Background(), zoneFilter).Decode(&zone)
+	return zone, err
 }

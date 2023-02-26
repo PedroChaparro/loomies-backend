@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"math/rand"
 	"time"
 
@@ -30,4 +31,15 @@ func GetRandomCoordinatesNear(coordinates interfaces.Coordinates) interfaces.Coo
 		Latitude:  latitude,
 		Longitude: longitude,
 	}
+}
+
+func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
+	// initial zones calculations
+	const initialLatitude = 6.9595
+	const initialLongitude = -73.1696
+	const sizeMinZone = 0.0035
+
+	coordX := math.Floor((coordinates.Longitude - initialLongitude) / sizeMinZone)
+	coordY := math.Floor((coordinates.Latitude - initialLatitude) / sizeMinZone)
+	return int(coordX), int(coordY)
 }
