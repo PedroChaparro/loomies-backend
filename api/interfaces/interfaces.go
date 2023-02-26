@@ -12,6 +12,8 @@ type Globals struct {
 	RefreshTokenSecret          string
 	MinLoomiesGenerationTimeout int
 	MaxLoomiesGenerationTimeout int
+	MinLoomiesGenerationAmount  int
+	MaxLoomiesGenerationAmount  int
 }
 
 type Coordinates struct {
@@ -64,6 +66,19 @@ type User struct {
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
 }
 
+type LoomieRarity struct {
+	Id          primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name        string             `json:"name"      bson:"name"`
+	SpawnChance float64            `json:"spawn_chance"      bson:"spawn_chance"`
+}
+
+type LoomieType struct {
+	Id            primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name          string               `json:"name"      bson:"name"`
+	StrongAgainst []primitive.ObjectID `json:"strong_against"      bson:"strong_against"`
+}
+
+// BaseLoomie is the "template" for a loomie
 type BaseLoomies struct {
 	Id          primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Serial      int                  `json:"serial"      bson:"serial"`
@@ -87,14 +102,15 @@ type BaseLoomiesWithPopulatedRarity struct {
 	PopulatedRarity LoomieRarity         `json:"populated_rarity"     bson:"populated_rarity"`
 }
 
-type LoomieRarity struct {
-	Id          primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Name        string             `json:"name"      bson:"name"`
-	SpawnChance float64            `json:"spawn_chance"      bson:"spawn_chance"`
-}
-
-type LoomieType struct {
-	Id            primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Name          string               `json:"name"      bson:"name"`
-	StrongAgainst []primitive.ObjectID `json:"strong_against"      bson:"strong_against"`
+// WildLoomie is a global loomie that can be found in the wild to be caught by any user
+type WildLoomie struct {
+	Id        primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name      string               `json:"name"      bson:"name"`
+	Types     []primitive.ObjectID `json:"types"     bson:"types"`
+	Rarity    primitive.ObjectID   `json:"rarity"     bson:"rarity"`
+	HP        int                  `json:"hp"     bson:"hp"`
+	Attack    int                  `json:"attack"     bson:"attack"`
+	Defense   int                  `json:"defense"     bson:"defense"`
+	Latitude  float64              `json:"latitude"     bson:"latitude"`
+	Longitude float64              `json:"longitude"     bson:"longitude"`
 }

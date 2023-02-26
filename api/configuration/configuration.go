@@ -84,6 +84,24 @@ func GetLoomiesGenerationTimeouts() (int, int) {
 	return Globals.MinLoomiesGenerationTimeout, Globals.MaxLoomiesGenerationTimeout
 }
 
+func GetLoomiesGenerationAmounts() (int, int) {
+	if Globals.MinLoomiesGenerationAmount == 0 || Globals.MaxLoomiesGenerationAmount == 0 {
+		// Get values (as strings) from the environment
+		minLoomiesGenerationAmountString := getEnvironmentVariable("GAME_MIN_LOOMIES_GENERATION_AMOUNT")
+		maxLoomiesGenerationAmountString := getEnvironmentVariable("GAME_MAX_LOOMIES_GENERATION_AMOUNT")
+
+		// Convert the strings to integers
+		minLoomiesGenerationAmount, _ := strconv.Atoi(minLoomiesGenerationAmountString)
+		maxLoomiesGenerationAmount, _ := strconv.Atoi(maxLoomiesGenerationAmountString)
+
+		// Set the values in the globals
+		Globals.MinLoomiesGenerationAmount = minLoomiesGenerationAmount
+		Globals.MaxLoomiesGenerationAmount = maxLoomiesGenerationAmount
+	}
+
+	return Globals.MinLoomiesGenerationAmount, Globals.MaxLoomiesGenerationAmount
+}
+
 // connectToMongo returns a MongoDB client
 func getMongoClient() *mongo.Client {
 	// Create the connection if it does not exist
