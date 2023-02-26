@@ -40,7 +40,7 @@ func HandleLogIn(c *gin.Context) {
 		return
 	}
 
-	user, err = models.CheckExistEmail(form.Email)
+	user, err = models.GetUserByEmail(form.Email)
 
 	//Check if exists email
 	if err != nil {

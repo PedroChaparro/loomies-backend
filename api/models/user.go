@@ -15,34 +15,6 @@ import (
 
 var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
 
-// CheckExistEmail returns a user by its email and an error (if any)
-func CheckExistEmail(email string) (interfaces.User, error) {
-	var userE interfaces.User
-
-	// Find the user with the given email (case insensitive)
-	err := Collection.FindOne(
-		context.TODO(),
-		bson.M{"email": bson.M{"$regex": email, "$options": "i"}},
-	).Decode(&userE)
-
-	return userE, err
-
-}
-
-// CheckExistUsername returns an mongodb errror if the username already exists
-func CheckExistUsername(Username string) error {
-	var userU interfaces.User
-
-	//Find the user with the given username (case insensitive)
-	err := Collection.FindOne(
-		context.TODO(),
-		bson.M{"username": bson.M{"$regex": Username, "$options": "i"}},
-	).Decode(&userU)
-
-	return err
-
-}
-
 func InsertUser(data interfaces.User) error {
 	// Set the current time as the "last time the user generated loomies"
 	data.LastLoomieGenerationTime = time.Now().Unix()
@@ -72,6 +44,32 @@ next:
 		return fmt.Errorf("password must have at least one %s character", name)
 	}
 	return nil
+}
+
+// GetUserByEmail returns a user by its email and an error (if any)
+func GetUserByEmail(email string) (interfaces.User, error) {
+	var userE interfaces.User
+
+	// Find the user with the given email (case insensitive)
+	err := Collection.FindOne(
+		context.TODO(),
+		bson.M{"email": bson.M{"$regex": email, "$options": "i"}},
+	).Decode(&userE)
+
+	return userE, err
+}
+
+// CheckExistUsername returns an mongodb errror if the username already exists
+func GetUserByUsername(Username string) (interfaces.User, error) {
+	var userU interfaces.User
+
+	//Find the user with the given username (case insensitive)
+	err := Collection.FindOne(
+		context.TODO(),
+		bson.M{"username": bson.M{"$regex": Username, "$options": "i"}},
+	).Decode(&userU)
+
+	return userU, err
 }
 
 // GetUserById returns a user by its id

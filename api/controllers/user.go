@@ -55,7 +55,7 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
-	_, err = models.CheckExistEmail(form.Email)
+	_, err = models.GetUserByEmail(form.Email)
 
 	//Check if exists email
 	if !(err != nil) {
@@ -66,7 +66,7 @@ func HandleSignUp(c *gin.Context) {
 		}
 	}
 
-	err = models.CheckExistUsername(form.Username)
+	_, err = models.GetUserByUsername(form.Username)
 
 	//Check if exists username
 	if !(err != nil) {
