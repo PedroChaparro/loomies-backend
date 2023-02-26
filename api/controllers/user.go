@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"net/mail"
 
@@ -17,7 +16,6 @@ func HandleSignUp(c *gin.Context) {
 	var form interfaces.SignUpForm
 
 	if err := c.BindJSON(&form); err != nil {
-		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
 		return
 	}
@@ -91,7 +89,6 @@ func HandleSignUp(c *gin.Context) {
 	err = models.InsertUser(data)
 
 	if err != nil {
-		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
 		return
 	}

@@ -54,8 +54,6 @@ func HandleNearLoomies(c *gin.Context) {
 	generatedLoomies := []interfaces.WildLoomie{} // The loomies that will be generated
 
 	if err != nil {
-		fmt.Println("Error...", err)
-
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error":   true,
 			"message": "Error getting the base loomies. Please try again later.",

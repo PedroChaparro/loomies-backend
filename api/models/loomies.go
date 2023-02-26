@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -95,7 +94,7 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 
 	// Check if the zone has the maximum amount of loomies
 	currentLoomies, err := GetLoomiesFromZoneId(zone.Id)
-	fmt.Println("Zone has", len(currentLoomies), "loomies")
+	// fmt.Println("Zone has", len(currentLoomies), "loomies")
 
 	if err != nil || len(currentLoomies) >= configuration.GetMaxLoomiesPerZone() {
 		// fmt.Println("Zone has the maximum amount of loomies")
