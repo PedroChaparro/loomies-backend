@@ -7,8 +7,8 @@
   "scripts": {
     "bulk": "node bulk.js",
     "test": "vitest",
-    "clean:outdated": "node wild_loomies_remover.js --outdated",
-    "clean:all": "node wild_loomies_remover.js --all"
+    "clear:outdated": "node wild_loomies_remover.js --outdated",
+    "clear:all": "node wild_loomies_remover.js --all"
   },
   "keywords": [],
   "author": "",
