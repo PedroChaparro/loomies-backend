@@ -151,6 +151,16 @@ func HandleNearLoomies(c *gin.Context) {
 		return
 	}
 
+	if len(wildLoomies) == 0 {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+			"error":   true,
+			"message": "No loomies found",
+			"loomies": wildLoomies,
+		})
+
+		return
+	}
+
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"error":   false,
 		"message": "Loomies were retrieved successfully",
