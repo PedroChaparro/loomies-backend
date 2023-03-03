@@ -20,4 +20,7 @@ func SetupRoutes(engine *gin.Engine) {
 
 	// Loomies
 	engine.POST("/near_loomies", middlewares.MustProvideAccessToken(), controllers.HandleNearLoomies)
+
+	//Items
+	engine.GET("/get_items", middlewares.MustProvideAccessToken(), controllers.HandleGetItems)
 }

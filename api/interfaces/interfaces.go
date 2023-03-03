@@ -73,14 +73,33 @@ type User struct {
 	Username string             `json:"username"      bson:"username"`
 	Email    string             `json:"email"     bson:"email"`
 	Password string             `json:"password"  bson:"password"`
-
-	// tODO: Change this to a struct
-	Items []interface{} `json:"items"     bson:"items"`
-
+	Items []ItemsArray `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
+}
+
+type ItemsArray struct {
+	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Quantity int                  `json:"quantity" bson:"quantity"`
+}
+
+type Items struct {
+	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name string             `json:"name"      bson:"name"`
+	Description    string             `json:"description"     bson:"description"`
+	Target string             `json:"target"  bson:"target"`
+	Is_combat_item                      bool                 `json:"is_combat_item"   bson:"is_combat_item"`
+}
+
+type GetItem struct {
+	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name string             `json:"name"      bson:"name"`
+	Description    string             `json:"description"     bson:"description"`
+	Target string             `json:"target"  bson:"target"`
+	Is_combat_item                      bool                 `json:"is_combat_item"   bson:"is_combat_item"`
+	Quantity int                  `json:"quantity" bson:"quantity"`
 }
 
 type LoomieRarity struct {
