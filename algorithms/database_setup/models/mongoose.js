@@ -10,6 +10,7 @@ const ZoneSchema = new Schema(
     number: Number,
     coordinates: String,
     gym: { type: Schema.Types.ObjectId, ref: "Gym" },
+    loomies: [{ type: Schema.Types.ObjectId, ref: "wild_loomies" }],
   },
   { versionKey: false }
 );
@@ -67,6 +68,32 @@ const BaseLoomieSchema = new Schema(
   { versionKey: false }
 );
 
+const WildLoomieSchema = new Schema(
+  {
+    serial: Number,
+    name: String,
+    types: {
+      type: [Schema.Types.ObjectId],
+      ref: "loomie_types",
+    },
+    rarity: {
+      type: Schema.Types.ObjectId,
+      ref: "loomie_rarities",
+    },
+    hp: Number,
+    attack: Number,
+    defense: Number,
+    zone_id: {
+      type: Schema.Types.ObjectId,
+      ref: "zones",
+    },
+    latitude: Number,
+    longitude: Number,
+    generated_at: Number,
+  },
+  { versionKey: false }
+);
+
 const ItemsSchema = new Schema(
   {
     name: String,
@@ -86,4 +113,5 @@ export const GymModel = model("gyms", GymSchema);
 export const LoomieTypeModel = model("loomie_types", LoomieTypeSchema);
 export const LoomieRarityModel = model("loomie_rarities", LoomieRaritySchema);
 export const BaseLoomieModel = model("base_loomies", BaseLoomieSchema);
+export const WildLoomieModel = model("wild_loomies", WildLoomieSchema);
 export const ItemModel = model("items", ItemsSchema);

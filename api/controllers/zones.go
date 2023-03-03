@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -14,7 +13,6 @@ func HandleNearGyms(c *gin.Context) {
 	bodyCoord := interfaces.Coordinates{}
 
 	if err := c.BindJSON(&bodyCoord); err != nil {
-		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
 		return
 	}
@@ -22,7 +20,6 @@ func HandleNearGyms(c *gin.Context) {
 	nearGyms, err := models.GetNearGyms(bodyCoord.Latitude, bodyCoord.Longitude)
 
 	if err != nil {
-		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
 		return
 	}

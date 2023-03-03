@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "bulk": "node bulk.js",
-    "test": "vitest"
+    "test": "vitest",
+    "clear:outdated": "node wild_loomies_remover.js --outdated",
+    "clear:all": "node wild_loomies_remover.js --all"
   },
   "keywords": [],
   "author": "",

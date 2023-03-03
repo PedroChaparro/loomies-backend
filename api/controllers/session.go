@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"net/mail"
 
@@ -19,7 +18,6 @@ func HandleLogIn(c *gin.Context) {
 	var user interfaces.User
 
 	if err := c.BindJSON(&form); err != nil {
-		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
 		return
 	}
@@ -40,7 +38,7 @@ func HandleLogIn(c *gin.Context) {
 		return
 	}
 
-	user, err = models.CheckExistEmail(form.Email)
+	user, err = models.GetUserByEmail(form.Email)
 
 	//Check if exists email
 	if err != nil {
