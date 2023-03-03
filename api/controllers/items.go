@@ -24,8 +24,8 @@ func HandleGetItems(c *gin.Context) {
 	}
 
 	user_items := []interfaces.GetItem{}
-	
-	for i:= 0; i < len(user.Items); i++{
+
+	for i := 0; i < len(user.Items); i++ {
 		id := user.Items[i].Id
 		item, err := models.GetItemById(id)
 		if err != nil {
@@ -37,10 +37,10 @@ func HandleGetItems(c *gin.Context) {
 				return
 			}
 		}
-		data := interfaces.GetItem{Id: item.Id, Name: item.Name, Description: item.Description, Target: item.Target, Is_combat_item:item.Is_combat_item, Quantity:user.Items[i].Quantity}
+		data := interfaces.GetItem{Id: item.Id, Name: item.Name, Description: item.Description, Target: item.Target, Is_combat_item: item.Is_combat_item, Quantity: user.Items[i].Quantity}
 		user_items = append(user_items, data)
 	}
-	
+
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"items": user_items,
 	})

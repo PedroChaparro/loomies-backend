@@ -69,11 +69,11 @@ type Gym struct {
 }
 
 type User struct {
-	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Username string             `json:"username"      bson:"username"`
-	Email    string             `json:"email"     bson:"email"`
-	Password string             `json:"password"  bson:"password"`
-	Items []ItemsArray `json:"items"     bson:"items"`
+	Id                              primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Username                        string               `json:"username"      bson:"username"`
+	Email                           string               `json:"email"     bson:"email"`
+	Password                        string               `json:"password"  bson:"password"`
+	Items                           []ItemsArray         `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
@@ -82,24 +82,24 @@ type User struct {
 
 type ItemsArray struct {
 	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Quantity int                  `json:"quantity" bson:"quantity"`
+	Quantity int                `json:"quantity" bson:"quantity"`
 }
 
 type Items struct {
-	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Name string             `json:"name"      bson:"name"`
+	Id             primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name           string             `json:"name"      bson:"name"`
 	Description    string             `json:"description"     bson:"description"`
-	Target string             `json:"target"  bson:"target"`
-	Is_combat_item                      bool                 `json:"is_combat_item"   bson:"is_combat_item"`
+	Target         string             `json:"target"  bson:"target"`
+	Is_combat_item bool               `json:"is_combat_item"   bson:"is_combat_item"`
 }
 
 type GetItem struct {
-	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Name string             `json:"name"      bson:"name"`
+	Id             primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name           string             `json:"name"      bson:"name"`
 	Description    string             `json:"description"     bson:"description"`
-	Target string             `json:"target"  bson:"target"`
-	Is_combat_item                      bool                 `json:"is_combat_item"   bson:"is_combat_item"`
-	Quantity int                  `json:"quantity" bson:"quantity"`
+	Target         string             `json:"target"  bson:"target"`
+	Is_combat_item bool               `json:"is_combat_item"   bson:"is_combat_item"`
+	Quantity       int                `json:"quantity" bson:"quantity"`
 }
 
 type LoomieRarity struct {
