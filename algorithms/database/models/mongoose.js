@@ -127,6 +127,8 @@ const ItemsSchema = new Schema(
       min: 0,
       max: 1,
     },
+    min_reward_quantity: Number,
+    max_reward_quantity: Number,
   },
   { versionKey: false }
 );
@@ -147,6 +149,8 @@ const LoomBallsSchema = new Schema(
       min: 0,
       max: 1,
     },
+    min_reward_quantity: Number,
+    max_reward_quantity: Number,
   },
   { versionKey: false }
 );
