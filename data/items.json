@@ -4,48 +4,62 @@
     "description": "Heals 50 HP",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.5
+    "gym_reward_chance": 0.5,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 3
   },
   {
     "name": "Small Aid Kit",
     "description": "Heals 100 HP",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.25
+    "gym_reward_chance": 0.25,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 2
   },
   {
     "name": "Big Aid Kit",
     "description": "Heals all the HP",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.1
+    "gym_reward_chance": 0.1,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 1
   },
   {
     "name": "Defibrillator",
     "description": "Revives a dead loomie with half HP",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.25
+    "gym_reward_chance": 0.25,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 1
   },
   {
     "name": "Steroids Injection",
     "description": "Increases the loomie's attack by 20%",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.35
+    "gym_reward_chance": 0.35,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 2
   },
   {
     "name": "Vitamins",
     "description": "Increases the loomie's max HP by 20%",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.35
+    "gym_reward_chance": 0.35,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 2
   },
   {
     "name": "Unknown Bevarage",
     "description": "Increate the loomie's level by 1",
     "target": "Loomie",
     "is_combat_item": false,
-    "gym_reward_chance": 0.35
+    "gym_reward_chance": 0.35,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 1
   }
 ]

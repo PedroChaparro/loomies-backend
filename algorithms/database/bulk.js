@@ -231,7 +231,15 @@ console.log("Inserted loomies: ", await BaseLoomieModel.countDocuments(), "\n");
 console.log("📦 Inserting items...");
 
 for await (const item of items) {
-  const { name, description, target, is_combat_item, gym_reward_chance } = item;
+  const {
+    name,
+    description,
+    target,
+    is_combat_item,
+    gym_reward_chance,
+    min_reward_quantity,
+    max_reward_quantity,
+  } = item;
 
   const newItem = new ItemModel({
     name,
@@ -239,6 +247,8 @@ for await (const item of items) {
     target,
     is_combat_item,
     gym_reward_chance,
+    min_reward_quantity,
+    max_reward_quantity,
   });
 
   await newItem.save();
@@ -256,6 +266,8 @@ for await (const loomball of loomballs) {
     decay_until,
     minimum_probability,
     gym_reward_chance,
+    min_reward_quantity,
+    max_reward_quantity,
   } = loomball;
 
   const newLoomball = new LoomBallModel({
@@ -264,6 +276,8 @@ for await (const loomball of loomballs) {
     decay_until,
     minimum_probability,
     gym_reward_chance,
+    min_reward_quantity,
+    max_reward_quantity,
   });
 
   await newLoomball.save();
