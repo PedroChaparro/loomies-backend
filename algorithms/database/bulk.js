@@ -25,6 +25,10 @@ const loomieTypes = readJsonFromDataFolder("loomies_types");
 const loomieRarities = readJsonFromDataFolder("loomies_rarities");
 const loomballs = readJsonFromDataFolder("loomballs");
 
+// Global variables
+const globalLoomiesTypesIds = [];
+const globalLoomiesRaritiesIds = [];
+
 // --- Zones and Gyms ---
 console.log("🏟️ Inserting gyms and zones...");
 const coordinates = { x: 0, y: 0 };
@@ -52,7 +56,12 @@ for await (const zone of zones) {
   // Insert the gym into mongodb and get the id
   if (gym !== -1) {
     const { name, latitude, longitude } = gyms[gym];
-    const newGym = new GymModel({ name, latitude, longitude });
+    const newGym = new GymModel({
+      name,
+      latitude,
+      longitude,
+      current_rewards: [],
+    });
     const { _id } = await newGym.save();
     GymMongoId = _id;
   }
@@ -83,7 +92,6 @@ console.log("Gyms inserted: ", await GymModel.countDocuments(), "\n");
 
 // --- Loomies types ---
 console.log("✨ Inserting loomie types...");
-const globalLoomiesTypesIds = [];
 
 // 1. Insert loomie types without the strong_against attribute
 for await (const loomieType of loomieTypes) {
@@ -144,7 +152,6 @@ console.log(
 
 // --- Loomies rarities ---
 console.log("📊 Inserting loomie rarities...");
-const globalLoomiesRaritiesIds = [];
 
 for await (const loomieRarity of loomieRarities) {
   const { name, spawn_chance } = loomieRarity;
@@ -222,13 +229,14 @@ console.log("Inserted loomies: ", await BaseLoomieModel.countDocuments(), "\n");
 console.log("📦 Inserting items...");
 
 for await (const item of items) {
-  const { name, description, target, is_combat_item } = item;
+  const { name, description, target, is_combat_item, gym_reward_chance } = item;
 
   const newItem = new ItemModel({
     name,
     description,
     target,
     is_combat_item,
+    gym_reward_chance,
   });
 
   await newItem.save();
@@ -240,13 +248,20 @@ console.log("Inserted items: ", await ItemModel.countDocuments(), "\n");
 console.log("🎱 Inserting loomballs...");
 
 for await (const loomball of loomballs) {
-  const { name, effective_until, decay_until, minimum_probability } = loomball;
+  const {
+    name,
+    effective_until,
+    decay_until,
+    minimum_probability,
+    gym_reward_chance,
+  } = loomball;
 
   const newLoomball = new LoomBallModel({
     name,
     effective_until,
     decay_until,
     minimum_probability,
+    gym_reward_chance,
   });
 
   await newLoomball.save();
