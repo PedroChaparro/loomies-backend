@@ -3,18 +3,21 @@
     "name": "LoomBall",
     "effective_until": 0,
     "decay_until": 30,
-    "minimum_probability": 0.1
+    "minimum_probability": 0.1,
+    "gym_reward_chance": 0.75
   },
   {
     "name": "LoomBall Tier 2",
     "effective_until": 15,
     "decay_until": 50,
-    "minimum_probability": 0.2
+    "minimum_probability": 0.2,
+    "gym_reward_chance": 0.5
   },
   {
     "name": "LoomBall Experimental",
     "effective_until": 0,
     "decay_until": 0,
-    "minimum_probability": 1
+    "minimum_probability": 1,
+    "gym_reward_chance": 0.1
   }
 ]

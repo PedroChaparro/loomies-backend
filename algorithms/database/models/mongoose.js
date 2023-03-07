@@ -24,6 +24,23 @@ const GymSchema = new Schema(
     latitude: Number,
     longitude: Number,
     name: String,
+    current_rewards: {
+      type: [
+        {
+          reward_type: {
+            type: String,
+            // Gym rewards can be items or loomballs
+            enum: ["Item", "LoomBall"],
+          },
+          reward_id: {
+            type: Schema.Types.ObjectId,
+            // Dynamically reference the correct collection
+            refPath: "current_rewards.reward_type",
+          },
+          reward_quantity: Number,
+        },
+      ],
+    },
   },
   { versionKey: false }
 );
@@ -103,6 +120,12 @@ const ItemsSchema = new Schema(
       enum: ["Loomie"], // Currently items only target loomies
     },
     is_combat_item: Boolean,
+    // Probability to appear as a gym reward
+    gym_reward_chance: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
   },
   { versionKey: false }
 );
@@ -113,6 +136,12 @@ const LoomBallsSchema = new Schema(
     effective_until: Number,
     decay_until: Number,
     minimum_probability: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+    // Probability to appear as a gym reward
+    gym_reward_chance: {
       type: Number,
       min: 0,
       max: 1,
