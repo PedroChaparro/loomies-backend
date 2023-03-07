@@ -7,8 +7,8 @@
   "scripts": {
     "bulk": "node bulk.js",
     "test": "vitest",
-    "clear:outdated": "node cronjobs/remove_outdated_loomies/wild_loomies_remover.js --outdated",
-    "clear:all": "node cronjobs/remove_outdated_loomies/wild_loomies_remover.js --all"
+    "clear:outdated": "node cronjobs/remove_outdated_loomies/remove.js --outdated",
+    "clear:all": "node cronjobs/remove_outdated_loomies/remove.js --all"
   },
   "keywords": [],
   "author": "",
