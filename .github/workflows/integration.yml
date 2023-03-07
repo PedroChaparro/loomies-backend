@@ -45,7 +45,7 @@ jobs:
 
       - name: 💾 Insert data
         run: |
-          cd algorithms/gyms_insertion
+          cd algorithms/database_setup
           echo "MONGO_URI = mongodb://root:development@127.0.0.1:27017" >> .env
           npm install
           npm run bulk
