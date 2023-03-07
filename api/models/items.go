@@ -13,6 +13,11 @@ var ItemsCollection = configuration.ConnectToMongoCollection("items")
 
 // GetItemsFromIds returns an array of items from an array of items ids
 func GetItemsFromIds(ids []primitive.ObjectID) ([]interfaces.Item, error) {
+	// If there are no ids, return an empty array to prevent errors
+	if len(ids) == 0 {
+		return []interfaces.Item{}, nil
+	}
+
 	var itemsE []interfaces.Item
 	cursor, err := ItemsCollection.Find(context.Background(), bson.M{"_id": bson.M{"$in": ids}})
 
