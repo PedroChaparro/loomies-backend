@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"fmt"
-	"math/rand"
 	"net/http"
 	"net/mail"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -99,12 +99,7 @@ func HandleSignUp(c *gin.Context) {
 	}
 
 	//generate code
-	numbers := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
-	var validationCode string = ""
-	for i := 0; i < 6; i++ {
-		randnum := rand.Intn(9)
-		validationCode += numbers[randnum]
-	}
+	validationCode := utils.GetValidationCode()
 
 	// updates validation code //todo ask
 	err = models.InsertValidationCode(userId, validationCode)
@@ -114,8 +109,12 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
-	//send mail of verification, //todo validation? trycatch, revisar node
-	//utils.SendEmail(verifcode)
+	//send mail of verification
+	err = utils.SendEmail(form.Email, "Here is your validation code", validationCode)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		return
+	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
