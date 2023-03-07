@@ -11,11 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
 
-func InsertUser(data interfaces.User) error {
+func InsertUser(data interfaces.User) (primitive.ObjectID, error) {
 	// Set the current time as the "last time the user generated loomies"
 	data.LastLoomieGenerationTime = time.Now().Unix()
 
@@ -24,8 +25,9 @@ func InsertUser(data interfaces.User) error {
 	data.Loomies = []primitive.ObjectID{}
 
 	//Insert User in database
-	_, err := Collection.InsertOne(context.TODO(), data)
-	return err
+	user, err := Collection.InsertOne(context.TODO(), data)
+
+	return user.InsertedID.(primitive.ObjectID), err
 }
 
 func ValidPassword(s string) error {
@@ -111,4 +113,45 @@ func UpdateUserGenerationTimes(userId string, lastGenerated int64, newTimeout in
 	)
 
 	return err
+}
+
+func InsertValidationCode(userId primitive.ObjectID, validationCode string) error {
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "validationCode", Value: validationCode}},
+	}}
+	_, err := Collection.UpdateByID(context.TODO(), userId, update)
+
+	return err
+}
+
+func CheckCodeExistence(email string, code string) bool {
+
+	var usercode interfaces.ValidationCode
+	filter := bson.D{{Key: "email", Value: email}}
+	project := bson.D{{Key: "email", Value: 1}, {Key: "validationCode", Value: 1}}
+	opts := options.FindOne().SetProjection(project)
+
+	err := Collection.FindOne(context.TODO(), filter, opts).Decode(&usercode)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// verify code
+	if code != usercode.ValidationCode {
+		return false
+	} else {
+		// update status verified and delete one
+		filter := bson.D{{Key: "email", Value: usercode.Email}}
+		update := bson.D{{Key: "$set", Value: bson.D{
+			{Key: "isVerified", Value: true},
+			{Key: "validationCode", Value: ""},
+		},
+		}}
+		Collection.UpdateOne(context.TODO(), filter, update)
+		return true
+	}
+}
+
+func VerifyStatus() {
+
 }

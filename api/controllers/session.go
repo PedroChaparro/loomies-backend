@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"net/mail"
 
@@ -112,4 +113,32 @@ func HandleRefresh(c *gin.Context) {
 		"message":     "Successfully refreshed access token",
 		"accessToken": accessToken,
 	})
+}
+
+func HandleCodeValidation(c *gin.Context) {
+	var form interfaces.ValidationCode
+	if err := c.BindJSON(&form); err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+	//Check if there is no code
+	if form.ValidationCode == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Verification code cannot be empty"})
+		return
+	}
+	//Check if there is no email
+	if form.Email == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
+		return
+	}
+	// code validation
+	exists := models.CheckCodeExistence(form.Email, form.ValidationCode)
+	if exists {
+		c.IndentedJSON(http.StatusOK, gin.H{"message": "Email has been verified"})
+		return
+	} else {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "Code was incorrect"})
+		return
+	}
 }

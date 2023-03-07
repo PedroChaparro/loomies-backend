@@ -1,12 +1,15 @@
 package controllers
 
 import (
+	"fmt"
+	"math/rand"
 	"net/http"
 	"net/mail"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -86,12 +89,33 @@ func HandleSignUp(c *gin.Context) {
 	data := interfaces.User{Username: form.Username, Email: form.Email, Password: string(hashed), IsVerified: false}
 
 	//Insert user in database
-	err = models.InsertUser(data)
+	var userId primitive.ObjectID
+	userId, err = models.InsertUser(data)
 
 	if err != nil {
+		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
 		return
 	}
+
+	//generate code
+	numbers := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
+	var validationCode string = ""
+	for i := 0; i < 6; i++ {
+		randnum := rand.Intn(9)
+		validationCode += numbers[randnum]
+	}
+
+	// updates validation code //todo ask
+	err = models.InsertValidationCode(userId, validationCode)
+	if err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		return
+	}
+
+	//send mail of verification, //todo validation? trycatch, revisar node
+	//utils.SendEmail(verifcode)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
