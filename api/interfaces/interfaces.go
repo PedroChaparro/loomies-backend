@@ -61,9 +61,9 @@ type ZoneWithPopulatedLoomies struct {
 	PopulatedLoomies []WildLoomie         `json:"populated_loomies" bson:"populated_loomies"`
 }
 
-type InventoryItem struct {
+type GymRewardItem struct {
 	RewardCollection string             `json:"reward_collection" bson:"reward_collection"`
-	RewardID         primitive.ObjectID `json:"reward_id" bson:"reward_id"`
+	RewardId         primitive.ObjectID `json:"reward_id" bson:"reward_id"`
 	RewardQuantity   int                `json:"reward_quantity" bson:"reward_quantity"`
 }
 
@@ -72,7 +72,7 @@ type Gym struct {
 	Latitude         float64              `json:"latitude"      bson:"latitude"`
 	Longitude        float64              `json:"longitude"      bson:"longitude"`
 	Name             string               `json:"name"      bson:"name"`
-	CurrentRewards   []InventoryItem      `json:"current_rewards"      bson:"current_rewards"`
+	CurrentRewards   []GymRewardItem      `json:"current_rewards"      bson:"current_rewards"`
 	RewardsClaimedBy []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
 }
 
@@ -96,6 +96,12 @@ type Loomball struct {
 	GymRewardChance    float64            `json:"gym_reward_chance"      bson:"gym_reward_chance"`
 	MinRewardQuantity  int                `json:"min_reward_quantity"      bson:"min_reward_quantity"`
 	MaxRewardQuantity  int                `json:"max_reward_quantity"      bson:"max_reward_quantity"`
+}
+
+type InventoryItem struct {
+	ItemCollection string             `json:"item_collection" bson:"item_collection"`
+	ItemId         primitive.ObjectID `json:"item_id" bson:"item_id"`
+	ItemQuantity   int                `json:"item_quantity" bson:"item_quantity"`
 }
 
 type User struct {

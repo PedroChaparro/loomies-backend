@@ -114,14 +114,20 @@ func UpdateUserGenerationTimes(userId string, lastGenerated int64, newTimeout in
 }
 
 // AddItemToUserInventory adds an item to the user's inventory
-func AddItemToUserInventory(userId primitive.ObjectID, item interfaces.InventoryItem) error {
+func AddItemToUserInventory(userId primitive.ObjectID, item interfaces.GymRewardItem) error {
+	userInventoryItem := interfaces.InventoryItem{
+		ItemCollection: item.RewardCollection,
+		ItemId:         item.RewardId,
+		ItemQuantity:   item.RewardQuantity,
+	}
+
 	// Update the user document
 	_, err := Collection.UpdateOne(
 		context.TODO(),
 		bson.D{{Key: "_id", Value: userId}},
 		bson.D{
 			{Key: "$push", Value: bson.D{
-				{Key: "items", Value: item},
+				{Key: "items", Value: userInventoryItem},
 			}},
 		},
 	)
@@ -130,19 +136,13 @@ func AddItemToUserInventory(userId primitive.ObjectID, item interfaces.Inventory
 }
 
 // AddItemsToUserInventory adds multiple items to the user's inventory
-func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.InventoryItem) error {
-	// Update the user document
-	_, err := Collection.UpdateOne(
-		context.TODO(),
-		bson.D{{Key: "_id", Value: userId}},
-		bson.D{
-			{Key: "$push", Value: bson.D{
-				{Key: "items", Value: bson.D{
-					{Key: "$each", Value: items},
-				}},
-			}},
-		},
-	)
+func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.GymRewardItem) error {
+	for _, item := range items {
+		err := AddItemToUserInventory(userId, item)
+		if err != nil {
+			return err
+		}
+	}
 
-	return err
+	return nil
 }

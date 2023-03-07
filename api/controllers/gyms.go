@@ -76,14 +76,14 @@ func HandleClaimReward(c *gin.Context) {
 
 	for _, reward := range gym.CurrentRewards {
 		if reward.RewardCollection == "items" {
-			itemsIds = append(itemsIds, reward.RewardID)
+			itemsIds = append(itemsIds, reward.RewardId)
 		}
 
 		if reward.RewardCollection == "loom_balls" {
-			loomballsIds = append(loomballsIds, reward.RewardID)
+			loomballsIds = append(loomballsIds, reward.RewardId)
 		}
 
-		rewardsQuantity[reward.RewardID.Hex()] = reward.RewardQuantity
+		rewardsQuantity[reward.RewardId.Hex()] = reward.RewardQuantity
 	}
 
 	items, err := models.GetItemsFromIds(itemsIds)
