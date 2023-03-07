@@ -1,37 +1,98 @@
 package controllers
 
 import (
+	"fmt"
+	"math"
 	"net/http"
+	"strconv"
 
+	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func HandleNearGyms(c *gin.Context) {
-
 	bodyCoord := interfaces.Coordinates{}
 
 	if err := c.BindJSON(&bodyCoord); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
 
 	nearGyms, err := models.GetNearGyms(bodyCoord.Latitude, bodyCoord.Longitude)
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 		return
 	}
 
 	if len(nearGyms) == 0 {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Gyms Not Found",
+		c.IndentedJSON(http.StatusNotFound, gin.H{"error": true, "message": "Gyms Not Found",
 			"nearGyms": []interfaces.Gym{},
 		})
 	} else {
-		c.IndentedJSON(http.StatusOK, gin.H{"message": "Gyms have been found in near areas",
+		c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Gyms have been found in near areas",
 			"nearGyms": nearGyms,
 		})
 	}
+}
 
+func HandleClaimReward(c *gin.Context) {
+	// Get user from request context
+	userId, _ := c.Get("userid")
+	userId = userId.(string)
+	userIdMongo, _ := primitive.ObjectIDFromHex(userId.(string))
+
+	// Parse request body
+	payload := interfaces.ClaimGymRewardReq{}
+
+	if err := c.BindJSON(&payload); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Gym id, latitude and longitude are required"})
+		return
+	}
+
+	// 1. Validate the user is near (at most the zone radius) to the gym
+	zoneRadiusStr := configuration.GetEnvironmentVariable("GAME_ZONE_RADIUS")
+	zoneRadius, _ := strconv.ParseFloat(zoneRadiusStr, 64)
+	gym, err := models.GetGymFromID(payload.GymID)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Gym not found"})
+			return
+		}
+
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when getting gym, please try again later"})
+	}
+
+	if math.Abs(gym.Latitude-payload.Latitude) > zoneRadius || math.Abs(gym.Longitude-payload.Longitude) > zoneRadius {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User is not near the gym"})
+		return
+	}
+
+	// 2. Validate the user has not claimed the reward yet
+	if models.HasUserClaimedReward(gym, userIdMongo) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User has already claimed the reward"})
+		return
+	}
+
+	// 3. Give the reward to the user and add the user to the list of users that have claimed the reward
+	err = models.AddItemsToUserInventory(userIdMongo, gym.CurrentRewards)
+
+	if err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when adding items to user inventory, please try again later"})
+	}
+
+	err = models.RegisterClaimedReward(gym, userIdMongo)
+
+	if err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when registering claimed reward, please try again later"})
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Reward claimed successfully", "rewards": gym.CurrentRewards})
 }

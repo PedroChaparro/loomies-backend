@@ -20,7 +20,7 @@ func InsertUser(data interfaces.User) error {
 	data.LastLoomieGenerationTime = time.Now().Unix()
 
 	// Set the items and loomies as empty arrays
-	data.Items = []interface{}{} // TODO: Change this to a struct
+	data.Items = []interfaces.InventoryItem{} // TODO: Change this to a struct
 	data.Loomies = []primitive.ObjectID{}
 
 	//Insert User in database
@@ -106,6 +106,40 @@ func UpdateUserGenerationTimes(userId string, lastGenerated int64, newTimeout in
 			{Key: "$set", Value: bson.D{
 				{Key: "lastLoomieGenerationTime", Value: lastGenerated},
 				{Key: "currentLoomiesGenerationTimeout", Value: newTimeout},
+			}},
+		},
+	)
+
+	return err
+}
+
+// AddItemToUserInventory adds an item to the user's inventory
+func AddItemToUserInventory(userId primitive.ObjectID, item interfaces.InventoryItem) error {
+	// Update the user document
+	_, err := Collection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: userId}},
+		bson.D{
+			{Key: "$push", Value: bson.D{
+				{Key: "items", Value: item},
+			}},
+		},
+	)
+
+	return err
+}
+
+// AddItemsToUserInventory adds multiple items to the user's inventory
+func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.InventoryItem) error {
+	// Update the user document
+	_, err := Collection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: userId}},
+		bson.D{
+			{Key: "$push", Value: bson.D{
+				{Key: "items", Value: bson.D{
+					{Key: "$each", Value: items},
+				}},
 			}},
 		},
 	)
