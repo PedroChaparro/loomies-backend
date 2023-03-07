@@ -27,10 +27,10 @@ const GymSchema = new Schema(
     current_rewards: {
       type: [
         {
-          reward_type: {
+          reward_collection: {
             type: String,
             // Gym rewards can be items or loomballs
-            enum: ["Item", "LoomBall"],
+            enum: ["items", "loom_balls"],
           },
           reward_id: {
             type: Schema.Types.ObjectId,
@@ -41,6 +41,7 @@ const GymSchema = new Schema(
         },
       ],
     },
+    rewards_claimed_by: [{ type: Schema.Types.ObjectId, ref: "users" }],
   },
   { versionKey: false }
 );
