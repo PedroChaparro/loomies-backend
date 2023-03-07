@@ -107,6 +107,20 @@ const ItemsSchema = new Schema(
   { versionKey: false }
 );
 
+const LoomBallsSchema = new Schema(
+  {
+    name: String,
+    effective_until: Number,
+    decay_until: Number,
+    minimum_probability: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+  },
+  { versionKey: false }
+);
+
 // Models
 export const ZoneModel = model("zones", ZoneSchema);
 export const GymModel = model("gyms", GymSchema);
@@ -115,3 +129,4 @@ export const LoomieRarityModel = model("loomie_rarities", LoomieRaritySchema);
 export const BaseLoomieModel = model("base_loomies", BaseLoomieSchema);
 export const WildLoomieModel = model("wild_loomies", WildLoomieSchema);
 export const ItemModel = model("items", ItemsSchema);
+export const LoomBallModel = model("loom_balls", LoomBallsSchema);

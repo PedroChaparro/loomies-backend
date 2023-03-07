@@ -7,6 +7,7 @@ import {
   LoomieRarityModel,
   BaseLoomieModel,
   ItemModel,
+  LoomBallModel,
 } from "./models/mongoose.js";
 import { readJsonFromDataFolder } from "./utils/utils.js";
 
@@ -22,6 +23,7 @@ const loomies = readJsonFromDataFolder("loomies");
 const items = readJsonFromDataFolder("items");
 const loomieTypes = readJsonFromDataFolder("loomies_types");
 const loomieRarities = readJsonFromDataFolder("loomies_rarities");
+const loomballs = readJsonFromDataFolder("loomballs");
 
 // --- Zones and Gyms ---
 console.log("🏟️ Inserting gyms and zones...");
@@ -233,6 +235,24 @@ for await (const item of items) {
 }
 
 console.log("Inserted items: ", await ItemModel.countDocuments(), "\n");
+
+// --- Loomballs ---
+console.log("🎱 Inserting loomballs...");
+
+for await (const loomball of loomballs) {
+  const { name, effective_until, decay_until, minimum_probability } = loomball;
+
+  const newLoomball = new LoomBallModel({
+    name,
+    effective_until,
+    decay_until,
+    minimum_probability,
+  });
+
+  await newLoomball.save();
+}
+
+console.log("Inserted loomballs: ", await LoomBallModel.countDocuments(), "\n");
 
 // Close connection
 await ZoneModel.ensureIndexes();

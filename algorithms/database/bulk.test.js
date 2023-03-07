@@ -5,6 +5,7 @@ import {
   BaseLoomieModel,
   GymModel,
   ItemModel,
+  LoomBallModel,
   LoomieRarityModel,
   LoomieTypeModel,
   ZoneModel,
@@ -23,6 +24,7 @@ const loomies = readJsonFromDataFolder("loomies");
 const items = readJsonFromDataFolder("items");
 const loomieTypes = readJsonFromDataFolder("loomies_types");
 const loomieRarities = readJsonFromDataFolder("loomies_rarities");
+const loomballs = readJsonFromDataFolder("loomballs");
 
 // --- Tests ---
 describe.concurrent("Testing documents count", () => {
@@ -117,6 +119,31 @@ describe("Test loomies rarities", () => {
 
       // Validate spawn chance
       expect(spawn_chance).toBe(loomieRarityDoc.spawn_chance);
+    }
+  });
+});
+
+describe("Test Loomballs", () => {
+  it("Shold have all the expected loomballs", async () => {
+    const loomballsDocuments = await LoomBallModel.find();
+
+    // Validate count
+    expect(loomballsDocuments.length).toBe(loomballs.length);
+
+    for await (const loomballDoc of loomballsDocuments) {
+      // Get the loomball from the json file
+      const loomball = loomballs.find(
+        (loomball) => loomball.name === loomballDoc.name
+      );
+
+      // Validate loomball
+      expect(loomball).not.toBe(undefined);
+      expect(loomballDoc.name).toBe(loomball.name);
+      expect(loomballDoc.effective_until).toBe(loomball.effective_until);
+      expect(loomballDoc.decay_until).toBe(loomball.decay_until);
+      expect(loomballDoc.minimum_probability).toBe(
+        loomball.minimum_probability
+      );
     }
   });
 });

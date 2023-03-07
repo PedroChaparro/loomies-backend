@@ -17,5 +17,8 @@
     "dotenv": "^16.0.3",
     "mongoose": "^6.9.1",
     "vitest": "^0.29.1"
+  },
+  "devDependencies": {
+    "vite": "^4.1.4"
   }
 }
