@@ -87,6 +87,17 @@ type Item struct {
 	MaxRewardQuantity int                `json:"max_reward_quantity"      bson:"max_reward_quantity"`
 }
 
+type Loomball struct {
+	Id                 primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name               string             `json:"name"      bson:"name"`
+	EffectiveUntil     int64              `json:"effective_until"      bson:"effective_until"`
+	DecayUntil         int64              `json:"decay_until"      bson:"decay_until"`
+	MinimumProbability float64            `json:"minimum_probability"      bson:"minimum_probability"`
+	GymRewardChance    float64            `json:"gym_reward_chance"      bson:"gym_reward_chance"`
+	MinRewardQuantity  int                `json:"min_reward_quantity"      bson:"min_reward_quantity"`
+	MaxRewardQuantity  int                `json:"max_reward_quantity"      bson:"max_reward_quantity"`
+}
+
 type User struct {
 	Id                              primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Username                        string               `json:"username"      bson:"username"`

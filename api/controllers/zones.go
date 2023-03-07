@@ -83,16 +83,68 @@ func HandleClaimReward(c *gin.Context) {
 	err = models.AddItemsToUserInventory(userIdMongo, gym.CurrentRewards)
 
 	if err != nil {
-		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when adding items to user inventory, please try again later"})
+		return
 	}
 
 	err = models.RegisterClaimedReward(gym, userIdMongo)
 
 	if err != nil {
-		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when registering claimed reward, please try again later"})
+		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Reward claimed successfully", "rewards": gym.CurrentRewards})
+	// 4. Get the details of the items that the user has received
+	var rewardsQuantity = make(map[string]int)
+	var itemsIds []primitive.ObjectID
+	var loomballsIds []primitive.ObjectID
+
+	for _, reward := range gym.CurrentRewards {
+		if reward.RewardCollection == "items" {
+			itemsIds = append(itemsIds, reward.RewardID)
+		}
+
+		if reward.RewardCollection == "loom_balls" {
+			loomballsIds = append(loomballsIds, reward.RewardID)
+		}
+
+		rewardsQuantity[reward.RewardID.Hex()] = reward.RewardQuantity
+	}
+
+	items, err := models.GetItemsFromIds(itemsIds)
+
+	if err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when getting items details, please try again later"})
+		return
+	}
+
+	loomballs, err := models.GetLoomballsFromIds(loomballsIds)
+
+	if err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when getting loomballs details, please try again later"})
+		return
+	}
+
+	// 5. Create an unique array with the items and loomballs\
+	var allRewards []gin.H
+
+	for _, item := range items {
+		allRewards = append(allRewards, gin.H{
+			"id":       item.Id.Hex(),
+			"name":     item.Name,
+			"quantity": rewardsQuantity[item.Id.Hex()],
+		})
+	}
+
+	for _, loomball := range loomballs {
+		allRewards = append(allRewards, gin.H{
+			"id":       loomball.Id.Hex(),
+			"name":     loomball.Name,
+			"quantity": rewardsQuantity[loomball.Id.Hex()],
+		})
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Reward claimed successfully", "reward": allRewards})
 }
