@@ -31,7 +31,7 @@ func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.PopulatedI
 			}
 
 		}
-		
+
 	}
 
 	return user_items, err
