@@ -1,5 +1,7 @@
 package interfaces
 
+import "time"
+
 type SignUpForm struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
@@ -11,8 +13,12 @@ type LogInForm struct {
 	Password string `json:"password"`
 }
 
-// todo req validation code, interface
 type ValidationCode struct {
-	Email          string `json:"email"`
-	ValidationCode string `json:"validationCode"`
+	Email          string    `json:"email"`
+	ValidationCode string    `json:"validationCode"`
+	TimeExpiration time.Time `json:"timeExpiration"`
+}
+
+type Email struct {
+	Email string `json:"email"`
 }

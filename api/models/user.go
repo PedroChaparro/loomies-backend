@@ -16,7 +16,7 @@ import (
 
 var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
 
-func InsertUser(data interfaces.User) (primitive.ObjectID, error) {
+func InsertUser(data interfaces.User) error {
 	// Set the current time as the "last time the user generated loomies"
 	data.LastLoomieGenerationTime = time.Now().Unix()
 
@@ -25,9 +25,9 @@ func InsertUser(data interfaces.User) (primitive.ObjectID, error) {
 	data.Loomies = []primitive.ObjectID{}
 
 	//Insert User in database
-	user, err := Collection.InsertOne(context.TODO(), data)
+	_, err := Collection.InsertOne(context.TODO(), data)
 
-	return user.InsertedID.(primitive.ObjectID), err
+	return err
 }
 
 func ValidPassword(s string) error {
@@ -115,25 +115,28 @@ func UpdateUserGenerationTimes(userId string, lastGenerated int64, newTimeout in
 	return err
 }
 
-func InsertValidationCode(userId primitive.ObjectID, validationCode string) error {
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "validationCode", Value: validationCode}},
-	}}
-	_, err := Collection.UpdateByID(context.TODO(), userId, update)
-
-	return err
-}
-
 func CheckCodeExistence(email string, code string) bool {
 
 	var usercode interfaces.ValidationCode
 	filter := bson.D{{Key: "email", Value: email}}
-	project := bson.D{{Key: "email", Value: 1}, {Key: "validationCode", Value: 1}}
+	project := bson.D{{Key: "email", Value: 1}, {Key: "validationCode", Value: 1}, {Key: "timeExpiration", Value: 1}}
 	opts := options.FindOne().SetProjection(project)
 
 	err := Collection.FindOne(context.TODO(), filter, opts).Decode(&usercode)
 	if err != nil {
 		fmt.Println(err)
+	}
+
+	// check time expire
+	if !time.Now().Before(usercode.TimeExpiration) {
+		// clean validationCode field
+		filter := bson.D{{Key: "email", Value: usercode.Email}}
+		update := bson.D{{Key: "$set", Value: bson.D{
+			{Key: "validationCode", Value: ""},
+		},
+		}}
+		Collection.UpdateOne(context.TODO(), filter, update)
+		return false
 	}
 
 	// verify code
@@ -150,8 +153,4 @@ func CheckCodeExistence(email string, code string) bool {
 		Collection.UpdateOne(context.TODO(), filter, update)
 		return true
 	}
-}
-
-func VerifyStatus() {
-
 }

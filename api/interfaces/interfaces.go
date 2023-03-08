@@ -1,6 +1,8 @@
 package interfaces
 
 import (
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -78,6 +80,8 @@ type User struct {
 	Items []interface{} `json:"items"     bson:"items"`
 
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
+	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
+	TimeExpiration                  time.Time            `json:"timeExpiration"   bson:"timeExpiration"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
