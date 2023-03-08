@@ -8,14 +8,14 @@ import (
 )
 
 func SendEmail(email string, subject string, validationCode string) error {
-
+	sender := os.Getenv("EMAIL_MAIL")
 	msg := gomail.NewMessage()
-	msg.SetHeader("From", os.Getenv("EMAIL"))
+	msg.SetHeader("From", sender)
 	msg.SetHeader("To", email)
 	msg.SetHeader("Subject", subject)
 	msg.SetBody("text/html", fmt.Sprintf("This is your code <b>%s</b>, <br> Go quickly this code expires soon, loomies are waiting for you!", validationCode))
 
-	n := gomail.NewDialer("smtp.gmail.com", 587, os.Getenv("EMAIL"), os.Getenv("EMAIL_PASSWORD"))
+	n := gomail.NewDialer("smtp.gmail.com", 587, sender, os.Getenv("EMAIL_PASSWORD"))
 
 	// Send the email
 	if err := n.DialAndSend(msg); err != nil {
