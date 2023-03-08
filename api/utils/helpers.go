@@ -11,8 +11,9 @@ import (
 
 // GetRandomInt returns a random integer between min and max (both included)
 func GetRandomInt(min int, max int) int {
-	rand.Seed(time.Now().UnixNano())
-	return rand.Intn(max-min) + min
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	return r.Intn(max-min) + min
 }
 
 // GetRandomFloat returns a random float64 between min and max (both included)
