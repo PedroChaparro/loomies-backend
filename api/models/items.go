@@ -6,19 +6,33 @@ import (
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var Citems *mongo.Collection = configuration.ConnectToMongoCollection("items")
 
-func GetItemById(id primitive.ObjectID) (interfaces.Items, error) {
-	var item interfaces.Items
+func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.PopulatedIventoryItem, error) {
 
-	err := Citems.FindOne(
-		context.TODO(),
-		bson.D{{Key: "_id", Value: id}},
-	).Decode(&item)
+	cursor, err := Citems.Find(context.TODO(), bson.D{})
 
-	return item, err
+	var user_items []interfaces.PopulatedIventoryItem
+
+	for cursor.Next(context.TODO()) {
+		var item interfaces.Items
+		var data interfaces.PopulatedIventoryItem
+
+		cursor.Decode(&item)
+
+		for _, element := range itemsArray {
+
+			if item.Id == element.Id {
+				data = interfaces.PopulatedIventoryItem{Id: item.Id, Name: item.Name, Description: item.Description, Target: item.Target, Is_combat_item: item.Is_combat_item, Quantity: element.Quantity}
+				user_items = append(user_items, data)
+			}
+
+		}
+		
+	}
+
+	return user_items, err
 }

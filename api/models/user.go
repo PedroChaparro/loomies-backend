@@ -20,7 +20,7 @@ func InsertUser(data interfaces.User) error {
 	data.LastLoomieGenerationTime = time.Now().Unix()
 
 	// Set the items and loomies as empty arrays
-	data.Items = []interfaces.ItemsArray{}
+	data.Items = []interfaces.InventoryItem{}
 	data.Loomies = []primitive.ObjectID{}
 
 	//Insert User in database
