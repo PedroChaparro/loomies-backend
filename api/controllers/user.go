@@ -154,10 +154,15 @@ func HandleNewCodeValidation(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Verification code cannot be empty"})
 		return
 	}
+	_, err := models.GetUserByEmail(form.Email)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "This Email has not been registered"})
+		return
+	}
 	//generate code
 	validationCode := utils.GetValidationCode()
 	//send mail of verification
-	err := utils.SendEmail(form.Email, "Here is validation code requested", validationCode)
+	err = utils.SendEmail(form.Email, "Here is validation code requested", validationCode)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
 		return
