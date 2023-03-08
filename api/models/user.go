@@ -148,9 +148,25 @@ func CheckCodeExistence(email string, code string) bool {
 		update := bson.D{{Key: "$set", Value: bson.D{
 			{Key: "isVerified", Value: true},
 			{Key: "validationCode", Value: ""},
+			{Key: "timeExpiration", Value: nil},
 		},
 		}}
 		Collection.UpdateOne(context.TODO(), filter, update)
 		return true
 	}
+}
+
+func UpdateCode(email string, validationCode string) error {
+	// update code and expiration time
+	filter := bson.D{{Key: "email", Value: email}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "validationCode", Value: validationCode},
+		{Key: "timeExpiration", Value: time.Now().Add(time.Minute * 60)},
+	},
+	}}
+	_, err := Collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return err
 }

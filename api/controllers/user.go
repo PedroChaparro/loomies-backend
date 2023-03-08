@@ -161,6 +161,14 @@ func HandleNewCodeValidation(c *gin.Context) {
 	}
 	//generate code
 	validationCode := utils.GetValidationCode()
+	//update in database
+	err = models.UpdateCode(form.Email, validationCode)
+	if err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		return
+	}
+
 	//send mail of verification
 	err = utils.SendEmail(form.Email, "Here is validation code requested", validationCode)
 	if err != nil {
