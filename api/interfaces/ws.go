@@ -3,6 +3,8 @@ package interfaces
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -48,6 +50,18 @@ func (wsHub *WsHub) AddClient(gymID string, wsClient *WsClient) {
 func (wsClient *WsClient) ReadMessages() {
 	// Close the connection when the ws communication is over
 	defer wsClient.Connection.Close()
+
+	// Send random messages to the client
+	go func() {
+		for {
+			randInt := rand.Intn(3-1) + 1
+			time.Sleep(time.Duration(randInt) * time.Second)
+			wsClient.Connection.WriteJSON(gin.H{
+				"error":   false,
+				"message": "Random message",
+			})
+		}
+	}()
 
 	for {
 		// Read the message from the client
