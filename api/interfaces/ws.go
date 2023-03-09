@@ -1,8 +1,10 @@
 package interfaces
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
@@ -16,9 +18,8 @@ type WsClient struct {
 // WsMessage is a struct to make it possible to send  and receive messages
 // through the socket.
 type WsMessage struct {
+	Type    string `json:"type"`
 	Message string `json:"message"`
-	// The key to identify the combat in the Hub map
-	CombatKey string `json:"combat_key"`
 }
 
 // WsHub is a struct that contains all the clients connected to the server.
@@ -52,21 +53,33 @@ func (wsClient *WsClient) ReadMessages() {
 		// Read the message from the client
 		_, message, err := wsClient.Connection.ReadMessage()
 
+		// Parse message to JSON
+		var wsMessage WsMessage
+		_ = json.Unmarshal(message, &wsMessage)
+
 		if err != nil {
 			fmt.Printf("ERROR: Error reading message from client: %v \n", err)
 			return
 		}
 
-		fmt.Printf("INFO: Message received from client: %s \n", message)
-
 		// Send a message back to the client
-		wsClient.WriteMessage("The message was received")
+		switch wsMessage.Type {
+		case "attack":
+			wsClient.WriteMessage("The attack was received")
+		default:
+			wsClient.WriteMessage("The message type is not valid")
+		}
+
+		fmt.Println("The message was received...")
 	}
 }
 
 // WriteMessage sends a message to the client.
 func (wsClient *WsClient) WriteMessage(message string) {
-	err := wsClient.Connection.WriteMessage(websocket.TextMessage, []byte(message))
+	err := wsClient.Connection.WriteJSON(gin.H{
+		"error":   false,
+		"message": message,
+	})
 
 	if err != nil {
 		fmt.Printf("ERROR: Error writing message to client: %v \n", err)
