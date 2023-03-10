@@ -24,7 +24,24 @@ const GymSchema = new Schema(
     latitude: Number,
     longitude: Number,
     name: String,
-    current_rewards: {
+    current_players_rewards: {
+      type: [
+        {
+          reward_collection: {
+            type: String,
+            // Gym rewards can be items or loomballs
+            enum: ["items", "loom_balls"],
+          },
+          reward_id: {
+            type: Schema.Types.ObjectId,
+            // Dynamically reference the correct collection
+            refPath: "current_rewards.reward_type",
+          },
+          reward_quantity: Number,
+        },
+      ],
+    },
+    current_owners_rewards: {
       type: [
         {
           reward_collection: {
