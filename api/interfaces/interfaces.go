@@ -72,6 +72,7 @@ type Gym struct {
 	Latitude              float64              `json:"latitude"      bson:"latitude"`
 	Longitude             float64              `json:"longitude"      bson:"longitude"`
 	Name                  string               `json:"name"      bson:"name"`
+	Owner                 primitive.ObjectID   `json:"owner,omitempty"      bson:"owner,omitempty"`
 	CurrentPlayersRewards []GymRewardItem      `json:"current_players_rewards"      bson:"current_players_rewards"`
 	CurrentOwnerRewards   []GymRewardItem      `json:"current_owner_rewards"      bson:"current_owner_rewards"`
 	RewardsClaimedBy      []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
