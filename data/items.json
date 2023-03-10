@@ -4,7 +4,8 @@
     "description": "Heals 50 HP",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.5,
+    "gym_reward_chance_player": 0.5,
+    "gym_reward_chance_owner": 1,
     "min_reward_quantity": 1,
     "max_reward_quantity": 3
   },
@@ -13,7 +14,8 @@
     "description": "Heals 100 HP",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.25,
+    "gym_reward_chance_player": 0.25,
+    "gym_reward_chance_owner": 1,
     "min_reward_quantity": 1,
     "max_reward_quantity": 2
   },
@@ -22,7 +24,8 @@
     "description": "Heals all the HP",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.1,
+    "gym_reward_chance_player": 0.1,
+    "gym_reward_chance_owner": 1,
     "min_reward_quantity": 1,
     "max_reward_quantity": 1
   },
@@ -31,7 +34,8 @@
     "description": "Revives a dead loomie with half HP",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.25,
+    "gym_reward_chance_player": 0.25,
+    "gym_reward_chance_owner": 1,
     "min_reward_quantity": 1,
     "max_reward_quantity": 1
   },
@@ -40,7 +44,8 @@
     "description": "Increases the loomie's attack by 20%",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.35,
+    "gym_reward_chance_player": 0.35,
+    "gym_reward_chance_owner": 1,
     "min_reward_quantity": 1,
     "max_reward_quantity": 2
   },
@@ -49,7 +54,8 @@
     "description": "Increases the loomie's max HP by 20%",
     "target": "Loomie",
     "is_combat_item": true,
-    "gym_reward_chance": 0.35,
+    "gym_reward_chance_player": 0.35,
+    "gym_reward_chance_owner": 1,
     "min_reward_quantity": 1,
     "max_reward_quantity": 2
   },
@@ -58,7 +64,8 @@
     "description": "Increate the loomie's level by 1",
     "target": "Loomie",
     "is_combat_item": false,
-    "gym_reward_chance": 0.35,
+    "gym_reward_chance_player": 0.35,
+    "gym_reward_chance_owner": 1,
     "min_reward_quantity": 1,
     "max_reward_quantity": 1
   }

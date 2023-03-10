@@ -30,11 +30,11 @@ async function generateNewRewards() {
   const chances = [
     ...items.map((item) => ({
       result: { ...item._doc },
-      chance: item.gym_reward_chance,
+      chance: item.gym_reward_chance_player,
     })),
     ...loomballs.map((loomball) => ({
       result: { ...loomball._doc },
-      chance: loomball.gym_reward_chance,
+      chance: loomball.gym_reward_chance_player,
     })),
   ];
 

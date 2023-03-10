@@ -122,7 +122,12 @@ const ItemsSchema = new Schema(
     },
     is_combat_item: Boolean,
     // Probability to appear as a gym reward
-    gym_reward_chance: {
+    gym_reward_chance_player: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+    gym_reward_chance_owner: {
       type: Number,
       min: 0,
       max: 1,
@@ -144,7 +149,12 @@ const LoomBallsSchema = new Schema(
       max: 1,
     },
     // Probability to appear as a gym reward
-    gym_reward_chance: {
+    gym_reward_chance_player: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+    gym_reward_chance_owner: {
       type: Number,
       min: 0,
       max: 1,
