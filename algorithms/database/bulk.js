@@ -60,6 +60,8 @@ for await (const zone of zones) {
       name,
       latitude,
       longitude,
+      // Initially the gym has no owner
+      owner: null,
       // Initially the gym has no rewards until the cronjob runs
       current_rewards: [],
       rewards_claimed_by: [],

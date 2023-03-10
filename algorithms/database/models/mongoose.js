@@ -24,6 +24,7 @@ const GymSchema = new Schema(
     latitude: Number,
     longitude: Number,
     name: String,
+    owner: { type: Schema.Types.ObjectId, ref: "users" },
     current_players_rewards: {
       type: [
         {
