@@ -68,12 +68,13 @@ type GymRewardItem struct {
 }
 
 type Gym struct {
-	Id               primitive.ObjectID   `json:"_id" bson:"_id"`
-	Latitude         float64              `json:"latitude"      bson:"latitude"`
-	Longitude        float64              `json:"longitude"      bson:"longitude"`
-	Name             string               `json:"name"      bson:"name"`
-	CurrentRewards   []GymRewardItem      `json:"current_rewards"      bson:"current_rewards"`
-	RewardsClaimedBy []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
+	Id                    primitive.ObjectID   `json:"_id" bson:"_id"`
+	Latitude              float64              `json:"latitude"      bson:"latitude"`
+	Longitude             float64              `json:"longitude"      bson:"longitude"`
+	Name                  string               `json:"name"      bson:"name"`
+	CurrentPlayersRewards []GymRewardItem      `json:"current_players_rewards"      bson:"current_players_rewards"`
+	CurrentOwnerRewards   []GymRewardItem      `json:"current_owner_rewards"      bson:"current_owner_rewards"`
+	RewardsClaimedBy      []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
 }
 
 type Item struct {
