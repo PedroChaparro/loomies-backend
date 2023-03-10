@@ -93,7 +93,11 @@ async function run() {
   await removeRewardsAndClaimers();
   await generateNewRewards();
   console.log("The generated rewards are: (name: quantity): ");
-  console.table(CHOOSED_REWARDS);
+
+  const GENERATED_ARR = Object.entries(CHOOSED_REWARDS);
+  GENERATED_ARR.sort((a, b) => b[1] - a[1]);
+  console.table(GENERATED_ARR);
+
   mongoose.connection.close();
 }
 
