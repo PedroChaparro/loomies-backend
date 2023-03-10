@@ -53,3 +53,10 @@ export async function generateRewards(
     chances = chances.filter((reward) => reward.result._id !== selection._id);
   }
 }
+
+export function printRewards(rewardsMap, title) {
+  const rewardsArr = Object.entries(rewardsMap);
+  rewardsArr.sort((a, b) => b[1] - a[1]);
+  console.log(title);
+  console.table(rewardsArr);
+}

@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { getRandomRewardsAmount, generateRewards } from "./helpers.js";
+import {
+  getRandomRewardsAmount,
+  generateRewards,
+  printRewards,
+} from "./helpers.js";
 import { GymModel, ItemModel, LoomBallModel } from "../../models/mongoose.js";
 
 // Connect to MongoDB
@@ -101,18 +105,8 @@ async function generateNewRewards() {
 async function run() {
   await removeRewardsAndClaimers();
   await generateNewRewards();
-  console.log("The generated rewards are: (name: quantity): ");
-
-  const USER_GENERATED_ARR = Object.entries(PLAYERS_GENERATED_REWARDS);
-  USER_GENERATED_ARR.sort((a, b) => b[1] - a[1]);
-  console.log("Generated rewards for the players:");
-  console.table(USER_GENERATED_ARR);
-
-  const OWNER_GENERATED_ARR = Object.entries(OWNERS_GENERATED_REWARDS);
-  OWNER_GENERATED_ARR.sort((a, b) => b[1] - a[1]);
-  console.log("Generated rewards for the owners:");
-  console.table(OWNER_GENERATED_ARR);
-
+  printRewards(PLAYERS_GENERATED_REWARDS, "Rewards for players:");
+  printRewards(OWNERS_GENERATED_REWARDS, "Rewards for owners:");
   mongoose.connection.close();
 }
 
