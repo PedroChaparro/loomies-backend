@@ -7,6 +7,7 @@ import {
   LoomieRarityModel,
   BaseLoomieModel,
   ItemModel,
+  LoomBallModel,
 } from "./models/mongoose.js";
 import { readJsonFromDataFolder } from "./utils/utils.js";
 
@@ -22,6 +23,11 @@ const loomies = readJsonFromDataFolder("loomies");
 const items = readJsonFromDataFolder("items");
 const loomieTypes = readJsonFromDataFolder("loomies_types");
 const loomieRarities = readJsonFromDataFolder("loomies_rarities");
+const loomballs = readJsonFromDataFolder("loomballs");
+
+// Global variables
+const globalLoomiesTypesIds = [];
+const globalLoomiesRaritiesIds = [];
 
 // --- Zones and Gyms ---
 console.log("🏟️ Inserting gyms and zones...");
@@ -50,7 +56,16 @@ for await (const zone of zones) {
   // Insert the gym into mongodb and get the id
   if (gym !== -1) {
     const { name, latitude, longitude } = gyms[gym];
-    const newGym = new GymModel({ name, latitude, longitude });
+    const newGym = new GymModel({
+      name,
+      latitude,
+      longitude,
+      // Initially the gym has no owner
+      owner: null,
+      // Initially the gym has no rewards until the cronjob runs
+      current_rewards: [],
+      rewards_claimed_by: [],
+    });
     const { _id } = await newGym.save();
     GymMongoId = _id;
   }
@@ -81,7 +96,6 @@ console.log("Gyms inserted: ", await GymModel.countDocuments(), "\n");
 
 // --- Loomies types ---
 console.log("✨ Inserting loomie types...");
-const globalLoomiesTypesIds = [];
 
 // 1. Insert loomie types without the strong_against attribute
 for await (const loomieType of loomieTypes) {
@@ -142,7 +156,6 @@ console.log(
 
 // --- Loomies rarities ---
 console.log("📊 Inserting loomie rarities...");
-const globalLoomiesRaritiesIds = [];
 
 for await (const loomieRarity of loomieRarities) {
   const { name, spawn_chance } = loomieRarity;
@@ -220,19 +233,63 @@ console.log("Inserted loomies: ", await BaseLoomieModel.countDocuments(), "\n");
 console.log("📦 Inserting items...");
 
 for await (const item of items) {
-  const { name, description, target, is_combat_item } = item;
+  const {
+    name,
+    description,
+    target,
+    is_combat_item,
+    gym_reward_chance_player,
+    gym_reward_chance_owner,
+    min_reward_quantity,
+    max_reward_quantity,
+  } = item;
 
   const newItem = new ItemModel({
     name,
     description,
     target,
     is_combat_item,
+    gym_reward_chance_player,
+    gym_reward_chance_owner,
+    min_reward_quantity,
+    max_reward_quantity,
   });
 
   await newItem.save();
 }
 
 console.log("Inserted items: ", await ItemModel.countDocuments(), "\n");
+
+// --- Loomballs ---
+console.log("🎱 Inserting loomballs...");
+
+for await (const loomball of loomballs) {
+  const {
+    name,
+    effective_until,
+    decay_until,
+    minimum_probability,
+    gym_reward_chance_player,
+    gym_reward_chance_owner,
+    min_reward_quantity,
+    max_reward_quantity,
+  } = loomball;
+
+  const newLoomball = new LoomBallModel({
+    name,
+    effective_until,
+    decay_until,
+    minimum_probability,
+    gym_reward_chance_player,
+    gym_reward_chance_owner,
+    min_reward_quantity,
+    max_reward_quantity,
+  });
+
+  await newLoomball.save();
+}
+
+console.log("Inserted loomballs: ", await LoomBallModel.countDocuments(), "\n");
 
 // Close connection
 await ZoneModel.ensureIndexes();

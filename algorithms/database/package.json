@@ -1,0 +1,26 @@
+{
+  "name": "gyms_insertion",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bulk": "node bulk.js",
+    "test": "vitest",
+    "clear:outdated": "node cronjobs/remove_outdated_loomies/remove.js --outdated",
+    "clear:all": "node cronjobs/remove_outdated_loomies/remove.js --all",
+    "update:rewards": "node cronjobs/update_gyms_rewards/update.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "mongoose": "^6.9.1",
+    "vitest": "^0.29.1",
+    "weighted-randomly-select": "^1.0.6"
+  },
+  "devDependencies": {
+    "vite": "^4.1.4"
+  }
+}
