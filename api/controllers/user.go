@@ -90,11 +90,11 @@ func HandleSignUp(c *gin.Context) {
 	validationCode := utils.GetValidationCode()
 
 	data := interfaces.User{Username: form.Username,
-		Email:          form.Email,
-		Password:       string(hashed),
-		ValidationCode: validationCode,
-		TimeExpiration: time.Now().Add(time.Minute * 1).Unix(),
-		IsVerified:     false}
+		Email:             form.Email,
+		Password:          string(hashed),
+		ValidationCode:    validationCode,
+		ValidationCodeExp: time.Now().Add(time.Minute * 15).Unix(),
+		IsVerified:        false}
 
 	err = models.InsertUser(data)
 

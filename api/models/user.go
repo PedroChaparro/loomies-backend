@@ -132,7 +132,7 @@ func CheckCodeExistence(email string, code string) bool {
 		fmt.Println(err)
 	}
 	// check time expire
-	if !time.Now().Before(time.Unix(usercode.TimeExpiration, 0)) {
+	if !time.Now().Before(time.Unix(usercode.ValidationCodeExp, 0)) {
 		// clean validationCode field
 		filter := bson.D{{Key: "email", Value: usercode.Email}}
 		update := bson.D{{Key: "$set", Value: bson.D{
@@ -152,7 +152,7 @@ func CheckCodeExistence(email string, code string) bool {
 		update := bson.D{{Key: "$set", Value: bson.D{
 			{Key: "isVerified", Value: true},
 			{Key: "validationCode", Value: nil},
-			{Key: "timeExpiration", Value: nil},
+			{Key: "validationCodeExp", Value: nil},
 		},
 		}}
 		Collection.UpdateOne(context.TODO(), filter, update)
@@ -165,7 +165,7 @@ func UpdateCode(email string, validationCode string) error {
 	filter := bson.D{{Key: "email", Value: email}}
 	update := bson.D{{Key: "$set", Value: bson.D{
 		{Key: "validationCode", Value: validationCode},
-		{Key: "timeExpiration", Value: time.Now().Add(time.Minute * 1).Unix()},
+		{Key: "validationCodeExp", Value: time.Now().Add(time.Minute * 15).Unix()},
 	},
 	}}
 	_, err := Collection.UpdateOne(context.TODO(), filter, update)

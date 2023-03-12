@@ -116,7 +116,7 @@ type User struct {
 	Items                           []InventoryItem      `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
 	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
-	TimeExpiration                  int64                `json:"timeExpiration"   bson:"timeExpiration"`
+	ValidationCodeExp               int64                `json:"validationCodeExp"   bson:"validationCodeExp"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
@@ -175,7 +175,7 @@ type WildLoomie struct {
 }
 
 type ValidationCode struct {
-	Email          string `json:"email"`
-	ValidationCode string `json:"validationCode"`
-	TimeExpiration int64  `json:"timeExpiration,omitempty"`
+	Email             string `json:"email"`
+	ValidationCode    string `json:"validationCode"`
+	ValidationCodeExp int64  `json:"validationCodeExp,omitempty"`
 }
