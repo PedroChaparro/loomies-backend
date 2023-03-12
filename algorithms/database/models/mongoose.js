@@ -122,12 +122,15 @@ const WildLoomieSchema = new Schema(
   { versionKey: false }
 );
 
-const CaughtLoomieSchema = new Schema({
-  // The caught loomie is a copy of the wild loomie
-  ...sharedLoomieAttributes,
-  // But also has a reference to the user that caught it
-  owner: { type: Schema.Types.ObjectId, ref: "users" },
-});
+const CaughtLoomieSchema = new Schema(
+  {
+    // The caught loomie is a copy of the wild loomie
+    ...sharedLoomieAttributes,
+    // But also has a reference to the user that caught it
+    owner: { type: Schema.Types.ObjectId, ref: "users" },
+  },
+  { versionKey: false }
+);
 
 const ItemsSchema = new Schema(
   {
