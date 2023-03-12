@@ -85,7 +85,7 @@ type InventoryItem struct {
 	Quantity int                `json:"quantity" bson:"quantity"`
 }
 
-type Items struct {
+type Item struct {
 	Id             primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name           string             `json:"name"      bson:"name"`
 	Description    string             `json:"description"     bson:"description"`
