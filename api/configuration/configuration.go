@@ -34,7 +34,7 @@ func load() {
 	Globals.Loaded = true
 }
 
-func getEnvironmentVariable(name string) string {
+func GetEnvironmentVariable(name string) string {
 	if Globals.Loaded == false {
 		load()
 	}
@@ -50,7 +50,7 @@ func getEnvironmentVariable(name string) string {
 
 func GetAccessTokenSecret() string {
 	if Globals.AccessTokenSecret == "" {
-		accessTokenSecret := getEnvironmentVariable("ACCESS_TOKEN_SECRET")
+		accessTokenSecret := GetEnvironmentVariable("ACCESS_TOKEN_SECRET")
 		Globals.AccessTokenSecret = accessTokenSecret
 	}
 
@@ -59,7 +59,7 @@ func GetAccessTokenSecret() string {
 
 func GetRefreshTokenSecret() string {
 	if Globals.RefreshTokenSecret == "" {
-		refreshTokenSecret := getEnvironmentVariable("REFRESH_TOKEN_SECRET")
+		refreshTokenSecret := GetEnvironmentVariable("REFRESH_TOKEN_SECRET")
 		Globals.RefreshTokenSecret = refreshTokenSecret
 	}
 
@@ -69,8 +69,8 @@ func GetRefreshTokenSecret() string {
 func GetLoomiesGenerationTimeouts() (int, int) {
 	if Globals.MinLoomiesGenerationTimeout == 0 || Globals.MaxLoomiesGenerationTimeout == 0 {
 		// Get values (as strings) from the environment
-		minLoomiesGenerationTimeoutString := getEnvironmentVariable("GAME_MIN_LOOMIES_GENERATION_TIMEOUT")
-		maxLoomiesGenerationTimeoutString := getEnvironmentVariable("GAME_MAX_LOOMIES_GENERATION_TIMEOUT")
+		minLoomiesGenerationTimeoutString := GetEnvironmentVariable("GAME_MIN_LOOMIES_GENERATION_TIMEOUT")
+		maxLoomiesGenerationTimeoutString := GetEnvironmentVariable("GAME_MAX_LOOMIES_GENERATION_TIMEOUT")
 
 		// Convert the strings to integers
 		minLoomiesGenerationTimeout, _ := strconv.Atoi(minLoomiesGenerationTimeoutString)
@@ -87,8 +87,8 @@ func GetLoomiesGenerationTimeouts() (int, int) {
 func GetLoomiesGenerationAmounts() (int, int) {
 	if Globals.MinLoomiesGenerationAmount == 0 || Globals.MaxLoomiesGenerationAmount == 0 {
 		// Get values (as strings) from the environment
-		minLoomiesGenerationAmountString := getEnvironmentVariable("GAME_MIN_LOOMIES_GENERATION_AMOUNT")
-		maxLoomiesGenerationAmountString := getEnvironmentVariable("GAME_MAX_LOOMIES_GENERATION_AMOUNT")
+		minLoomiesGenerationAmountString := GetEnvironmentVariable("GAME_MIN_LOOMIES_GENERATION_AMOUNT")
+		maxLoomiesGenerationAmountString := GetEnvironmentVariable("GAME_MAX_LOOMIES_GENERATION_AMOUNT")
 
 		// Convert the strings to integers
 		minLoomiesGenerationAmount, _ := strconv.Atoi(minLoomiesGenerationAmountString)
@@ -105,7 +105,7 @@ func GetLoomiesGenerationAmounts() (int, int) {
 func GetLoomiesGenerationRadius() float64 {
 	if Globals.LoomiesGenerationRadius == 0 {
 		// Get value (as string) from the environment
-		loomiesGenerationRadiusString := getEnvironmentVariable("GAME_LOOMIES_GENERATION_RADIUS")
+		loomiesGenerationRadiusString := GetEnvironmentVariable("GAME_LOOMIES_GENERATION_RADIUS")
 
 		// Convert the string to float64
 		loomiesGenerationRadius, _ := strconv.ParseFloat(loomiesGenerationRadiusString, 64)
@@ -120,7 +120,7 @@ func GetLoomiesGenerationRadius() float64 {
 func GetMaxLoomiesPerZone() int {
 	if Globals.MaxLoomiesPerZone == 0 {
 		// Get value (as string) from the environment
-		maxLoomiesPerZoneString := getEnvironmentVariable("GAME_MAX_LOOMIES_PER_ZONE")
+		maxLoomiesPerZoneString := GetEnvironmentVariable("GAME_MAX_LOOMIES_PER_ZONE")
 
 		// Convert the string to integer
 		maxLoomiesPerZone, _ := strconv.Atoi(maxLoomiesPerZoneString)
@@ -141,9 +141,9 @@ func getMongoClient() *mongo.Client {
 		defer cancel()
 
 		// Connect to mongo db using the user and password from the .env file
-		user := getEnvironmentVariable("MONGO_USER")
-		password := getEnvironmentVariable("MONGO_PASSWORD")
-		hosts := getEnvironmentVariable("MONGO_HOSTS")
+		user := GetEnvironmentVariable("MONGO_USER")
+		password := GetEnvironmentVariable("MONGO_PASSWORD")
+		hosts := GetEnvironmentVariable("MONGO_HOSTS")
 		uri := fmt.Sprintf("mongodb://%s:%s@%s", user, password, hosts)
 
 		client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))

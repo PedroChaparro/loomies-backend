@@ -17,6 +17,7 @@ func SetupRoutes(engine *gin.Engine) {
 
 	// Gyms
 	engine.POST("/near_gyms", middlewares.MustProvideAccessToken(), controllers.HandleNearGyms)
+	engine.POST("/gyms/claim_reward", middlewares.MustProvideAccessToken(), controllers.HandleClaimReward)
 
 	// Loomies
 	engine.POST("/near_loomies", middlewares.MustProvideAccessToken(), controllers.HandleNearLoomies)
