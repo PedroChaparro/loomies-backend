@@ -1,8 +1,6 @@
 package interfaces
 
 import (
-	"time"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -118,7 +116,7 @@ type User struct {
 	Items                           []InventoryItem      `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
 	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
-	TimeExpiration                  time.Time            `json:"timeExpiration"   bson:"timeExpiration"`
+	TimeExpiration                  int64                `json:"timeExpiration"   bson:"timeExpiration"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
@@ -174,4 +172,10 @@ type WildLoomie struct {
 	Latitude    float64              `json:"latitude"     bson:"latitude"`
 	Longitude   float64              `json:"longitude"     bson:"longitude"`
 	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
+}
+
+type ValidationCode struct {
+	Email          string `json:"email"`
+	ValidationCode string `json:"validationCode"`
+	TimeExpiration int64  `json:"timeExpiration,omitempty"`
 }

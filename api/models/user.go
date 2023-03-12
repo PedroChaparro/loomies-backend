@@ -11,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
@@ -74,6 +73,15 @@ func GetUserByUsername(Username string) (interfaces.User, error) {
 	return userU, err
 }
 
+func GetUserByEmailAndVerifStatus(email string) (interfaces.User, error) {
+	var userE interfaces.User
+	err := Collection.FindOne(
+		context.TODO(),
+		bson.D{{Key: "email", Value: email}, {Key: "isVerified", Value: true}},
+	).Decode(&userE)
+	return userE, err
+}
+
 // GetUserById returns a user by its id
 func GetUserById(id string) (interfaces.User, error) {
 	var user interfaces.User
@@ -119,20 +127,16 @@ func CheckCodeExistence(email string, code string) bool {
 
 	var usercode interfaces.ValidationCode
 	filter := bson.D{{Key: "email", Value: email}}
-	project := bson.D{{Key: "email", Value: 1}, {Key: "validationCode", Value: 1}, {Key: "timeExpiration", Value: 1}}
-	opts := options.FindOne().SetProjection(project)
-
-	err := Collection.FindOne(context.TODO(), filter, opts).Decode(&usercode)
+	err := Collection.FindOne(context.TODO(), filter).Decode(&usercode)
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	// check time expire
-	if !time.Now().Before(usercode.TimeExpiration) {
+	if !time.Now().Before(time.Unix(usercode.TimeExpiration, 0)) {
 		// clean validationCode field
 		filter := bson.D{{Key: "email", Value: usercode.Email}}
 		update := bson.D{{Key: "$set", Value: bson.D{
-			{Key: "validationCode", Value: ""},
+			{Key: "validationCode", Value: nil},
 		},
 		}}
 		Collection.UpdateOne(context.TODO(), filter, update)
@@ -147,7 +151,7 @@ func CheckCodeExistence(email string, code string) bool {
 		filter := bson.D{{Key: "email", Value: usercode.Email}}
 		update := bson.D{{Key: "$set", Value: bson.D{
 			{Key: "isVerified", Value: true},
-			{Key: "validationCode", Value: ""},
+			{Key: "validationCode", Value: nil},
 			{Key: "timeExpiration", Value: nil},
 		},
 		}}
@@ -161,7 +165,7 @@ func UpdateCode(email string, validationCode string) error {
 	filter := bson.D{{Key: "email", Value: email}}
 	update := bson.D{{Key: "$set", Value: bson.D{
 		{Key: "validationCode", Value: validationCode},
-		{Key: "timeExpiration", Value: time.Now().Add(time.Minute * 60)},
+		{Key: "timeExpiration", Value: time.Now().Add(time.Minute * 1).Unix()},
 	},
 	}}
 	_, err := Collection.UpdateOne(context.TODO(), filter, update)

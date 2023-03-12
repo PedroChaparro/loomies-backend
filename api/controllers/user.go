@@ -93,7 +93,7 @@ func HandleSignUp(c *gin.Context) {
 		Email:          form.Email,
 		Password:       string(hashed),
 		ValidationCode: validationCode,
-		TimeExpiration: time.Now().Add(time.Minute * 60),
+		TimeExpiration: time.Now().Add(time.Minute * 1).Unix(),
 		IsVerified:     false}
 
 	err = models.InsertUser(data)
@@ -143,7 +143,7 @@ func HandleCodeValidation(c *gin.Context) {
 }
 
 func HandleNewCodeValidation(c *gin.Context) {
-	var form interfaces.Email
+	var form interfaces.EmailForm
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
@@ -151,12 +151,18 @@ func HandleNewCodeValidation(c *gin.Context) {
 	}
 	//Check if there is no email
 	if form.Email == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Verification code cannot be empty"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
 		return
 	}
+
 	_, err := models.GetUserByEmail(form.Email)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "This Email has not been registered"})
+		return
+	}
+	_, err = models.GetUserByEmailAndVerifStatus(form.Email)
+	if err == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "This Email has been already verified"})
 		return
 	}
 	//generate code

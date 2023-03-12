@@ -13,7 +13,7 @@ func SendEmail(email string, subject string, validationCode string) error {
 	msg.SetHeader("From", sender)
 	msg.SetHeader("To", email)
 	msg.SetHeader("Subject", subject)
-	msg.SetBody("text/html", fmt.Sprintf("This is your code <b>%s</b>, <br> Go quickly this code expires soon, loomies are waiting for you!", validationCode))
+	msg.SetBody("text/html", fmt.Sprintf("This is your code: <b>%s</b>, <br> Hurry up! This code expires soon, Loomies are waiting for you!", validationCode))
 
 	n := gomail.NewDialer("smtp.gmail.com", 587, sender, os.Getenv("EMAIL_PASSWORD"))
 
