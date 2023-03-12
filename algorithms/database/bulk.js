@@ -10,7 +10,10 @@ import {
   ItemModel,
   LoomBallModel,
 } from "./models/mongoose.js";
-import { readJsonFromDataFolder } from "./utils/utils.js";
+import {
+  createRandomLoomieTeam,
+  readJsonFromDataFolder,
+} from "./utils/utils.js";
 
 // Connect to MongoDB
 dotenv.config();
@@ -29,7 +32,7 @@ const loomballs = readJsonFromDataFolder("loomballs");
 // Global variables
 const globalLoomiesTypesIds = [];
 const globalLoomiesRaritiesIds = [];
-let insertedBaseLoomies;
+const globalCommonLoomies = [];
 
 // --- Loomies data ---
 // It's necessary to insert the loomies data beforte the zones and gyms
@@ -165,11 +168,11 @@ for await (const loomie of loomies) {
     base_defense: BASE_ATTRIBUTES.deffense + extra_def,
   });
 
-  await newLoomie.save();
+  const inserted = await newLoomie.save();
+  if (rarity === "Common") globalCommonLoomies.push(inserted._doc);
 }
 
 // Get the inserted loomies to create the default loomie team for each gym
-insertedBaseLoomies = await BaseLoomieModel.find();
 console.log("Inserted loomies: ", await BaseLoomieModel.countDocuments(), "\n");
 
 // --- Zones and Gyms ---
@@ -199,8 +202,7 @@ for await (const zone of zones) {
   // Insert the gym into mongodb and get the id
   if (gym !== -1) {
     const { name, latitude, longitude } = gyms[gym];
-
-    // TODO: Create a random loomie team to protect the gym
+    const protectors = await createRandomLoomieTeam(globalCommonLoomies);
 
     const newGym = new GymModel({
       name,
@@ -208,6 +210,8 @@ for await (const zone of zones) {
       longitude,
       // Initially the gym has no owner
       owner: null,
+      // Set the default loomie team
+      protectors,
       // Initially the gym has no rewards until the cronjob runs
       current_rewards: [],
       rewards_claimed_by: [],
