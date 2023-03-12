@@ -45,6 +45,7 @@ const GymSchema = new Schema(
     longitude: Number,
     name: String,
     owner: { type: Schema.Types.ObjectId, ref: "users" },
+    protectors: [{ type: Schema.Types.ObjectId, ref: "caught_loomies" }],
     current_players_rewards: sharedRewardSchema,
     current_owners_rewards: sharedRewardSchema,
     rewards_claimed_by: [{ type: Schema.Types.ObjectId, ref: "users" }],
