@@ -22,3 +22,9 @@ type ValidationCode struct {
 type Email struct {
 	Email string `json:"email"`
 }
+
+type ClaimGymRewardReq struct {
+	GymID     string  `json:"gym_id"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}

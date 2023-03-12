@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { WildLoomieModel, ZoneModel } from "./models/mongoose.js";
+import { WildLoomieModel, ZoneModel } from "../../models/mongoose.js";
 
 // Connect to MongoDB
 dotenv.config();

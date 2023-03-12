@@ -63,22 +63,59 @@ type ZoneWithPopulatedLoomies struct {
 	PopulatedLoomies []WildLoomie         `json:"populated_loomies" bson:"populated_loomies"`
 }
 
+type GymRewardItem struct {
+	RewardCollection string             `json:"reward_collection" bson:"reward_collection"`
+	RewardId         primitive.ObjectID `json:"reward_id" bson:"reward_id"`
+	RewardQuantity   int                `json:"reward_quantity" bson:"reward_quantity"`
+}
+
 type Gym struct {
-	Id        primitive.ObjectID `json:"_id" bson:"_id"`
-	Latitude  float64            `json:"latitude"      bson:"latitude"`
-	Longitude float64            `json:"longitude"      bson:"longitude"`
-	Name      string             `json:"name"      bson:"name"`
+	Id                    primitive.ObjectID   `json:"_id" bson:"_id"`
+	Latitude              float64              `json:"latitude"      bson:"latitude"`
+	Longitude             float64              `json:"longitude"      bson:"longitude"`
+	Name                  string               `json:"name"      bson:"name"`
+	Owner                 primitive.ObjectID   `json:"owner,omitempty"      bson:"owner,omitempty"`
+	CurrentPlayersRewards []GymRewardItem      `json:"current_players_rewards"      bson:"current_players_rewards"`
+	CurrentOwnerRewards   []GymRewardItem      `json:"current_owners_rewards"      bson:"current_owners_rewards"`
+	RewardsClaimedBy      []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
+}
+
+type Item struct {
+	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name                  string             `json:"name"      bson:"name"`
+	Description           string             `json:"description"      bson:"description"`
+	Target                string             `json:"target"      bson:"target"`
+	IsCombatItem          bool               `json:"is_combat_item"      bson:"is_combat_item"`
+	GymRewardChancePlayer float64            `json:"gym_reward_chance_player"      bson:"gym_reward_chance_player"`
+	GymRewardChanceOwner  float64            `json:"gym_reward_chance_owner"      bson:"gym_reward_chance_owner"`
+	MinRewardQuantity     int                `json:"min_reward_quantity"      bson:"min_reward_quantity"`
+	MaxRewardQuantity     int                `json:"max_reward_quantity"      bson:"max_reward_quantity"`
+}
+
+type Loomball struct {
+	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name                  string             `json:"name"      bson:"name"`
+	EffectiveUntil        int64              `json:"effective_until"      bson:"effective_until"`
+	DecayUntil            int64              `json:"decay_until"      bson:"decay_until"`
+	MinimumProbability    float64            `json:"minimum_probability"      bson:"minimum_probability"`
+	GymRewardChancePlayer float64            `json:"gym_reward_chance_player"      bson:"gym_reward_chance_player"`
+	GymRewardChanceOwner  float64            `json:"gym_reward_chance_owner"      bson:"gym_reward_chance_owner"`
+	MinRewardQuantity     int                `json:"min_reward_quantity"      bson:"min_reward_quantity"`
+	MaxRewardQuantity     int                `json:"max_reward_quantity"      bson:"max_reward_quantity"`
+}
+
+type InventoryItem struct {
+	ItemCollection string             `json:"item_collection" bson:"item_collection"`
+	ItemId         primitive.ObjectID `json:"item_id" bson:"item_id"`
+	ItemQuantity   int                `json:"item_quantity" bson:"item_quantity"`
 }
 
 type User struct {
-	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Username string             `json:"username"      bson:"username"`
-	Email    string             `json:"email"     bson:"email"`
-	Password string             `json:"password"  bson:"password"`
-
-	// tODO: Change this to a struct
-	Items []interface{} `json:"items"     bson:"items"`
-
+	Id                              primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Username                        string               `json:"username"      bson:"username"`
+	Email                           string               `json:"email"     bson:"email"`
+	Password                        string               `json:"password"  bson:"password"`
+	Items                           []InventoryItem      `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
 	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
 	TimeExpiration                  time.Time            `json:"timeExpiration"   bson:"timeExpiration"`
