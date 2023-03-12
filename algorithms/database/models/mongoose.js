@@ -24,6 +24,42 @@ const GymSchema = new Schema(
     latitude: Number,
     longitude: Number,
     name: String,
+    owner: { type: Schema.Types.ObjectId, ref: "users" },
+    current_players_rewards: {
+      type: [
+        {
+          reward_collection: {
+            type: String,
+            // Gym rewards can be items or loomballs
+            enum: ["items", "loom_balls"],
+          },
+          reward_id: {
+            type: Schema.Types.ObjectId,
+            // Dynamically reference the correct collection
+            refPath: "current_rewards.reward_type",
+          },
+          reward_quantity: Number,
+        },
+      ],
+    },
+    current_owners_rewards: {
+      type: [
+        {
+          reward_collection: {
+            type: String,
+            // Gym rewards can be items or loomballs
+            enum: ["items", "loom_balls"],
+          },
+          reward_id: {
+            type: Schema.Types.ObjectId,
+            // Dynamically reference the correct collection
+            refPath: "current_rewards.reward_type",
+          },
+          reward_quantity: Number,
+        },
+      ],
+    },
+    rewards_claimed_by: [{ type: Schema.Types.ObjectId, ref: "users" }],
   },
   { versionKey: false }
 );
@@ -103,6 +139,46 @@ const ItemsSchema = new Schema(
       enum: ["Loomie"], // Currently items only target loomies
     },
     is_combat_item: Boolean,
+    // Probability to appear as a gym reward
+    gym_reward_chance_player: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+    gym_reward_chance_owner: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+    min_reward_quantity: Number,
+    max_reward_quantity: Number,
+  },
+  { versionKey: false }
+);
+
+const LoomBallsSchema = new Schema(
+  {
+    name: String,
+    effective_until: Number,
+    decay_until: Number,
+    minimum_probability: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+    // Probability to appear as a gym reward
+    gym_reward_chance_player: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+    gym_reward_chance_owner: {
+      type: Number,
+      min: 0,
+      max: 1,
+    },
+    min_reward_quantity: Number,
+    max_reward_quantity: Number,
   },
   { versionKey: false }
 );
@@ -115,3 +191,4 @@ export const LoomieRarityModel = model("loomie_rarities", LoomieRaritySchema);
 export const BaseLoomieModel = model("base_loomies", BaseLoomieSchema);
 export const WildLoomieModel = model("wild_loomies", WildLoomieSchema);
 export const ItemModel = model("items", ItemsSchema);
+export const LoomBallModel = model("loom_balls", LoomBallsSchema);

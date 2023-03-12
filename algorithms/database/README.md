@@ -26,19 +26,3 @@ pnpm bulk
 pnpm test
 # npm run test
 ```
-
-## Instruction to remove outdated loomies
-
-1. If you want to remove ALL the loomies, run the `clean:all` script:
-
-```bash
-pnpm clean:all
-# npm run clear:all
-```
-
-2. If you want to remove only the outdated loomies, run the `clean:outdated` script:
-
-```bash
-pnpm clean:outdated
-# npm run clear:outdated
-```

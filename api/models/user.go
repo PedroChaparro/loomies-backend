@@ -20,7 +20,7 @@ func InsertUser(data interfaces.User) error {
 	data.LastLoomieGenerationTime = time.Now().Unix()
 
 	// Set the items and loomies as empty arrays
-	data.Items = []interface{}{} // TODO: Change this to a struct
+	data.Items = []interfaces.InventoryItem{}
 	data.Loomies = []primitive.ObjectID{}
 
 	//Insert User in database
@@ -111,4 +111,38 @@ func UpdateUserGenerationTimes(userId string, lastGenerated int64, newTimeout in
 	)
 
 	return err
+}
+
+// AddItemToUserInventory adds an item to the user's inventory
+func AddItemToUserInventory(userId primitive.ObjectID, item interfaces.GymRewardItem) error {
+	userInventoryItem := interfaces.InventoryItem{
+		ItemCollection: item.RewardCollection,
+		ItemId:         item.RewardId,
+		ItemQuantity:   item.RewardQuantity,
+	}
+
+	// Update the user document
+	_, err := Collection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: userId}},
+		bson.D{
+			{Key: "$push", Value: bson.D{
+				{Key: "items", Value: userInventoryItem},
+			}},
+		},
+	)
+
+	return err
+}
+
+// AddItemsToUserInventory adds multiple items to the user's inventory
+func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.GymRewardItem) error {
+	for _, item := range items {
+		err := AddItemToUserInventory(userId, item)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
