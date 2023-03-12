@@ -46,6 +46,8 @@ export async function createRandomLoomieTeam(commonLoomies) {
       defense: baseLoomie.base_defense - getRandomInt(0, 5),
       // The loomie has no owner, it just exists to protect the gym initially
       owner: null,
+      // The loomie is busy defending the gym althought it's not owned by anyone
+      is_busy: true,
     };
   });
 

@@ -175,6 +175,7 @@ type WildLoomie struct {
 
 type CaughtLoomie struct {
 	Owner   primitive.ObjectID   `json:"owner,omitempty"       bson:"owner,omitempty"`
+	IsBusy  bool                 `json:"is_busy"      bson:"is_busy"`
 	Id      primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Serial  int                  `json:"serial"      bson:"serial"`
 	Name    string               `json:"name"      bson:"name"`
