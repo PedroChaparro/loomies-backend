@@ -43,6 +43,14 @@ jobs:
           echo "REFRESH_TOKEN_SECRET = dummy_refresh_secret" >> .env
           echo "ACCESS_TOKEN_SECRET = dummy_access_secret" >> .env
 
+      - name: 💾 Insert data
+        run: |
+          cd algorithms/database
+          echo "MONGO_URI = mongodb://root:development@127.0.0.1:27017" >> .env
+          npm install
+          npm run bulk 
+          npm run update:rewards
+
       - name: 🧪 Run tests
         run: |
           cd api
