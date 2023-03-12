@@ -19,46 +19,33 @@ const ZoneSchema = new Schema(
 ZoneSchema.set("autoIndex", false);
 ZoneSchema.index({ coordinates: "hashed" });
 
+// Create a schema for the rewards that can be claimed by players and gym owners
+const sharedRewardSchema = {
+  type: [
+    {
+      reward_collection: {
+        type: String,
+        // Gym rewards can be items or loomballs
+        enum: ["items", "loom_balls"],
+      },
+      reward_id: {
+        type: Schema.Types.ObjectId,
+        // Dynamically reference the correct collection
+        refPath: "current_rewards.reward_type",
+      },
+      reward_quantity: Number,
+    },
+  ],
+};
+
 const GymSchema = new Schema(
   {
     latitude: Number,
     longitude: Number,
     name: String,
     owner: { type: Schema.Types.ObjectId, ref: "users" },
-    current_players_rewards: {
-      type: [
-        {
-          reward_collection: {
-            type: String,
-            // Gym rewards can be items or loomballs
-            enum: ["items", "loom_balls"],
-          },
-          reward_id: {
-            type: Schema.Types.ObjectId,
-            // Dynamically reference the correct collection
-            refPath: "current_rewards.reward_type",
-          },
-          reward_quantity: Number,
-        },
-      ],
-    },
-    current_owners_rewards: {
-      type: [
-        {
-          reward_collection: {
-            type: String,
-            // Gym rewards can be items or loomballs
-            enum: ["items", "loom_balls"],
-          },
-          reward_id: {
-            type: Schema.Types.ObjectId,
-            // Dynamically reference the correct collection
-            refPath: "current_rewards.reward_type",
-          },
-          reward_quantity: Number,
-        },
-      ],
-    },
+    current_players_rewards: sharedRewardSchema,
+    current_owners_rewards: sharedRewardSchema,
     rewards_claimed_by: [{ type: Schema.Types.ObjectId, ref: "users" }],
   },
   { versionKey: false }
