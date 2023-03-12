@@ -45,10 +45,11 @@ jobs:
 
       - name: 💾 Insert data
         run: |
-          cd algorithms/database_setup
+          cd algorithms/database
           echo "MONGO_URI = mongodb://root:development@127.0.0.1:27017" >> .env
           npm install
-          npm run bulk
+          npm run bulk 
+          npm run update:rewards
 
       - name: 🧪 Run tests
         run: |
