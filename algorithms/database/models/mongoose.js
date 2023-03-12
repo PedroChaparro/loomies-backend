@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 
+// -- --- --- --- ---
 // Schemas
 const ZoneSchema = new Schema(
   {
@@ -19,46 +20,34 @@ const ZoneSchema = new Schema(
 ZoneSchema.set("autoIndex", false);
 ZoneSchema.index({ coordinates: "hashed" });
 
+// Create a schema for the rewards that can be claimed by players and gym owners
+const sharedRewardSchema = {
+  type: [
+    {
+      reward_collection: {
+        type: String,
+        // Gym rewards can be items or loomballs
+        enum: ["items", "loom_balls"],
+      },
+      reward_id: {
+        type: Schema.Types.ObjectId,
+        // Dynamically reference the correct collection
+        refPath: "current_rewards.reward_type",
+      },
+      reward_quantity: Number,
+    },
+  ],
+};
+
 const GymSchema = new Schema(
   {
     latitude: Number,
     longitude: Number,
     name: String,
     owner: { type: Schema.Types.ObjectId, ref: "users" },
-    current_players_rewards: {
-      type: [
-        {
-          reward_collection: {
-            type: String,
-            // Gym rewards can be items or loomballs
-            enum: ["items", "loom_balls"],
-          },
-          reward_id: {
-            type: Schema.Types.ObjectId,
-            // Dynamically reference the correct collection
-            refPath: "current_rewards.reward_type",
-          },
-          reward_quantity: Number,
-        },
-      ],
-    },
-    current_owners_rewards: {
-      type: [
-        {
-          reward_collection: {
-            type: String,
-            // Gym rewards can be items or loomballs
-            enum: ["items", "loom_balls"],
-          },
-          reward_id: {
-            type: Schema.Types.ObjectId,
-            // Dynamically reference the correct collection
-            refPath: "current_rewards.reward_type",
-          },
-          reward_quantity: Number,
-        },
-      ],
-    },
+    protectors: [{ type: Schema.Types.ObjectId, ref: "caught_loomies" }],
+    current_players_rewards: sharedRewardSchema,
+    current_owners_rewards: sharedRewardSchema,
     rewards_claimed_by: [{ type: Schema.Types.ObjectId, ref: "users" }],
   },
   { versionKey: false }
@@ -104,21 +93,25 @@ const BaseLoomieSchema = new Schema(
   { versionKey: false }
 );
 
+const sharedLoomieAttributes = {
+  serial: Number,
+  name: String,
+  types: {
+    type: [Schema.Types.ObjectId],
+    ref: "loomie_types",
+  },
+  rarity: {
+    type: Schema.Types.ObjectId,
+    ref: "loomie_rarities",
+  },
+  hp: Number,
+  attack: Number,
+  defense: Number,
+};
+
 const WildLoomieSchema = new Schema(
   {
-    serial: Number,
-    name: String,
-    types: {
-      type: [Schema.Types.ObjectId],
-      ref: "loomie_types",
-    },
-    rarity: {
-      type: Schema.Types.ObjectId,
-      ref: "loomie_rarities",
-    },
-    hp: Number,
-    attack: Number,
-    defense: Number,
+    ...sharedLoomieAttributes,
     zone_id: {
       type: Schema.Types.ObjectId,
       ref: "zones",
@@ -126,6 +119,18 @@ const WildLoomieSchema = new Schema(
     latitude: Number,
     longitude: Number,
     generated_at: Number,
+  },
+  { versionKey: false }
+);
+
+const CaughtLoomieSchema = new Schema(
+  {
+    // The caught loomie is a copy of the wild loomie
+    ...sharedLoomieAttributes,
+    // The caught loomie can be busy if it's
+    is_busy: Boolean,
+    // But also has a reference to the user that caught it
+    owner: { type: Schema.Types.ObjectId, ref: "users" },
   },
   { versionKey: false }
 );
@@ -183,12 +188,18 @@ const LoomBallsSchema = new Schema(
   { versionKey: false }
 );
 
+// -- --- --- --- ---
 // Models
+
+// Zone & Gyms
 export const ZoneModel = model("zones", ZoneSchema);
 export const GymModel = model("gyms", GymSchema);
+// Loomies
 export const LoomieTypeModel = model("loomie_types", LoomieTypeSchema);
 export const LoomieRarityModel = model("loomie_rarities", LoomieRaritySchema);
 export const BaseLoomieModel = model("base_loomies", BaseLoomieSchema);
 export const WildLoomieModel = model("wild_loomies", WildLoomieSchema);
+export const CaughtLoomieModel = model("caught_loomies", CaughtLoomieSchema);
+// Collectionables
 export const ItemModel = model("items", ItemsSchema);
 export const LoomBallModel = model("loom_balls", LoomBallsSchema);
