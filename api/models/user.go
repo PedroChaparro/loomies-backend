@@ -25,6 +25,7 @@ func InsertUser(data interfaces.User) error {
 
 	//Insert User in database
 	_, err := Collection.InsertOne(context.TODO(), data)
+
 	return err
 }
 
@@ -72,6 +73,15 @@ func GetUserByUsername(Username string) (interfaces.User, error) {
 	return userU, err
 }
 
+func GetUserByEmailAndVerifStatus(email string) (interfaces.User, error) {
+	var userE interfaces.User
+	err := Collection.FindOne(
+		context.TODO(),
+		bson.D{{Key: "email", Value: email}, {Key: "isVerified", Value: true}},
+	).Decode(&userE)
+	return userE, err
+}
+
 // GetUserById returns a user by its id
 func GetUserById(id string) (interfaces.User, error) {
 	var user interfaces.User
@@ -110,6 +120,58 @@ func UpdateUserGenerationTimes(userId string, lastGenerated int64, newTimeout in
 		},
 	)
 
+	return err
+}
+
+func CheckCodeExistence(email string, code string) bool {
+
+	var usercode interfaces.ValidationCode
+	filter := bson.D{{Key: "email", Value: email}}
+	err := Collection.FindOne(context.TODO(), filter).Decode(&usercode)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// check time expire
+	if !time.Now().Before(time.Unix(usercode.ValidationCodeExp, 0)) {
+		// clean validationCode field
+		filter := bson.D{{Key: "email", Value: usercode.Email}}
+		update := bson.D{{Key: "$set", Value: bson.D{
+			{Key: "validationCode", Value: nil},
+		},
+		}}
+		Collection.UpdateOne(context.TODO(), filter, update)
+		return false
+	}
+
+	// verify code
+	if code != usercode.ValidationCode {
+		return false
+	} else {
+		// update status verified and delete one
+		filter := bson.D{{Key: "email", Value: usercode.Email}}
+		update := bson.D{{Key: "$set", Value: bson.D{
+			{Key: "isVerified", Value: true},
+			{Key: "validationCode", Value: nil},
+			{Key: "validationCodeExp", Value: nil},
+		},
+		}}
+		Collection.UpdateOne(context.TODO(), filter, update)
+		return true
+	}
+}
+
+func UpdateCode(email string, validationCode string) error {
+	// update code and expiration time
+	filter := bson.D{{Key: "email", Value: email}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "validationCode", Value: validationCode},
+		{Key: "validationCodeExp", Value: time.Now().Add(time.Minute * 15).Unix()},
+	},
+	}}
+	_, err := Collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return err
 }
 
