@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 
+// -- --- --- --- ---
 // Schemas
 const ZoneSchema = new Schema(
   {
@@ -91,21 +92,25 @@ const BaseLoomieSchema = new Schema(
   { versionKey: false }
 );
 
+const sharedLoomieAttributes = {
+  serial: Number,
+  name: String,
+  types: {
+    type: [Schema.Types.ObjectId],
+    ref: "loomie_types",
+  },
+  rarity: {
+    type: Schema.Types.ObjectId,
+    ref: "loomie_rarities",
+  },
+  hp: Number,
+  attack: Number,
+  defense: Number,
+};
+
 const WildLoomieSchema = new Schema(
   {
-    serial: Number,
-    name: String,
-    types: {
-      type: [Schema.Types.ObjectId],
-      ref: "loomie_types",
-    },
-    rarity: {
-      type: Schema.Types.ObjectId,
-      ref: "loomie_rarities",
-    },
-    hp: Number,
-    attack: Number,
-    defense: Number,
+    ...sharedLoomieAttributes,
     zone_id: {
       type: Schema.Types.ObjectId,
       ref: "zones",
@@ -116,6 +121,13 @@ const WildLoomieSchema = new Schema(
   },
   { versionKey: false }
 );
+
+const CaughtLoomieSchema = new Schema({
+  // The caught loomie is a copy of the wild loomie
+  ...sharedLoomieAttributes,
+  // But also has a reference to the user that caught it
+  owner: { type: Schema.Types.ObjectId, ref: "users" },
+});
 
 const ItemsSchema = new Schema(
   {
@@ -170,12 +182,18 @@ const LoomBallsSchema = new Schema(
   { versionKey: false }
 );
 
+// -- --- --- --- ---
 // Models
+
+// Zone & Gyms
 export const ZoneModel = model("zones", ZoneSchema);
 export const GymModel = model("gyms", GymSchema);
+// Loomies
 export const LoomieTypeModel = model("loomie_types", LoomieTypeSchema);
 export const LoomieRarityModel = model("loomie_rarities", LoomieRaritySchema);
 export const BaseLoomieModel = model("base_loomies", BaseLoomieSchema);
 export const WildLoomieModel = model("wild_loomies", WildLoomieSchema);
+export const CaughtLoomieModel = model("caught_loomies", CaughtLoomieSchema);
+// Collectionables
 export const ItemModel = model("items", ItemsSchema);
 export const LoomBallModel = model("loom_balls", LoomBallsSchema);
