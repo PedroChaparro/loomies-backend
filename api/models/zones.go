@@ -13,7 +13,7 @@ import (
 
 var ZonesCollection *mongo.Collection = configuration.ConnectToMongoCollection("zones")
 
-func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfaces.Gym, e error) {
+func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfaces.NearGymsRes, e error) {
 	coordX, coordY := utils.GetZoneCoordinatesFromGPS(interfaces.Coordinates{
 		Latitude:  currentLatitude,
 		Longitude: currentLongitude,
@@ -45,17 +45,21 @@ func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfa
 	// make the aggregation and get the gym field
 	cursor, err := ZonesCollection.Aggregate(context.TODO(), []bson.M{matchFilter, lookupIntoGyms})
 
-	var gyms []interfaces.Gym
+	var gyms []interfaces.NearGymsRes
 
 	for cursor.Next(context.Background()) {
 		var surroundZones interfaces.ZoneWithGyms
 		cursor.Decode(&surroundZones)
+
 		// some zones don't have gyms
 		if len(surroundZones.Gyms) != 0 {
-			gyms = append(gyms, surroundZones.Gyms[0])
+			// Parse the gym to NearGymsRes (to remove unnecessary fields)
+			nearGymStruct := surroundZones.Gyms[0].ToNearGymsRes()
+			gyms = append(gyms, *nearGymStruct)
 		}
 	}
 
+	fmt.Println(err)
 	return gyms, err
 }
 

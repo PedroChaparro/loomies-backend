@@ -60,6 +60,8 @@ for await (const zone of zones) {
       name,
       latitude,
       longitude,
+      // Initially the gym has no owner
+      owner: null,
       // Initially the gym has no rewards until the cronjob runs
       current_rewards: [],
       rewards_claimed_by: [],
@@ -236,7 +238,8 @@ for await (const item of items) {
     description,
     target,
     is_combat_item,
-    gym_reward_chance,
+    gym_reward_chance_player,
+    gym_reward_chance_owner,
     min_reward_quantity,
     max_reward_quantity,
   } = item;
@@ -246,7 +249,8 @@ for await (const item of items) {
     description,
     target,
     is_combat_item,
-    gym_reward_chance,
+    gym_reward_chance_player,
+    gym_reward_chance_owner,
     min_reward_quantity,
     max_reward_quantity,
   });
@@ -265,7 +269,8 @@ for await (const loomball of loomballs) {
     effective_until,
     decay_until,
     minimum_probability,
-    gym_reward_chance,
+    gym_reward_chance_player,
+    gym_reward_chance_owner,
     min_reward_quantity,
     max_reward_quantity,
   } = loomball;
@@ -275,7 +280,8 @@ for await (const loomball of loomballs) {
     effective_until,
     decay_until,
     minimum_probability,
-    gym_reward_chance,
+    gym_reward_chance_player,
+    gym_reward_chance_owner,
     min_reward_quantity,
     max_reward_quantity,
   });

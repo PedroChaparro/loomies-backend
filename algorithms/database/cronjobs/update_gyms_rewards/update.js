@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import Randomly from "weighted-randomly-select";
+import {
+  getRandomRewardsAmount,
+  generateRewards,
+  printRewards,
+} from "./helpers.js";
 import { GymModel, ItemModel, LoomBallModel } from "../../models/mongoose.js";
 
 // Connect to MongoDB
@@ -9,7 +13,8 @@ mongoose.set("strictQuery", true);
 mongoose.connect(process.env.MONGO_URI, { dbName: "loomies" });
 
 // Debug variables
-const CHOOSED_REWARDS = {};
+const PLAYERS_GENERATED_REWARDS = {};
+const OWNERS_GENERATED_REWARDS = {};
 
 // 1. Remove the current rewards and the users who claimed them
 async function removeRewardsAndClaimers() {
@@ -21,20 +26,32 @@ async function removeRewardsAndClaimers() {
 }
 
 // 2. Generate & save the new rewards
+
 async function generateNewRewards() {
   // Get all the items and loomballs
   const items = await ItemModel.find({});
   const loomballs = await LoomBallModel.find({});
 
   // Prepare the chances array
-  const chances = [
+  const players_chances = [
     ...items.map((item) => ({
       result: { ...item._doc },
-      chance: item.gym_reward_chance,
+      chance: item.gym_reward_chance_player,
     })),
     ...loomballs.map((loomball) => ({
       result: { ...loomball._doc },
-      chance: loomball.gym_reward_chance,
+      chance: loomball.gym_reward_chance_player,
+    })),
+  ];
+
+  const owners_chances = [
+    ...items.map((item) => ({
+      result: { ...item._doc },
+      chance: item.gym_reward_chance_owner,
+    })),
+    ...loomballs.map((loomball) => ({
+      result: { ...loomball._doc },
+      chance: loomball.gym_reward_chance_owner,
     })),
   ];
 
@@ -43,47 +60,43 @@ async function generateNewRewards() {
 
   for await (const gym of gyms) {
     // Random rewards quantity [4-6]
-    const min_rewards_qty = 4;
-    const max_rewards_qty = 6;
-    const rewards_qty = Math.floor(
-      Math.random() * (max_rewards_qty - min_rewards_qty + 1) + min_rewards_qty
-    );
+    let min_rewards_qty = 4;
+    let max_rewards_qty = 6;
+    let rewards_qty = getRandomRewardsAmount(min_rewards_qty, max_rewards_qty);
 
     // Copy the chances array to avoid repeating the same reward
-    let current_chances = [...chances];
-    const current_generated_rewards = [];
+    let current_player_chances = [...players_chances];
+    let current_owner_chances = [...owners_chances];
+    const player_generated_rewards = [];
+    const owner_generated_rewards = [];
 
-    for (let i = 0; i < rewards_qty; i++) {
-      // Select
-      const selection = Randomly.select(current_chances);
-      const min_qty = selection.min_reward_quantity;
-      const max_qty = selection.max_reward_quantity;
-      const qty = Math.floor(Math.random() * (max_qty - min_qty + 1) + min_qty);
+    // Generate rewards for the players
+    await generateRewards(
+      3,
+      5,
+      players_chances,
+      items,
+      player_generated_rewards,
+      PLAYERS_GENERATED_REWARDS
+    );
 
-      // Add to the gym rewards
-      const isItem = items.some((item) => item._doc._id === selection._id);
-
-      current_generated_rewards.push({
-        reward_collection: isItem ? "items" : "loom_balls",
-        reward_id: selection._id,
-        reward_quantity: qty,
-      });
-
-      // Add to the debug variable
-      CHOOSED_REWARDS[selection.name] = CHOOSED_REWARDS[selection.name]
-        ? CHOOSED_REWARDS[selection.name] + qty
-        : qty;
-
-      // Remove from the chances array
-      current_chances = current_chances.filter(
-        (reward) => reward.result._id !== selection._id
-      );
-    }
+    // Generate rewards for the owners
+    await generateRewards(
+      4,
+      6,
+      owners_chances,
+      items,
+      owner_generated_rewards,
+      OWNERS_GENERATED_REWARDS
+    );
 
     // Save the rewards
     await GymModel.updateOne(
       { _id: gym._id },
-      { current_rewards: current_generated_rewards }
+      {
+        current_players_rewards: player_generated_rewards,
+        current_owners_rewards: owner_generated_rewards,
+      }
     );
   }
 }
@@ -92,8 +105,8 @@ async function generateNewRewards() {
 async function run() {
   await removeRewardsAndClaimers();
   await generateNewRewards();
-  console.log("The generated rewards are: (name: quantity): ");
-  console.table(CHOOSED_REWARDS);
+  printRewards(PLAYERS_GENERATED_REWARDS, "Rewards for players:");
+  printRewards(OWNERS_GENERATED_REWARDS, "Rewards for owners:");
   mongoose.connection.close();
 }
 

@@ -68,34 +68,38 @@ type GymRewardItem struct {
 }
 
 type Gym struct {
-	Id               primitive.ObjectID   `json:"_id" bson:"_id"`
-	Latitude         float64              `json:"latitude"      bson:"latitude"`
-	Longitude        float64              `json:"longitude"      bson:"longitude"`
-	Name             string               `json:"name"      bson:"name"`
-	CurrentRewards   []GymRewardItem      `json:"current_rewards"      bson:"current_rewards"`
-	RewardsClaimedBy []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
+	Id                    primitive.ObjectID   `json:"_id" bson:"_id"`
+	Latitude              float64              `json:"latitude"      bson:"latitude"`
+	Longitude             float64              `json:"longitude"      bson:"longitude"`
+	Name                  string               `json:"name"      bson:"name"`
+	Owner                 primitive.ObjectID   `json:"owner,omitempty"      bson:"owner,omitempty"`
+	CurrentPlayersRewards []GymRewardItem      `json:"current_players_rewards"      bson:"current_players_rewards"`
+	CurrentOwnerRewards   []GymRewardItem      `json:"current_owners_rewards"      bson:"current_owners_rewards"`
+	RewardsClaimedBy      []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
 }
 
 type Item struct {
-	Id                primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Name              string             `json:"name"      bson:"name"`
-	Description       string             `json:"description"      bson:"description"`
-	Target            string             `json:"target"      bson:"target"`
-	IsCombatItem      bool               `json:"is_combat_item"      bson:"is_combat_item"`
-	GymRewardChance   float64            `json:"gym_reward_chance"      bson:"gym_reward_chance"`
-	MinRewardQuantity int                `json:"min_reward_quantity"      bson:"min_reward_quantity"`
-	MaxRewardQuantity int                `json:"max_reward_quantity"      bson:"max_reward_quantity"`
+	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name                  string             `json:"name"      bson:"name"`
+	Description           string             `json:"description"      bson:"description"`
+	Target                string             `json:"target"      bson:"target"`
+	IsCombatItem          bool               `json:"is_combat_item"      bson:"is_combat_item"`
+	GymRewardChancePlayer float64            `json:"gym_reward_chance_player"      bson:"gym_reward_chance_player"`
+	GymRewardChanceOwner  float64            `json:"gym_reward_chance_owner"      bson:"gym_reward_chance_owner"`
+	MinRewardQuantity     int                `json:"min_reward_quantity"      bson:"min_reward_quantity"`
+	MaxRewardQuantity     int                `json:"max_reward_quantity"      bson:"max_reward_quantity"`
 }
 
 type Loomball struct {
-	Id                 primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Name               string             `json:"name"      bson:"name"`
-	EffectiveUntil     int64              `json:"effective_until"      bson:"effective_until"`
-	DecayUntil         int64              `json:"decay_until"      bson:"decay_until"`
-	MinimumProbability float64            `json:"minimum_probability"      bson:"minimum_probability"`
-	GymRewardChance    float64            `json:"gym_reward_chance"      bson:"gym_reward_chance"`
-	MinRewardQuantity  int                `json:"min_reward_quantity"      bson:"min_reward_quantity"`
-	MaxRewardQuantity  int                `json:"max_reward_quantity"      bson:"max_reward_quantity"`
+	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name                  string             `json:"name"      bson:"name"`
+	EffectiveUntil        int64              `json:"effective_until"      bson:"effective_until"`
+	DecayUntil            int64              `json:"decay_until"      bson:"decay_until"`
+	MinimumProbability    float64            `json:"minimum_probability"      bson:"minimum_probability"`
+	GymRewardChancePlayer float64            `json:"gym_reward_chance_player"      bson:"gym_reward_chance_player"`
+	GymRewardChanceOwner  float64            `json:"gym_reward_chance_owner"      bson:"gym_reward_chance_owner"`
+	MinRewardQuantity     int                `json:"min_reward_quantity"      bson:"min_reward_quantity"`
+	MaxRewardQuantity     int                `json:"max_reward_quantity"      bson:"max_reward_quantity"`
 }
 
 type InventoryItem struct {

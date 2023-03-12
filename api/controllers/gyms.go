@@ -54,8 +54,21 @@ func HandleClaimReward(c *gin.Context) {
 		return
 	}
 
+	// 3. Check if the user is the owner of the gym
+	isOwner := gym.Owner == userIdMongo
+
+	var playerRewards []interfaces.GymRewardItem
+
+	if isOwner {
+		fmt.Println("Giving the owner rewards...")
+		playerRewards = gym.CurrentOwnerRewards
+	} else {
+		fmt.Println("Giving the player rewards...")
+		playerRewards = gym.CurrentPlayersRewards
+	}
+
 	// 3. Give the reward to the user and add the user to the list of users that have claimed the reward
-	err = models.AddItemsToUserInventory(userIdMongo, gym.CurrentRewards)
+	err = models.AddItemsToUserInventory(userIdMongo, playerRewards)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when adding items to user inventory, please try again later"})
@@ -74,7 +87,7 @@ func HandleClaimReward(c *gin.Context) {
 	var itemsIds []primitive.ObjectID
 	var loomballsIds []primitive.ObjectID
 
-	for _, reward := range gym.CurrentRewards {
+	for _, reward := range playerRewards {
 		if reward.RewardCollection == "items" {
 			itemsIds = append(itemsIds, reward.RewardId)
 		}
