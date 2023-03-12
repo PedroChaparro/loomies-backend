@@ -120,19 +120,6 @@ type User struct {
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
 }
 
-type InventoryItem struct {
-	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Quantity int                `json:"quantity" bson:"quantity"`
-}
-
-type Item struct {
-	Id             primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Name           string             `json:"name"      bson:"name"`
-	Description    string             `json:"description"     bson:"description"`
-	Target         string             `json:"target"  bson:"target"`
-	Is_combat_item bool               `json:"is_combat_item"   bson:"is_combat_item"`
-}
-
 type PopulatedIventoryItem struct {
 	Id             primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name           string             `json:"name"      bson:"name"`

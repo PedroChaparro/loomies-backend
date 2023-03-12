@@ -27,8 +27,8 @@ func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.PopulatedI
 
 		for _, element := range itemsArray {
 
-			if item.Id == element.Id {
-				data = interfaces.PopulatedIventoryItem{Id: item.Id, Name: item.Name, Description: item.Description, Target: item.Target, Is_combat_item: item.Is_combat_item, Quantity: element.Quantity}
+			if item.Id == element.ItemId {
+				data = interfaces.PopulatedIventoryItem{Id: item.Id, Name: item.Name, Description: item.Description, Target: item.Target, Is_combat_item: item.IsCombatItem, Quantity: element.ItemQuantity}
 				user_items = append(user_items, data)
 			}
 
