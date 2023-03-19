@@ -73,6 +73,7 @@ type Gym struct {
 	Longitude             float64              `json:"longitude"      bson:"longitude"`
 	Name                  string               `json:"name"      bson:"name"`
 	Owner                 primitive.ObjectID   `json:"owner,omitempty"      bson:"owner,omitempty"`
+	Protectors            []primitive.ObjectID `json:"protectors"      bson:"protectors"`
 	CurrentPlayersRewards []GymRewardItem      `json:"current_players_rewards"      bson:"current_players_rewards"`
 	CurrentOwnerRewards   []GymRewardItem      `json:"current_owners_rewards"      bson:"current_owners_rewards"`
 	RewardsClaimedBy      []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
@@ -170,4 +171,17 @@ type WildLoomie struct {
 	Latitude    float64              `json:"latitude"     bson:"latitude"`
 	Longitude   float64              `json:"longitude"     bson:"longitude"`
 	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
+}
+
+type CaughtLoomie struct {
+	Owner   primitive.ObjectID   `json:"owner,omitempty"       bson:"owner,omitempty"`
+	IsBusy  bool                 `json:"is_busy"      bson:"is_busy"`
+	Id      primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial  int                  `json:"serial"      bson:"serial"`
+	Name    string               `json:"name"      bson:"name"`
+	Types   []primitive.ObjectID `json:"types"     bson:"types"`
+	Rarity  primitive.ObjectID   `json:"rarity"     bson:"rarity"`
+	HP      int                  `json:"hp"     bson:"hp"`
+	Attack  int                  `json:"attack"     bson:"attack"`
+	Defense int                  `json:"defense"     bson:"defense"`
 }

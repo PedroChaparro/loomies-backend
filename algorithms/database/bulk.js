@@ -6,10 +6,14 @@ import {
   LoomieTypeModel,
   LoomieRarityModel,
   BaseLoomieModel,
+  CaughtLoomieModel,
   ItemModel,
   LoomBallModel,
 } from "./models/mongoose.js";
-import { readJsonFromDataFolder } from "./utils/utils.js";
+import {
+  createRandomLoomieTeam,
+  readJsonFromDataFolder,
+} from "./utils/utils.js";
 
 // Connect to MongoDB
 dotenv.config();
@@ -28,71 +32,11 @@ const loomballs = readJsonFromDataFolder("loomballs");
 // Global variables
 const globalLoomiesTypesIds = [];
 const globalLoomiesRaritiesIds = [];
+const globalCommonLoomies = [];
 
-// --- Zones and Gyms ---
-console.log("🏟️ Inserting gyms and zones...");
-const coordinates = { x: 0, y: 0 };
-let currentLongitude;
-
-console.log("Expected zones: ", zones.length);
-console.log("Expected gyms: ", gyms.length);
-
-for await (const zone of zones) {
-  let GymMongoId;
-
-  // Initialize currentLongitude
-  if (!currentLongitude) currentLongitude = zone.bottomFrontier;
-
-  // Increment coordinates when longitude changes (New row)
-  if (currentLongitude !== zone.bottomFrontier) {
-    currentLongitude = zone.bottomFrontier;
-    coordinates.x = 0;
-    coordinates.y++;
-  }
-
-  // Get the zone's gym
-  const gym = gyms.findIndex((gym) => gym.zoneIdentifier === zone.identifier);
-
-  // Insert the gym into mongodb and get the id
-  if (gym !== -1) {
-    const { name, latitude, longitude } = gyms[gym];
-    const newGym = new GymModel({
-      name,
-      latitude,
-      longitude,
-      // Initially the gym has no owner
-      owner: null,
-      // Initially the gym has no rewards until the cronjob runs
-      current_rewards: [],
-      rewards_claimed_by: [],
-    });
-    const { _id } = await newGym.save();
-    GymMongoId = _id;
-  }
-
-  // Insert zone with the gym id
-  const { leftFrontier, rightFrontier, topFrontier, bottomFrontier, number } =
-    zone;
-
-  const newZone = new ZoneModel({
-    leftFrontier,
-    rightFrontier,
-    topFrontier,
-    bottomFrontier,
-    number,
-    coordinates: `${coordinates.x},${coordinates.y}`,
-    gym: GymMongoId ? GymMongoId : null,
-    loomies: [], // Empty loomies array
-  });
-
-  await newZone.save();
-
-  // Increment coordinates
-  coordinates.x++;
-}
-
-console.log("Zones inserted: ", await ZoneModel.countDocuments());
-console.log("Gyms inserted: ", await GymModel.countDocuments(), "\n");
+// --- Loomies data ---
+// It's necessary to insert the loomies data beforte the zones and gyms
+// because the gyms will have a reference to the loomies
 
 // --- Loomies types ---
 console.log("✨ Inserting loomie types...");
@@ -224,10 +168,82 @@ for await (const loomie of loomies) {
     base_defense: BASE_ATTRIBUTES.deffense + extra_def,
   });
 
-  await newLoomie.save();
+  const inserted = await newLoomie.save();
+  if (rarity === "Common") globalCommonLoomies.push(inserted._doc);
 }
 
+// Get the inserted loomies to create the default loomie team for each gym
 console.log("Inserted loomies: ", await BaseLoomieModel.countDocuments(), "\n");
+
+// --- Zones and Gyms ---
+console.log("🏟️ Inserting gyms and zones...");
+const coordinates = { x: 0, y: 0 };
+let currentLongitude;
+
+console.log("Expected zones: ", zones.length);
+console.log("Expected gyms: ", gyms.length);
+
+for await (const zone of zones) {
+  let GymMongoId;
+
+  // Initialize currentLongitude
+  if (!currentLongitude) currentLongitude = zone.bottomFrontier;
+
+  // Increment coordinates when longitude changes (New row)
+  if (currentLongitude !== zone.bottomFrontier) {
+    currentLongitude = zone.bottomFrontier;
+    coordinates.x = 0;
+    coordinates.y++;
+  }
+
+  // Get the zone's gym
+  const gym = gyms.findIndex((gym) => gym.zoneIdentifier === zone.identifier);
+
+  // Insert the gym into mongodb and get the id
+  if (gym !== -1) {
+    const { name, latitude, longitude } = gyms[gym];
+    const protectors = await createRandomLoomieTeam(globalCommonLoomies);
+
+    const newGym = new GymModel({
+      name,
+      latitude,
+      longitude,
+      // Initially the gym has no owner
+      owner: null,
+      // Set the default loomie team
+      protectors,
+      // Initially the gym has no rewards until the cronjob runs
+      current_rewards: [],
+      rewards_claimed_by: [],
+    });
+
+    const { _id } = await newGym.save();
+    GymMongoId = _id;
+  }
+
+  // Insert zone with the gym id
+  const { leftFrontier, rightFrontier, topFrontier, bottomFrontier, number } =
+    zone;
+
+  const newZone = new ZoneModel({
+    leftFrontier,
+    rightFrontier,
+    topFrontier,
+    bottomFrontier,
+    number,
+    coordinates: `${coordinates.x},${coordinates.y}`,
+    gym: GymMongoId ? GymMongoId : null,
+    loomies: [], // Empty loomies array
+  });
+
+  await newZone.save();
+
+  // Increment coordinates
+  coordinates.x++;
+}
+
+console.log("Zones inserted: ", await ZoneModel.countDocuments());
+console.log("Gyms inserted: ", await GymModel.countDocuments(), "\n");
 
 // --- Items ---
 console.log("📦 Inserting items...");
