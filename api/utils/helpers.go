@@ -11,8 +11,9 @@ import (
 
 // GetRandomInt returns a random integer between min and max (both included)
 func GetRandomInt(min int, max int) int {
-	rand.Seed(time.Now().UnixNano())
-	return rand.Intn(max-min) + min
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	return r.Intn(max-min) + min
 }
 
 // GetRandomFloat returns a random float64 between min and max (both included)
@@ -42,4 +43,16 @@ func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
 	coordX := math.Floor((coordinates.Longitude - initialLongitude) / sizeMinZone)
 	coordY := math.Floor((coordinates.Latitude - initialLatitude) / sizeMinZone)
 	return int(coordX), int(coordY)
+}
+
+// get a code of 6 digits
+func GetValidationCode() string {
+
+	numbers := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
+	var validationCode string = ""
+	for i := 0; i < 6; i++ {
+		validationCode += numbers[GetRandomInt(0, 9)]
+	}
+
+	return validationCode
 }

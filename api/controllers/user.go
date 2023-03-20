@@ -1,11 +1,14 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"net/mail"
+	"time"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -83,15 +86,101 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
-	data := interfaces.User{Username: form.Username, Email: form.Email, Password: string(hashed), IsVerified: false}
+	//generate code
+	validationCode := utils.GetValidationCode()
 
-	//Insert user in database
+	data := interfaces.User{Username: form.Username,
+		Email:             form.Email,
+		Password:          string(hashed),
+		ValidationCode:    validationCode,
+		ValidationCodeExp: time.Now().Add(time.Minute * 15).Unix(),
+		IsVerified:        false}
+
 	err = models.InsertUser(data)
 
+	if err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		return
+	}
+
+	//send mail of verification
+	err = utils.SendEmail(form.Email, "Here is your validation code", validationCode)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
 		return
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User created successfully"})
+}
+
+func HandleCodeValidation(c *gin.Context) {
+	var form interfaces.ValidationCode
+	if err := c.BindJSON(&form); err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+	//Check if there is no code
+	if form.ValidationCode == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Verification code cannot be empty"})
+		return
+	}
+	//Check if there is no email
+	if form.Email == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
+		return
+	}
+	// code validation
+	exists := models.CheckCodeExistence(form.Email, form.ValidationCode)
+	if exists {
+		c.IndentedJSON(http.StatusOK, gin.H{"message": "Email has been verified"})
+		return
+	} else {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "Code was incorrect or time has expired"})
+		return
+	}
+}
+
+func HandleNewCodeValidation(c *gin.Context) {
+	var form interfaces.EmailForm
+	if err := c.BindJSON(&form); err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+	//Check if there is no email
+	if form.Email == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
+		return
+	}
+
+	_, err := models.GetUserByEmail(form.Email)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "This Email has not been registered"})
+		return
+	}
+	_, err = models.GetUserByEmailAndVerifStatus(form.Email)
+	if err == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "This Email has been already verified"})
+		return
+	}
+	//generate code
+	validationCode := utils.GetValidationCode()
+	//update in database
+	err = models.UpdateCode(form.Email, validationCode)
+	if err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		return
+	}
+
+	//send mail of verification
+	err = utils.SendEmail(form.Email, "Here is validation code requested", validationCode)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Code created and sended"})
 }

@@ -9,6 +9,8 @@ import (
 func SetupRoutes(engine *gin.Engine) {
 	// User
 	engine.POST("/signup", controllers.HandleSignUp)
+	engine.POST("/code_validation", controllers.HandleCodeValidation)
+	engine.POST("/new_code", controllers.HandleNewCodeValidation)
 
 	// Session
 	engine.POST("/login", controllers.HandleLogIn)

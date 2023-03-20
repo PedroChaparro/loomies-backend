@@ -11,6 +11,10 @@ type LogInForm struct {
 	Password string `json:"password"`
 }
 
+type EmailForm struct {
+	Email string `json:"email"`
+}
+
 type ClaimGymRewardReq struct {
 	GymID     string  `json:"gym_id"`
 	Latitude  float64 `json:"latitude"`
