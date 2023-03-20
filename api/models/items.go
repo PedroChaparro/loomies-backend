@@ -17,8 +17,8 @@ func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.UserItemsR
 	userLoomballs := make(map[primitive.ObjectID]interfaces.InventoryItem)
 
 	// Save the ids to easily query the database
-	var itemsIds []primitive.ObjectID
-	var loomballsIds []primitive.ObjectID
+	var itemsIds []primitive.ObjectID = []primitive.ObjectID{}
+	var loomballsIds []primitive.ObjectID = []primitive.ObjectID{}
 
 	for _, element := range itemsArray {
 		if element.ItemCollection == "items" {
