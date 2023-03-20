@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
+var UserCollection *mongo.Collection = configuration.ConnectToMongoCollection("users")
 
 func InsertUser(data interfaces.User) error {
 	// Set the current time as the "last time the user generated loomies"
@@ -24,7 +24,7 @@ func InsertUser(data interfaces.User) error {
 	data.Loomies = []primitive.ObjectID{}
 
 	//Insert User in database
-	_, err := Collection.InsertOne(context.TODO(), data)
+	_, err := UserCollection.InsertOne(context.TODO(), data)
 	return err
 }
 
@@ -51,7 +51,7 @@ func GetUserByEmail(email string) (interfaces.User, error) {
 	var userE interfaces.User
 
 	// Find the user with the given email (case insensitive)
-	err := Collection.FindOne(
+	err := UserCollection.FindOne(
 		context.TODO(),
 		bson.M{"email": bson.M{"$regex": email, "$options": "i"}},
 	).Decode(&userE)
@@ -64,7 +64,7 @@ func GetUserByUsername(Username string) (interfaces.User, error) {
 	var userU interfaces.User
 
 	//Find the user with the given username (case insensitive)
-	err := Collection.FindOne(
+	err := UserCollection.FindOne(
 		context.TODO(),
 		bson.M{"username": bson.M{"$regex": Username, "$options": "i"}},
 	).Decode(&userU)
@@ -81,7 +81,7 @@ func GetUserById(id string) (interfaces.User, error) {
 		return user, err
 	}
 
-	err = Collection.FindOne(
+	err = UserCollection.FindOne(
 		context.TODO(),
 		bson.D{{Key: "_id", Value: mongoid}},
 	).Decode(&user)
@@ -99,7 +99,7 @@ func UpdateUserGenerationTimes(userId string, lastGenerated int64, newTimeout in
 	}
 
 	// Update the user document
-	_, err = Collection.UpdateOne(
+	_, err = UserCollection.UpdateOne(
 		context.TODO(),
 		bson.D{{Key: "_id", Value: mongoid}},
 		bson.D{
@@ -121,8 +121,10 @@ func AddItemToUserInventory(userId primitive.ObjectID, item interfaces.GymReward
 		ItemQuantity:   item.RewardQuantity,
 	}
 
+	// Check if the item already exists in the user's inventory
+
 	// Update the user document
-	_, err := Collection.UpdateOne(
+	_, err := UserCollection.UpdateOne(
 		context.TODO(),
 		bson.D{{Key: "_id", Value: userId}},
 		bson.D{
