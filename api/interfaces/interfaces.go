@@ -116,9 +116,20 @@ type User struct {
 	Password                        string               `json:"password"  bson:"password"`
 	Items                           []InventoryItem      `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
+	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
+	ValidationCodeExp               int64                `json:"validationCodeExp"   bson:"validationCodeExp"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
+}
+
+type PopulatedIventoryItem struct {
+	Id             primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name           string             `json:"name"      bson:"name"`
+	Description    string             `json:"description"     bson:"description"`
+	Target         string             `json:"target"  bson:"target"`
+	Is_combat_item bool               `json:"is_combat_item"   bson:"is_combat_item"`
+	Quantity       int                `json:"quantity" bson:"quantity"`
 }
 
 type LoomieRarity struct {
@@ -171,6 +182,12 @@ type WildLoomie struct {
 	Latitude    float64              `json:"latitude"     bson:"latitude"`
 	Longitude   float64              `json:"longitude"     bson:"longitude"`
 	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
+}
+
+type ValidationCode struct {
+	Email             string `json:"email"`
+	ValidationCode    string `json:"validationCode"`
+	ValidationCodeExp int64  `json:"validationCodeExp,omitempty"`
 }
 
 type CaughtLoomie struct {
