@@ -75,7 +75,7 @@ func GetUserByUsername(Username string) (interfaces.User, error) {
 
 func GetUserByEmailAndVerifStatus(email string) (interfaces.User, error) {
 	var userE interfaces.User
-	err := Collection.FindOne(
+	err := UserCollection.FindOne(
 		context.TODO(),
 		bson.D{{Key: "email", Value: email}, {Key: "isVerified", Value: true}},
 	).Decode(&userE)
@@ -127,7 +127,7 @@ func CheckCodeExistence(email string, code string) bool {
 
 	var usercode interfaces.ValidationCode
 	filter := bson.D{{Key: "email", Value: email}}
-	err := Collection.FindOne(context.TODO(), filter).Decode(&usercode)
+	err := UserCollection.FindOne(context.TODO(), filter).Decode(&usercode)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -139,7 +139,7 @@ func CheckCodeExistence(email string, code string) bool {
 			{Key: "validationCode", Value: nil},
 		},
 		}}
-		Collection.UpdateOne(context.TODO(), filter, update)
+		UserCollection.UpdateOne(context.TODO(), filter, update)
 		return false
 	}
 
@@ -155,7 +155,7 @@ func CheckCodeExistence(email string, code string) bool {
 			{Key: "validationCodeExp", Value: nil},
 		},
 		}}
-		Collection.UpdateOne(context.TODO(), filter, update)
+		UserCollection.UpdateOne(context.TODO(), filter, update)
 		return true
 	}
 }
@@ -168,7 +168,7 @@ func UpdateCode(email string, validationCode string) error {
 		{Key: "validationCodeExp", Value: time.Now().Add(time.Minute * 15).Unix()},
 	},
 	}}
-	_, err := Collection.UpdateOne(context.TODO(), filter, update)
+	_, err := UserCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		fmt.Println(err)
 	}
