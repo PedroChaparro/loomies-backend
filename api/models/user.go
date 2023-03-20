@@ -122,17 +122,59 @@ func AddItemToUserInventory(userId primitive.ObjectID, item interfaces.GymReward
 	}
 
 	// Check if the item already exists in the user's inventory
+	var user interfaces.User
+	var alreadyExists = false
 
-	// Update the user document
-	_, err := UserCollection.UpdateOne(
+	err := UserCollection.FindOne(
 		context.TODO(),
-		bson.D{{Key: "_id", Value: userId}},
 		bson.D{
-			{Key: "$push", Value: bson.D{
-				{Key: "items", Value: userInventoryItem},
-			}},
+			{Key: "_id", Value: userId},
 		},
-	)
+	).Decode(&user)
+
+	if err != nil {
+		return err
+	}
+
+	for _, inventoryItem := range user.Items {
+		if inventoryItem.ItemId == item.RewardId {
+			alreadyExists = true
+			break
+		}
+	}
+
+	if alreadyExists {
+		// Update the user document to increment the item quantity
+		_, err = UserCollection.UpdateOne(
+			context.TODO(),
+			bson.D{
+				// Match tue user
+				{Key: "_id", Value: userId},
+				// Match the item inside the user's inventory
+				{Key: "items", Value: bson.D{
+					{Key: "$elemMatch", Value: bson.D{
+						{Key: "item_id", Value: item.RewardId},
+					},
+					}},
+				},
+			}, bson.D{
+				// Increment the item quantity
+				{Key: "$inc", Value: bson.D{
+					{Key: "items.$.item_quantity", Value: item.RewardQuantity},
+				}},
+			})
+	} else {
+		// Update the user document to add the item to the inventory
+		_, err = UserCollection.UpdateOne(
+			context.TODO(),
+			bson.D{{Key: "_id", Value: userId}},
+			bson.D{
+				{Key: "$push", Value: bson.D{
+					{Key: "items", Value: userInventoryItem},
+				}},
+			},
+		)
+	}
 
 	return err
 }
