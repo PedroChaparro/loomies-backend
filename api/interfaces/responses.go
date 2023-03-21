@@ -30,6 +30,17 @@ type UserLoomballsRes struct {
 	Quantity int                `json:"quantity"      bson:"quantity"`
 }
 
+type UserLoomiesRes struct {
+	Id      primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial  int                  `json:"serial"      bson:"serial"`
+	Name    string               `json:"name"      bson:"name"`
+	Types   []primitive.ObjectID `json:"types"     bson:"types"`
+	Rarity  primitive.ObjectID   `json:"rarity"     bson:"rarity"`
+	Hp      int                  `json:"hp"     bson:"hp"`
+	Attack  int                  `json:"attack"     bson:"Attack"`
+	Defense int                  `json:"defense"     bson:"defense"`
+}
+
 // ToNearGymsRes converts a Gym struct to a NearGymsRes struct
 func (res *Gym) ToNearGymsRes() *NearGymsRes {
 	return &NearGymsRes{

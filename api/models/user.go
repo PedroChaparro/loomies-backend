@@ -15,6 +15,8 @@ import (
 
 var Collection *mongo.Collection = configuration.ConnectToMongoCollection("users")
 
+var LoomiesCollection *mongo.Collection = configuration.ConnectToMongoCollection("caught_loomies")
+
 func InsertUser(data interfaces.User) error {
 	// Set the current time as the "last time the user generated loomies"
 	data.LastLoomieGenerationTime = time.Now().Unix()
@@ -207,4 +209,58 @@ func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.GymRe
 	}
 
 	return nil
+}
+
+// GetLoomiesByUser returns an array of loomies according with user
+func GetLoomiesByUser(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomiesRes, error) {
+	//
+	//userLoomies := make(map[primitive.ObjectID]interfaces.UserLoomiesRes)
+	//
+	var loomiesIds []primitive.ObjectID = []primitive.ObjectID{}
+
+	for _, element := range loomiesArray {
+		//userLoomies[element.] = element
+		loomiesIds = append(loomiesIds, element)
+	}
+
+	//works
+
+	// Get the items from the database
+	var loomies []interfaces.UserLoomiesRes
+	cursor, err := LoomiesCollection.Find(context.Background(), bson.M{
+		"_id": bson.M{
+			"$in": loomiesIds,
+		},
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	//var results []bson.M
+	/* if err = cursor.All(context.TODO(), &loomies); err != nil {
+		panic(err)
+	}
+	for _, result := range loomies {
+		fmt.Printf("%+v\n", result)
+	} */
+
+	/* if err = cursor.All(context.TODO(), &loomies); err != nil {
+		panic(err)
+	} */
+
+	if err != nil {
+		return nil, err
+	}
+
+	for cursor.Next(context.TODO()) {
+		var loomie interfaces.UserLoomiesRes
+		/* 		var data interfaces.UserItemsRes */
+		cursor.Decode(&loomie)
+
+		/* 		data = interfaces.UserItemsRes{Id: loomie.Id, Name: loomie.Name, Types: loomie.Types, Target: item.Target, Is_combat_item: item.IsCombatItem, Quantity: userItems[item.Id].ItemQuantity} */
+		loomies = append(loomies, loomie)
+	}
+
+	return loomies, err
 }
