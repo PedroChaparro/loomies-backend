@@ -114,6 +114,7 @@ func HandleSignUp(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
+// Controller to validate a user code
 func HandleCodeValidation(c *gin.Context) {
 	var form interfaces.ValidationCode
 	if err := c.BindJSON(&form); err != nil {
@@ -142,6 +143,7 @@ func HandleCodeValidation(c *gin.Context) {
 	}
 }
 
+// controller to generate new code
 func HandleNewCodeValidation(c *gin.Context) {
 	var form interfaces.EmailForm
 	if err := c.BindJSON(&form); err != nil {
@@ -185,11 +187,13 @@ func HandleNewCodeValidation(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Code created and sended"})
 }
 
+// controller to obtain the loomies from an user
 func HandleGetLoomies(c *gin.Context) {
 	userid, _ := c.Get("userid")
 
 	user, err := models.GetUserById(userid.(string))
 
+	// user exists or not
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "User was not found"})
