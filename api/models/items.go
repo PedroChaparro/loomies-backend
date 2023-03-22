@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -16,8 +15,6 @@ func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.UserItemsR
 	// Create the maps to store the items to access them faster
 	userItems := make(map[primitive.ObjectID]interfaces.InventoryItem)
 	userLoomballs := make(map[primitive.ObjectID]interfaces.InventoryItem)
-
-	fmt.Println(userItems)
 
 	// Save the ids to easily query the database
 	var itemsIds []primitive.ObjectID = []primitive.ObjectID{}
