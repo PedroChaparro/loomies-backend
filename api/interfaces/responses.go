@@ -11,11 +11,6 @@ type NearGymsRes struct {
 	Name      string             `json:"name"      bson:"name"`
 }
 
-// LoomieRarityRes just bring the name field of lommie rarity
-type LoomieRarityRes struct {
-	Name string `json:"name"      bson:"name"`
-}
-
 // UserItemsRes is the response for the /items endpoint to avoid sending unnecessary
 // data to the client
 type UserItemsRes struct {
@@ -46,6 +41,7 @@ type UserLoomiesRes struct {
 	Attack  int                `json:"attack"     bson:"attack"`
 	IsBusy  bool               `json:"is_busy"     bson:"is_busy"`
 	Defense int                `json:"defense"     bson:"defense"`
+	Level   int                `json:"level"     bson:"level"`
 }
 
 // This is an aux for show info user loomies
@@ -54,7 +50,7 @@ type UserLoomiesResAux struct {
 	Serial  int                `json:"serial"      bson:"serial"`
 	Name    string             `json:"name"      bson:"name"`
 	Types   []LoomieType       `json:"types"     bson:"types"`
-	Rarity  []LoomieRarityRes  `json:"rarity"     bson:"rarity"`
+	Rarity  []LoomieRarity     `json:"rarity"     bson:"rarity"`
 	Hp      int                `json:"hp"     bson:"hp"`
 	Attack  int                `json:"attack"     bson:"attack"`
 	IsBusy  bool               `json:"is_busy"     bson:"is_busy"`
