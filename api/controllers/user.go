@@ -211,7 +211,7 @@ func HandleGetLoomies(c *gin.Context) {
 		return
 	}
 
-	// Prevent null responses
+	// Prevent null responses and obtain an empty array if user don't have loomies
 	if loomies == nil {
 		loomies = []interfaces.UserLoomiesRes{}
 	}

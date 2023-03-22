@@ -262,15 +262,17 @@ func GetLoomiesByUser(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomi
 	for cursor.Next(context.Background()) {
 		var loomieAux interfaces.UserLoomiesResAux
 		var loomie interfaces.UserLoomiesRes
+
 		var types []string
 
 		cursor.Decode(&loomieAux)
 		cursor.Decode(&loomie)
 
-		for _, v := range loomieAux.Types {
-			types = append(types, v.Name)
+		for _, t := range loomieAux.Types {
+			types = append(types, t.Name)
 		}
 
+		loomie.Rarity = loomieAux.Rarity[0].Name
 		loomie.Types = types
 
 		loomies = append(loomies, loomie)

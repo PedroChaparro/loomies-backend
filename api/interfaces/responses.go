@@ -41,7 +41,7 @@ type UserLoomiesRes struct {
 	Serial  int                `json:"serial"      bson:"serial"`
 	Name    string             `json:"name"      bson:"name"`
 	Types   []string           `json:"types"     bson:"types"`
-	Rarity  []LoomieRarityRes  `json:"rarity"     bson:"rarity"`
+	Rarity  string             `json:"rarity"     bson:"rarity"`
 	Hp      int                `json:"hp"     bson:"hp"`
 	Attack  int                `json:"attack"     bson:"attack"`
 	IsBusy  bool               `json:"is_busy"     bson:"is_busy"`
