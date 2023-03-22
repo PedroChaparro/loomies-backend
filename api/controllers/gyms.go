@@ -60,10 +60,10 @@ func HandleClaimReward(c *gin.Context) {
 	var playerRewards []interfaces.GymRewardItem
 
 	if isOwner {
-		fmt.Println("Giving the owner rewards...")
+		// fmt.Println("Giving the owner rewards...")
 		playerRewards = gym.CurrentOwnerRewards
 	} else {
-		fmt.Println("Giving the player rewards...")
+		// fmt.Println("Giving the player rewards...")
 		playerRewards = gym.CurrentPlayersRewards
 	}
 
