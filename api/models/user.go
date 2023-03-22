@@ -47,6 +47,20 @@ next:
 	return nil
 }
 
+// todo
+func UpdatePasword(email string, p string) error {
+	filter := bson.D{{Key: "email", Value: email}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "password", Value: p},
+	},
+	}}
+	_, err := Collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return err
+}
+
 // GetUserByEmail returns a user by its email and an error (if any)
 func GetUserByEmail(email string) (interfaces.User, error) {
 	var userE interfaces.User

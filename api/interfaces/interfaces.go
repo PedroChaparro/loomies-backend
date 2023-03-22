@@ -190,6 +190,13 @@ type ValidationCode struct {
 	ValidationCodeExp int64  `json:"validationCodeExp,omitempty"`
 }
 
+// todo
+type ValidationPassword struct {
+	ValidationCode string `json:"validationCode"`
+	Email          string `json:"email"`
+	Password       string `json:"password"  bson:"password"`
+}
+
 type CaughtLoomie struct {
 	Owner   primitive.ObjectID   `json:"owner,omitempty"       bson:"owner,omitempty"`
 	IsBusy  bool                 `json:"is_busy"      bson:"is_busy"`
