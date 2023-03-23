@@ -185,7 +185,7 @@ func HandleNewCodeValidation(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Code created and sended"})
 }
 
-// todo
+// controller to create and send a code to reset the password
 func HandleCodeResetPassword(c *gin.Context) {
 	var form interfaces.EmailForm
 	if err := c.BindJSON(&form); err != nil {
@@ -205,18 +205,18 @@ func HandleCodeResetPassword(c *gin.Context) {
 		return
 	}
 	//generate code
-	validationCode := utils.GetValidationCode()
+	resetPasswordCode := utils.GetValidationCode()
 
-	//update in database
-	err = models.UpdateCode(form.Email, validationCode)
+	//update in database reset password code
+	err = models.UpdateResetPassCode(form.Email, resetPasswordCode)
 	if err != nil {
 		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
 		return
 	}
 
-	//send mail of verification
-	err = utils.SendEmail(form.Email, "Here is your validation code, to reset your password", validationCode)
+	//send mail with code to help reset password
+	err = utils.SendEmail(form.Email, "Here is your validation code, to reset your password", resetPasswordCode)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
 		return
@@ -225,9 +225,9 @@ func HandleCodeResetPassword(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Code, to reset password, created and sended"})
 }
 
-// todo
+// Controller to reset password having a code
 func HandleResetPassword(c *gin.Context) {
-	var form interfaces.ValidationPassword
+	var form interfaces.ResetPasswordCode
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
@@ -243,6 +243,11 @@ func HandleResetPassword(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Password cannot be empty"})
 		return
 	}
+	//Check if there is no code
+	if form.ResetPassCode == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Verification code cannot be empty"})
+		return
+	}
 	//Check password format
 	if len(form.Password) >= 8 {
 		message := models.ValidPassword(form.Password)
@@ -254,14 +259,10 @@ func HandleResetPassword(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Password is too short"})
 		return
 	}
-	//Check if there is no code
-	if form.ValidationCode == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Verification code cannot be empty"})
-		return
-	}
+
 	// code validation
-	exists := models.CheckCodeExistence(form.Email, form.ValidationCode)
-	if exists {
+	match := models.CheckResetPassCodeExistence(form.Email, form.ResetPassCode)
+	if match {
 		//encrypt password
 		hashed, err := bcrypt.GenerateFromPassword([]byte(form.Password), 8)
 
@@ -276,7 +277,7 @@ func HandleResetPassword(c *gin.Context) {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
 			return
 		}
-		c.IndentedJSON(http.StatusOK, gin.H{"message": "Code has been verified"})
+		c.IndentedJSON(http.StatusOK, gin.H{"message": "Password has been changed successfully"})
 		return
 	} else {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "Code was incorrect or time has expired"})
