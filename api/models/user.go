@@ -212,19 +212,12 @@ func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.GymRe
 }
 
 // GetLoomiesByUser returns an array of loomies according with user
-func GetLoomiesByUser(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomiesRes, error) {
-
-	// array to keep loomies ids
-	var loomiesIds []primitive.ObjectID = []primitive.ObjectID{}
-
-	for _, element := range loomiesArray {
-		loomiesIds = append(loomiesIds, element)
-	}
+func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomiesRes, error) {
 
 	// Filter
 	filter := bson.M{
 		"_id": bson.M{
-			"$in": loomiesIds,
+			"$in": loomiesArray,
 		},
 	}
 

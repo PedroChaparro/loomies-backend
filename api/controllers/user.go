@@ -204,7 +204,7 @@ func HandleGetLoomies(c *gin.Context) {
 		}
 	}
 
-	loomies, err := models.GetLoomiesByUser(user.Loomies)
+	loomies, err := models.GetLoomiesByIds(user.Loomies)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
