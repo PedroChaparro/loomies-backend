@@ -18,7 +18,7 @@ func main() {
 	}
 
 	configuration.Globals.WsHub = &hub
-	routes.SetupWebSocketRoutes(engine, &hub)
+	routes.SetupWebSocketRoutes(engine)
 
 	// Start the server
 	engine.Run()
