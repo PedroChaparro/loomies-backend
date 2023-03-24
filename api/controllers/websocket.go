@@ -20,7 +20,7 @@ func HandleCombatRegister(c *gin.Context) {
 
 	// Create a token to authenticate the user with the websocket endpoint
 	userID, _ := c.Get("userid")
-	token, err := utils.CreateWsToken(userID.(string))
+	token, err := utils.CreateWsToken(userID.(string), payload.GymID, payload.Latitude, payload.Longitude)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to craete a token for the combat. Please try again later."})
@@ -28,4 +28,8 @@ func HandleCombatRegister(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Token was created successfully", "combat_token": token})
+}
+
+func HandleCombatInit(c *gin.Context) {
+	// Receive the gym id and the token from the params
 }

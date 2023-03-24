@@ -49,15 +49,16 @@ func CreateRefreshToken(userID string) (string, error) {
 	return refreshTokenString, nil
 }
 
-func CreateWsToken(userID string) (string, error) {
-	// 5 minutes short lived token
+func CreateWsToken(userID string, gymId string, latitude float64, longitude float64) (string, error) {
 	wsToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userid":    userID,
+		"user_id":   userID,
+		"gym_id":    gymId,
+		"latitude":  latitude,
+		"longitude": longitude,
 		"notBefore": time.Now(),
 		"expire":    time.Now().Add(time.Minute * 5),
 	})
 
-	// sign with secret and get encoded token
 	var err error
 	wsTokenString, err := wsToken.SignedString([]byte(JWTKeyWS))
 	if err != nil {
