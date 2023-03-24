@@ -124,15 +124,17 @@ func HandleCombatInit(c *gin.Context) {
 		return
 	}
 
-	connection := &interfaces.WsClient{
+	Combat := &interfaces.WsCombat{
 		GymID:                claims.GymID,
 		Connection:           conn,
 		LastMessageTimestamp: time.Now().Unix(),
+		PlayerLoomies:        userLoomies,
+		GymLoomies:           gymLoomies,
 	}
 
 	// Register the connection on the hub
-	hub.Register(claims.GymID, connection)
-	connection.Listen(hub)
+	hub.Register(claims.GymID, Combat)
+	Combat.Listen(hub)
 
 	// NOTE: The response is sended automatically when upgrading the connection
 }

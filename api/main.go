@@ -14,7 +14,7 @@ func main() {
 
 	// Setup websocket routes
 	hub := interfaces.WsHub{
-		Combats: make(map[string]*interfaces.WsClient),
+		Combats: make(map[string]*interfaces.WsCombat),
 	}
 
 	configuration.Globals.WsHub = &hub

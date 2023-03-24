@@ -8,16 +8,20 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// WsClient stores the websocket connection to be able
+// WsCombat stores the websocket connection to be able
 // to send messages to the client
-type WsClient struct {
+type WsCombat struct {
 	// We keep the gym id to easily remove it from the map
 	// when the connection is closed
-	GymID      string
+	GymID string
+	// The connecton to exchange messages with the client
 	Connection *websocket.Conn
 	// We keep track of the last message timestamp to finish
 	// the connection if the client is inactive for too long
 	LastMessageTimestamp int64
+	// Loomie teams in combat
+	GymLoomies    []UserLoomiesRes
+	PlayerLoomies []UserLoomiesRes
 }
 
 // WsMessage is the message that is sent to the client
@@ -32,7 +36,7 @@ type WsMessage struct {
 type WsHub struct {
 	// The key of the map is the Gym id, so, there can only
 	// be one client per gym
-	Combats map[string]*WsClient
+	Combats map[string]*WsCombat
 }
 
 type WsTokenClaims struct {
@@ -49,12 +53,12 @@ func (hub *WsHub) Includes(gym string) bool {
 }
 
 // Register registers a new client to the hub
-func (hub *WsHub) Register(gym string, client *WsClient) bool {
+func (hub *WsHub) Register(gym string, combat *WsCombat) bool {
 	if hub.Includes(gym) {
 		return false
 	}
 
-	hub.Combats[gym] = client
+	hub.Combats[gym] = combat
 	return true
 }
 
@@ -68,10 +72,10 @@ func (hub *WsHub) Unregister(gym string) bool {
 	return true
 }
 
-func (client *WsClient) Listen(hub *WsHub) {
+func (combat *WsCombat) Listen(hub *WsHub) {
 	// --- Close the connection when the function ends ---
 	defer func() {
-		hub.Unregister(client.GymID)
+		hub.Unregister(combat.GymID)
 		// TODO: This should remove the combat from the database
 	}()
 
@@ -82,8 +86,8 @@ func (client *WsClient) Listen(hub *WsHub) {
 		for {
 			select {
 			case <-ticker.C:
-				if time.Now().Unix()-client.LastMessageTimestamp > 30 {
-					client.Connection.Close()
+				if time.Now().Unix()-combat.LastMessageTimestamp > 30 {
+					combat.Connection.Close()
 					return
 				}
 			}
@@ -92,7 +96,7 @@ func (client *WsClient) Listen(hub *WsHub) {
 
 	// --- Endless loop to listen for messages ---
 	for {
-		_, message, err := client.Connection.ReadMessage()
+		_, message, err := combat.Connection.ReadMessage()
 
 		// If there is an error, is probably because the connection
 		// was closes, so, we exit the loop
@@ -106,7 +110,7 @@ func (client *WsClient) Listen(hub *WsHub) {
 
 		// Just print the message for now
 		if err == nil {
-			client.LastMessageTimestamp = time.Now().Unix()
+			combat.LastMessageTimestamp = time.Now().Unix()
 			fmt.Println("Message received: ", wsMessage)
 		}
 	}
