@@ -1,0 +1,707 @@
+openapi: 3.0.0
+
+info:
+  description: |
+    Loomies Rest API documentation.
+  version: "1.0.0"
+  title: Loomies Rest API
+  
+tags:
+  - name: User
+  - name: Session
+  - name: Gyms
+  - name: Loomies
+  - name: Websocket
+  
+paths:
+  # --- --- --
+  # User routes
+  /user/signup: 
+    post: 
+      tags: [ User ]
+      description: Creates a new account.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                username: 
+                  type: string
+                  example: "loomies"
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+                password:
+                  type: string
+                  example: "Password2023#"
+        required: true
+      responses: 
+        "201": 
+          description: All the fields were OK and the user was created successfully, also, the user should receive an email with their validation code. 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: The given password isn't valid. The password should contain one Uppercase letter, one Lowercase letter, one number, one special character and a minimum length of 8.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "409":
+          description: There is already another user using the given username / email.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/validate/code: 
+    post: 
+      tags: [ User ]
+      description: Request a new account validation code. 
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+        required: true
+      responses: 
+        "200": 
+          description: A new verification code was created and sended via e-mail to the user. 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request. Maybe the "email" field wasn't received. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any user with the give e-mail. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/validate: 
+    post: 
+      tags: [ User ]
+      description: Validate an account.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+                validationCode: 
+                  type: string
+                  example: "234508"
+        required: true
+      responses: 
+        "200": 
+          description: The code was valid and the account was successfully validated. 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request. Maybe the "email" or "validationCode" field wasn't received. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any user with the give e-mail or t he validation code was incorrect / expired.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/items: 
+    get: 
+      tags: [ User ]
+      description: Get the items of the given user.
+      security: 
+        - basicAuth: [Access-Token]
+      responses: 
+        "200": 
+          description: There wasn't any error and the items are retrieved.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The items were retrieved successfully"
+                  items: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicItem"
+                  loomballs: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicLoomBall"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/loomies: 
+    get: 
+      tags: [ User ]
+      description: Get the items of the given user.
+      security: 
+        - basicAuth: [Access-Token]
+      responses: 
+        "200": 
+          description: There wasn't any error and the items are retrieved.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The loomies were retrieved successfully"
+                  items: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicLoomie"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/password/code: 
+    post: 
+      tags: [ User ]
+      description: Request a new verification code to update the user password.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+        required: true
+      responses: 
+        "200": 
+          description: A new verification code was created and sended via e-mail to the user. 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request. Maybe the "email" field wasn't received. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any user with the give e-mail. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/password: 
+    put: 
+      tags: [ User ]
+      description: Update the user password.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+                resetPassCode: 
+                  type: string
+                  example: "234508"
+                password: 
+                  type: string
+                  example: "Password2023#"
+        required: true
+      responses: 
+        "200": 
+          description: The code and the new password were valid, so, the user password is sucessfully updated.
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request. Maybe the "email" or "validationCode" field wasn't received. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any user with the give e-mail or t he validation code was incorrect / expired.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  # --- --- --
+  # Session routes
+  /session/login: 
+    post: 
+      tags: [ Session ]
+      description: Login.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+                password:
+                  type: string
+                  example: "Password2023#"
+        required: true
+      responses: 
+        "200": 
+          description: The user was found and the passwors was correct, so, the user get their access and refresh token. 
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error: 
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: Successfully logged in
+                  user: 
+                    type: object
+                    properties: 
+                      email: 
+                        type: string
+                        example: loomies@gmail.com
+                      username: 
+                        type: string
+                        example: loomies
+                  accessToken: 
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOiIyMDIzLTAzLTI0VDA4OjA3OjU1LjM2MjQ0MjM3LTA1OjAwIiwibm90QmVmb3JlIjoiMjAyMy0wMy0yNFQwNzozNzo1NS4zNjI0NDE4MzgtMDU6MDAiLCJ1c2VyaWQiOiI2M2ZjMjUyZjQwMGQwOWFiNTkzN2NkMWUifQ.6gDSRsGoq2g9svrtI1nx8_MRHyODQKmZWqZNkP_-GZc"
+                  refreshToken: 
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOiIyMDIzLTA4LTI0VDA3OjM3OjU1LjM2MjQ2NzM3Mi0wNTowMCIsIm5vdEJlZm9yZSI6IjIwMjMtMDMtMjRUMDc6Mzc6NTUuMzYyNDY3MjIyLTA1OjAwIiwidXNlcmlkIjoiNjNmYzI1MmY0MDBkMDlhYjU5MzdjZDFlIn0.bASrFc5aNVP4oBfzhqvSwlcbaoml1sttPR_IM40eoE8"
+        "400":
+          description: Bad request. Mayby the username or password fields are empty. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The password is not correct or the email wasn't found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /session/whoami: 
+    get: 
+      tags: [ Session ]
+      description: Get the user information from the access token.
+      security: 
+        - basicAuth: [Access-Token]
+      responses: 
+        "200": 
+          description: The token is valid and the user information are successfully retreived.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The loomies were retrieved successfully"
+                  user: 
+                    type: object
+                    properties: 
+                      email: 
+                        type: string
+                        example: loomies@gmail.com
+                      username: 
+                        type: string
+                        example: loomies
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /session/refresh: 
+    get: 
+      tags: [ Session ]
+      description: Get a new Access Token from the Refresh one.
+      security: 
+        - basicAuth: [Refresh-Token]
+      responses: 
+        "200": 
+          description: The token is valid and the user gets a new access token.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The loomies were retrieved successfully"
+                  accessToken: 
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOiIyMDIzLTAzLTI0VDA4OjA3OjU1LjM2MjQ0MjM3LTA1OjAwIiwibm90QmVmb3JlIjoiMjAyMy0wMy0yNFQwNzozNzo1NS4zNjI0NDE4MzgtMDU6MDAiLCJ1c2VyaWQiOiI2M2ZjMjUyZjQwMGQwOWFiNTkzN2NkMWUifQ.6gDSRsGoq2g9svrtI1nx8_MRHyODQKmZWqZNkP_-GZc"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  # --- --- ---
+  # Gyms routes
+  /gyms/near: 
+    post: 
+      tags: [ Gyms ]
+      description: Get the gyms near the user coordinates.
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                latitude: 
+                  type: number
+                  example: 7.03823
+                longitude: 
+                  type: number
+                  example: -73.07137
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the neares gyms are retrieved.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The items were retrieved successfully"
+                  nearGyms: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicGym"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: No gyms were found near the user coordinates.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /gyms/claim-reward: 
+    post: 
+      tags: [ Gyms ]
+      description: Claim the reward of the given gym. 
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                gym_id: 
+                  type: string
+                  example: "640ddef4250023a581a475a7"
+                latitude: 
+                  type: number
+                  example: 7.03823
+                longitude: 
+                  type: number
+                  example: -73.07137
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the gym's rewards are claimed.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The items were retrieved successfully"
+                  reward: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicReward"
+        "400":
+          description: Bad request. 1) Maybe some fields are missed or 2) the user already claims the gym rewards or 3) The user isn't near the gym coordinates. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  # --- --- ---
+  # Gyms routes
+  /loomies/near: 
+    post: 
+      tags: [ Loomies ]
+      description: Get the gyms near the user coordinates.
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                latitude: 
+                  type: number
+                  example: 7.03823
+                longitude: 
+                  type: number
+                  example: -73.07137
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the neares loomies are retrieved.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The loomies were retrieved successfully"
+                  nearGyms: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicWildLoomie"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: No loomies were found near the user coordinates.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+# --- --- ---
+# Reusable components
+components: 
+  # --- --- ---
+  # Authorization schemas
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  # --- --- ---
+  # Reusable schemas
+  schemas: 
+    SuccessResponse:
+      type: object
+      properties:
+        error:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Request was successfully completed"
+    FailResponse:
+      type: object
+      properties:
+        error:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Request wasn't successfully completed. Please, try again later."
+    PublicItem: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        name: 
+          type: string
+          example: "Small Aid Kit"
+        description: 
+          type: string 
+          example: "Heals 100 HP"
+        target: 
+          type: string
+          example: "Loomie"
+        is_combat_item: 
+          type: boolean
+          example: true
+        quantity: 
+          type: number
+          example: 1
+    PublicLoomBall: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        name:   
+          type: string
+          example: "LoomBall Tier 2"
+        quantity: 
+          type: number
+          example: 1
+    PublicGym: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        latitude: 
+          type: number
+          example: 7.03823
+        longitude: 
+          type: number
+          example: -73.07137
+        name: 
+          type: string
+          example: "El cacareo"
+    PublicLoomie: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        serial: 
+          type: number
+          example: 17
+        name: 
+          type: string
+          example: "4 Legged Mushroom"
+        types: 
+          type: array
+          items: 
+            type: string
+            example: "Rock"
+        rarity:
+          type: string
+          example: "Common"
+        hp: 
+          type: number
+          example: 85
+        attack: 
+          type: number
+          example: 12
+        defense: 
+          type: number
+          example: 18
+        is_busy: 
+          type: boolean
+          example: false
+        level: 
+          type: number
+          example: 1
+    PublicReward: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        name: 
+          type: string
+          example: "Small Aid Kit"
+        quantity: 
+          type: number
+          example: 1
+    PublicWildLoomie: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        serial: 
+          type: number
+          example: 17
+        name: 
+          type: string
+          example: "4 Legged Mushroom"
+        types: 
+          type: array
+          items: 
+            type: string
+            example: "64073b543ae76d54e2641794"
+        rarity:
+          type: string
+          example: "64073b543ae76d54e26417b1"
+        hp: 
+          type: number
+          example: 85
+        attack: 
+          type: number
+          example: 12
+        defense: 
+          type: number
+          example: 18
+        zone_id: 
+          type: string
+          example: "64073b523ae76d54e263fac0"
+        latitude: 
+          type: number
+          example: 7.03823
+        longitude: 
+          type: number
+          example: -73.07137
+        generated_at: 
+          type: number
+          example: 1678241587

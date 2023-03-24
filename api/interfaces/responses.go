@@ -11,7 +11,7 @@ type NearGymsRes struct {
 	Name      string             `json:"name"      bson:"name"`
 }
 
-// UserItemsRes is the response for the /items endpoint to avoid sending unnecessary
+// UserItemsRes is the response for the /user/litems endpoint to avoid sending unnecessary
 // data to the client
 type UserItemsRes struct {
 	Id             primitive.ObjectID `json:"_id" bson:"_id"`

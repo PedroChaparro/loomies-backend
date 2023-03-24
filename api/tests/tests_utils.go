@@ -71,7 +71,7 @@ func GenerateRandomUser() interfaces.User {
 // InsertUser inserts a random user in the database. Use this function when you need to test
 // endpoints that require a user to be logged in whintout having to test the signup endpoint
 func InsertUser(user interfaces.User, router *gin.Engine, handler gin.HandlerFunc) {
-	router.POST("/signup", handler)
-	w, req := SetupPostRequest("/signup", user)
+	router.POST("/user/signup", handler)
+	w, req := SetupPostRequest("/user/signup", user)
 	router.ServeHTTP(w, req)
 }

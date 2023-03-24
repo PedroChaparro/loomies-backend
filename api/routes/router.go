@@ -8,22 +8,22 @@ import (
 
 func SetupRoutes(engine *gin.Engine) {
 	// User
-	engine.POST("/signup", controllers.HandleSignUp)
-	engine.POST("/code_validation", controllers.HandleCodeValidation)
-	engine.POST("/new_code", controllers.HandleNewCodeValidation)
+	engine.POST("/user/signup", controllers.HandleSignUp)
+	engine.POST("/user/validate", controllers.HandleCodeValidation)
+	engine.POST("/user/validate/code", controllers.HandleNewCodeValidation)
 
 	// Session
-	engine.POST("/login", controllers.HandleLogIn)
-	engine.GET("/whoami", middlewares.MustProvideAccessToken(), controllers.HandleWhoami)
-	engine.GET("/refresh", middlewares.MustProvideRefreshToken(), controllers.HandleRefresh)
+	engine.POST("/session/login", controllers.HandleLogIn)
+	engine.GET("/session/whoami", middlewares.MustProvideAccessToken(), controllers.HandleWhoami)
+	engine.GET("/session/refresh", middlewares.MustProvideRefreshToken(), controllers.HandleRefresh)
 
 	// Gyms
-	engine.POST("/near_gyms", middlewares.MustProvideAccessToken(), controllers.HandleNearGyms)
-	engine.POST("/gyms/claim_reward", middlewares.MustProvideAccessToken(), controllers.HandleClaimReward)
+	engine.POST("/gyms/near", middlewares.MustProvideAccessToken(), controllers.HandleNearGyms)
+	engine.POST("/gyms/claim-reward", middlewares.MustProvideAccessToken(), controllers.HandleClaimReward)
 
 	// Loomies
-	engine.POST("/near_loomies", middlewares.MustProvideAccessToken(), controllers.HandleNearLoomies)
+	engine.POST("/loomies/near", middlewares.MustProvideAccessToken(), controllers.HandleNearLoomies)
 
-	//Items
-	engine.GET("/items", middlewares.MustProvideAccessToken(), controllers.HandleGetItems)
+	// Items
+	engine.GET("/user/items", middlewares.MustProvideAccessToken(), controllers.HandleGetItems)
 }
