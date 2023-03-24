@@ -188,7 +188,78 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
-  
+  /user/password/code: 
+    post: 
+      tags: [ User ]
+      description: Request a new verification code to update the user password.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+        required: true
+      responses: 
+        "200": 
+          description: A new verification code was created and sended via e-mail to the user. 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request. Maybe the "email" field wasn't received. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any user with the give e-mail. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/password: 
+    put: 
+      tags: [ User ]
+      description: Update the user password.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+                resetPassCode: 
+                  type: string
+                  example: "234508"
+                password: 
+                  type: string
+                  example: "Password2023#"
+        required: true
+      responses: 
+        "200": 
+          description: The code and the new password were valid, so, the user password is sucessfully updated.
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request. Maybe the "email" or "validationCode" field wasn't received. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any user with the give e-mail or t he validation code was incorrect / expired.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
   # --- --- --
   # Session routes
   /session/login: 
