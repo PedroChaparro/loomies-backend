@@ -313,6 +313,109 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
+  # --- --- ---
+  # Gyms routes
+  /gyms/near: 
+    post: 
+      tags: [ Gyms ]
+      description: Get the gyms near the user coordinates.
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                latitude: 
+                  type: number
+                  example: 7.03823
+                longitude: 
+                  type: number
+                  example: -73.07137
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the neares gyms are retrieved.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The items were retrieved successfully"
+                  nearGyms: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicGym"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: No gyms were found near the user coordinates.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /gyms/claim-reward: 
+    post: 
+      tags: [ Gyms ]
+      description: Claim the reward of the given gym. 
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                gym_id: 
+                  type: string
+                  example: "640ddef4250023a581a475a7"
+                latitude: 
+                  type: number
+                  example: 7.03823
+                longitude: 
+                  type: number
+                  example: -73.07137
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the gym's rewards are claimed.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The items were retrieved successfully"
+                  reward: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicReward"
+        "400":
+          description: Bad request. 1) Maybe some fields are missed or 2) the user already claims the gym rewards or 3) The user isn't near the gym coordinates. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
 # --- --- ---
 # Reusable components
 components: 
@@ -377,6 +480,21 @@ components:
         quantity: 
           type: number
           example: 1
+    PublicGym: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        latitude: 
+          type: number
+          example: 7.03823
+        longitude: 
+          type: number
+          example: -73.07137
+        name: 
+          type: string
+          example: "El cacareo"
     PublicLoomie: 
       type: object
       properties: 
@@ -410,5 +528,17 @@ components:
           type: boolean
           example: false
         level: 
+          type: number
+          example: 1
+    PublicReward: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        name: 
+          type: string
+          example: "Small Aid Kit"
+        quantity: 
           type: number
           example: 1
