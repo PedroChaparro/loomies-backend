@@ -42,7 +42,7 @@ jobs:
           echo "MONGO_DATABASE = loomies" >> .env
           echo "REFRESH_TOKEN_SECRET = dummy_refresh_secret" >> .env
           echo "ACCESS_TOKEN_SECRET = dummy_access_secret" >> .env
-          echo "WS_TOKEN_SECRET" - dummy_ws_secret >> .env
+          echo "WS_TOKEN_SECRET" = dummy_ws_secret >> .env
           echo "GAME_ZONE_RADIUS" = 0.0035 >> .env
           echo "GAME_MIN_LOOMIES_GENERATION_TIMEOUT" = 5 >> .env
           echo "GAME_MAX_LOOMIES_GENERATION_TIMEOUT" = 12 >> .env
