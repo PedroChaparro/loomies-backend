@@ -14,14 +14,14 @@ func MustProvideAccessToken() gin.HandlerFunc {
 		accessToken := c.GetHeader("Access-Token")
 
 		if accessToken == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Access token is required"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "Access token is required"})
 			return
 		}
 
 		// Check if access token is valid
 		id, error := utils.ValidateAccessToken(accessToken)
 		if error != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": error.Error()})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": error.Error()})
 			return
 		}
 
@@ -37,14 +37,14 @@ func MustProvideRefreshToken() gin.HandlerFunc {
 		refreshToken := c.GetHeader("Refresh-Token")
 
 		if refreshToken == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Refresh token is required"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "Refresh token is required"})
 			return
 		}
 
 		// Check if refresh token is valid
 		id, error := utils.ValidateRefreshToken(refreshToken)
 		if error != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": error.Error()})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": error.Error()})
 			return
 		}
 

@@ -18,7 +18,7 @@ func HandleLogIn(c *gin.Context) {
 	var user interfaces.User
 
 	if err := c.BindJSON(&form); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
 
@@ -26,15 +26,15 @@ func HandleLogIn(c *gin.Context) {
 
 	//Check if exists empty fields
 	if form.Email == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email cannot be empty"})
 		return
 	} else if err != nil { //Check email format
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email is invalid"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email is invalid"})
 		return
 	}
 
 	if form.Password == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Password cannot be empty"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password cannot be empty"})
 		return
 	}
 
@@ -44,11 +44,11 @@ func HandleLogIn(c *gin.Context) {
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.AbortWithStatusJSON(http.StatusUnauthorized,
-				gin.H{"message": "Wrong Email/Password"})
+				gin.H{"error": true, "message": "Wrong Email/Password"})
 			return
 		} else {
 			c.AbortWithStatusJSON(http.StatusInternalServerError,
-				gin.H{"message": "Internal server error"})
+				gin.H{"error": true, "message": "Internal server error"})
 			return
 		}
 	}
@@ -56,13 +56,13 @@ func HandleLogIn(c *gin.Context) {
 	//Check if the password is correct
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)); err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized,
-			gin.H{"message": "Wrong Email/Password"})
+			gin.H{"error": true, "message": "Wrong Email/Password"})
 		return
 	}
 
 	//Check if user is verified
 	if !user.IsVerified {
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "User has not been verified"})
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": true, "message": "User has not been verified"})
 		return
 	}
 
@@ -70,6 +70,7 @@ func HandleLogIn(c *gin.Context) {
 	refreshToken, err := utils.CreateRefreshToken(user.Id.Hex())
 
 	c.IndentedJSON(http.StatusOK, gin.H{
+		"error":        false,
 		"message":      "Successfully logged in",
 		"user":         gin.H{"username": user.Username, "email": user.Email},
 		"accessToken":  accessToken,
@@ -84,15 +85,16 @@ func HandleWhoami(c *gin.Context) {
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "User was not found"})
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "User was not found"})
 			return
 		} else {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 			return
 		}
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{
+		"error":   false,
 		"message": "Successfully retrieved user",
 		"user":    gin.H{"username": user.Username, "email": user.Email},
 	})
@@ -104,11 +106,12 @@ func HandleRefresh(c *gin.Context) {
 
 	accessToken, err := utils.CreateAccessToken(userid.(string))
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 		return
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{
+		"error":       false,
 		"message":     "Successfully refreshed access token",
 		"accessToken": accessToken,
 	})

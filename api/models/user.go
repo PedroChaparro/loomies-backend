@@ -15,6 +15,8 @@ import (
 
 var UserCollection *mongo.Collection = configuration.ConnectToMongoCollection("users")
 
+var LoomiesCollection *mongo.Collection = configuration.ConnectToMongoCollection("caught_loomies")
+
 func InsertUser(data interfaces.User) error {
 	// Set the current time as the "last time the user generated loomies"
 	data.LastLoomieGenerationTime = time.Now().Unix()
@@ -317,4 +319,67 @@ func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.GymRe
 	}
 
 	return nil
+}
+
+// GetLoomiesByUser returns an array of loomies according with user
+func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomiesRes, error) {
+
+	// Filter
+	filter := bson.M{
+		"_id": bson.M{
+			"$in": loomiesArray,
+		},
+	}
+
+	matchFilter := bson.M{"$match": filter}
+
+	// Lookup loomies rarities collection
+	lookupIntoRarity := bson.M{
+		"$lookup": bson.M{
+			"from":         "loomie_rarities",
+			"localField":   "rarity",
+			"foreignField": "_id",
+			"as":           "rarity",
+		},
+	}
+
+	// Lookup loomies types collection
+	lookupIntoTypes := bson.M{
+		"$lookup": bson.M{
+			"from":         "loomie_types",
+			"localField":   "types",
+			"foreignField": "_id",
+			"as":           "types",
+		},
+	}
+
+	// Make the query
+	cursor, err := LoomiesCollection.Aggregate(context.TODO(), []bson.M{matchFilter, lookupIntoRarity, lookupIntoTypes})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var loomies []interfaces.UserLoomiesRes
+
+	for cursor.Next(context.Background()) {
+		var loomieAux interfaces.UserLoomiesResAux
+		var loomie interfaces.UserLoomiesRes
+
+		var types []string
+
+		cursor.Decode(&loomieAux)
+		cursor.Decode(&loomie)
+
+		for _, t := range loomieAux.Types {
+			types = append(types, t.Name)
+		}
+
+		loomie.Rarity = loomieAux.Rarity[0].Name
+		loomie.Types = types
+
+		loomies = append(loomies, loomie)
+	}
+
+	return loomies, err
 }
