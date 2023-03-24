@@ -57,6 +57,15 @@ func GetAccessTokenSecret() string {
 	return Globals.AccessTokenSecret
 }
 
+func GetWsTokenSecret() string {
+	if Globals.WsTokenSecret == "" {
+		wsTokenSecret := GetEnvironmentVariable("WS_TOKEN_SECRET")
+		Globals.WsTokenSecret = wsTokenSecret
+	}
+
+	return Globals.WsTokenSecret
+}
+
 func GetRefreshTokenSecret() string {
 	if Globals.RefreshTokenSecret == "" {
 		refreshTokenSecret := GetEnvironmentVariable("REFRESH_TOKEN_SECRET")

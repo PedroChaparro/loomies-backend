@@ -10,6 +10,7 @@ type Globals struct {
 	MongoClient                 *mongo.Client
 	AccessTokenSecret           string
 	RefreshTokenSecret          string
+	WsTokenSecret               string
 	MinLoomiesGenerationTimeout int
 	MaxLoomiesGenerationTimeout int
 	MinLoomiesGenerationAmount  int
