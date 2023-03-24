@@ -416,6 +416,57 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
+  # --- --- ---
+  # Gyms routes
+  /loomies/near: 
+    post: 
+      tags: [ Loomies ]
+      description: Get the gyms near the user coordinates.
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                latitude: 
+                  type: number
+                  example: 7.03823
+                longitude: 
+                  type: number
+                  example: -73.07137
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the neares loomies are retrieved.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The loomies were retrieved successfully"
+                  nearGyms: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicWildLoomie"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: No loomies were found near the user coordinates.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
 # --- --- ---
 # Reusable components
 components: 
@@ -542,3 +593,44 @@ components:
         quantity: 
           type: number
           example: 1
+    PublicWildLoomie: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        serial: 
+          type: number
+          example: 17
+        name: 
+          type: string
+          example: "4 Legged Mushroom"
+        types: 
+          type: array
+          items: 
+            type: string
+            example: "64073b543ae76d54e2641794"
+        rarity:
+          type: string
+          example: "64073b543ae76d54e26417b1"
+        hp: 
+          type: number
+          example: 85
+        attack: 
+          type: number
+          example: 12
+        defense: 
+          type: number
+          example: 18
+        zone_id: 
+          type: string
+          example: "64073b523ae76d54e263fac0"
+        latitude: 
+          type: number
+          example: 7.03823
+        longitude: 
+          type: number
+          example: -73.07137
+        generated_at: 
+          type: number
+          example: 1678241587
