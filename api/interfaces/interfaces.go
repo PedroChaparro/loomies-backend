@@ -214,10 +214,3 @@ type CaughtLoomie struct {
 	Attack  int                  `json:"attack"     bson:"attack"`
 	Defense int                  `json:"defense"     bson:"defense"`
 }
-
-type Combat struct {
-	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	PlayerId primitive.ObjectID `json:"player_id"      bson:"player_id"`
-	GymId    primitive.ObjectID `json:"gym_id"      bson:"gym_id"`
-	// TODO: Add the rest of the fields
-}

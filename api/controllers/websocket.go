@@ -130,14 +130,6 @@ func HandleCombatInit(c *gin.Context) {
 		LastMessageTimestamp: time.Now().Unix(),
 	}
 
-	// Initialize the combat on database
-	err = models.InitializeCombat(claims)
-
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to initialize the combat. Please try again later."})
-		return
-	}
-
 	// Register the connection on the hub
 	hub.Register(claims.GymID, connection)
 	connection.Listen(hub)
