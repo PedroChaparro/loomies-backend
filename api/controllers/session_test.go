@@ -38,8 +38,8 @@ func loginWithRandomUser() (interfaces.User, map[string]string) {
 		"password": randomUser.Password,
 	}
 
-	router.POST("/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/login", loginForm)
+	router.POST("/session/login", HandleLogIn)
+	w, req := tests.SetupPostRequest("/session/login", loginForm)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -66,8 +66,8 @@ func TestLoginForbidden(t *testing.T) {
 		"password": randomUser.Password,
 	}
 
-	router.POST("/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/login", loginForm)
+	router.POST("/session/login", HandleLogIn)
+	w, req := tests.SetupPostRequest("/session/login", loginForm)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -102,8 +102,8 @@ func TestLoginSuccess(t *testing.T) {
 		"password": randomUser.Password,
 	}
 
-	router.POST("/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/login", loginForm)
+	router.POST("/session/login", HandleLogIn)
+	w, req := tests.SetupPostRequest("/session/login", loginForm)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -141,8 +141,8 @@ func TestRefreshUnauthorized(t *testing.T) {
 
 	// Try to refresh without a refresh token
 	var refreshResponse map[string]string
-	router.POST("/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
-	w, req := tests.SetupPostRequest("/refresh", nil)
+	router.POST("/session/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
+	w, req := tests.SetupPostRequest("/session/refresh", nil)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &refreshResponse)
 
@@ -163,8 +163,8 @@ func TestRefreshSuccess(t *testing.T) {
 
 	// Get a new access token from the refresh token
 	var refreshResponse map[string]string
-	router.POST("/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
-	w, req := tests.SetupPostRequest("/refresh", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"]})
+	router.POST("/session/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
+	w, req := tests.SetupPostRequest("/session/refresh", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"]})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &refreshResponse)
 
@@ -193,8 +193,8 @@ func TestWhoamiUnauthorized(t *testing.T) {
 
 	// Try to get the user without a valid access token
 	var whoamiResponse map[string]string
-	router.GET("/whoami", middlewares.MustProvideAccessToken(), HandleWhoami)
-	w, req := tests.SetupGetRequest("/whoami")
+	router.GET("/session/whoami", middlewares.MustProvideAccessToken(), HandleWhoami)
+	w, req := tests.SetupGetRequest("/session/whoami")
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &whoamiResponse)
 
@@ -215,8 +215,8 @@ func TestWhoamiSuccess(t *testing.T) {
 
 	// Make a request to the whoami endpoint
 	var whoamiResponse map[string]interface{}
-	router.GET("/whoami", middlewares.MustProvideAccessToken(), HandleWhoami)
-	w, req := tests.SetupGetRequest("/whoami", tests.CustomHeader{Name: "Access-Token", Value: loginResponse["accessToken"]})
+	router.GET("/session/whoami", middlewares.MustProvideAccessToken(), HandleWhoami)
+	w, req := tests.SetupGetRequest("/session/whoami", tests.CustomHeader{Name: "Access-Token", Value: loginResponse["accessToken"]})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &whoamiResponse)
 
