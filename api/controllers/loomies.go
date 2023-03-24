@@ -109,7 +109,7 @@ func HandleNearLoomies(c *gin.Context) {
 	coordinates := interfaces.Coordinates{}
 
 	if err := c.BindJSON(&coordinates); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Latitude and longitude are required"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Latitude and longitude are required"})
 		return
 	}
 

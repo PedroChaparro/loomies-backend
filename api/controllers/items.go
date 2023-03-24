@@ -15,10 +15,10 @@ func HandleGetItems(c *gin.Context) {
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "User was not found"})
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "User was not found"})
 			return
 		} else {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 			return
 		}
 	}
