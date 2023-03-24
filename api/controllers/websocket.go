@@ -60,6 +60,27 @@ func HandleCombatInit(c *gin.Context) {
 		return
 	}
 
+	// Check the gym is near the user coordinates
+	gymDoc, err := models.GetGymFromID(claims.GymID)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the gym. Please try again later."})
+		return
+	}
+
+	isNear := utils.IsNear(interfaces.Coordinates{
+		Latitude:  gymDoc.Latitude,
+		Longitude: gymDoc.Longitude,
+	}, interfaces.Coordinates{
+		Latitude:  claims.Latitude,
+		Longitude: claims.Longitude,
+	})
+
+	if !isNear {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "You are not near the gym. Please go to the gym to start the combat."})
+		return
+	}
+
 	// Check the gym is not already in combat
 	hub := configuration.Globals.WsHub
 	inCombat := hub.Includes(claims.GymID)
