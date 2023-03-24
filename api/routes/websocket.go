@@ -8,6 +8,6 @@ import (
 
 // --- Websocket Routes ---
 func SetupWebSocketRoutes(engine *gin.Engine) {
-	engine.POST("/api/combat/register", middlewares.MustProvideAccessToken(), controllers.HandleCombatRegister)
-	engine.GET("/api/combat", controllers.HandleCombatInit)
+	engine.POST("/combat/register", middlewares.MustProvideAccessToken(), controllers.HandleCombatRegister)
+	engine.GET("/combat", controllers.HandleCombatInit)
 }
