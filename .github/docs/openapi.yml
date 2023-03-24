@@ -538,6 +538,85 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
+  # --- --- ---
+  # Web socket routes
+  /combat/register:
+    post: 
+      tags: [ Websocket ]
+      description: Request a combat token to initialize a combat.
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                gym_id: 
+                  type: string
+                  example: 640ddeed250023a581a3f7e5
+                latitude: 
+                  type: number
+                  example: 7.03823
+                longitude: 
+                  type: number
+                  example: -73.07137
+        required: true
+      responses: 
+        "200": 
+          description: All the fields were ok and the user gets a new combat token.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "Token was created successfully"
+                  combat_token: 
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOiIyMDIzLTAzLTI0VDA4OjA3OjU1LjM2MjQ0MjM3LTA1OjAwIiwibm90QmVmb3JlIjoiMjAyMy0wMy0yNFQwNzozNzo1NS4zNjI0NDE4MzgtMDU6MDAiLCJ1c2VyaWQiOiI2M2ZjMjUyZjQwMGQwOWFiNTkzN2NkMWUifQ.6gDSRsGoq2g9svrtI1nx8_MRHyODQKmZWqZNkP_-GZc"
+        "400":
+          description: Bad request. Maybe some of the fields were not received from the server.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /combat:
+    get: 
+      tags: [ Websocket ]
+      description: Initialize a combat using a combat token.
+      parameters: 
+        - in: query
+          name: token
+          schema: 
+            type: string
+          required: true
+          description: The combat token generated with the `/combat/register` endpoint.
+      responses: 
+        "200": 
+          description: The token was OK and the protocol is updated to Web Socket.
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "409":
+          description: The gym is already in combat.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
 # --- --- ---
 # Reusable components
 components: 
