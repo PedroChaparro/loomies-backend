@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -165,5 +166,27 @@ func HandleNearLoomies(c *gin.Context) {
 		"error":   false,
 		"message": "Loomies were retrieved successfully",
 		"loomies": wildLoomies,
+	})
+}
+
+func HandleValidateLoomieExists(c *gin.Context) {
+	var loomie_id interfaces.LoomieExistsForm
+
+	if err := c.BindJSON(&loomie_id); err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
+		return
+	}
+
+	if loomie_id.LoomieId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID"})
+		return
+	}
+
+	exists, _ := models.ValidateLoomieExists(loomie_id.LoomieId)
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"error":  false,
+		"exists": exists,
 	})
 }
