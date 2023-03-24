@@ -25,3 +25,26 @@ type WsHub struct {
 	// be one client per gym
 	Combats map[string]*WsClient
 }
+
+type WsTokenClaims struct {
+	UserID    string  `json:"user_id"`
+	GymID     string  `json:"gym_id"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+// Includes checks if the hub already has a client for the gym
+func (hub *WsHub) Includes(gym string) bool {
+	_, ok := hub.Combats[gym]
+	return ok
+}
+
+// Register registers a new client to the hub
+func (hub *WsHub) Register(gym string, client *WsClient) bool {
+	if hub.Includes(gym) {
+		return false
+	}
+
+	hub.Combats[gym] = client
+	return true
+}

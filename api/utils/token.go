@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
+	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -56,7 +57,7 @@ func CreateWsToken(userID string, gymId string, latitude float64, longitude floa
 		"latitude":  latitude,
 		"longitude": longitude,
 		"notBefore": time.Now(),
-		"expire":    time.Now().Add(time.Minute * 5),
+		"expire":    time.Now().Add(time.Minute * 1),
 	})
 
 	var err error
@@ -127,5 +128,41 @@ func ValidateRefreshToken(refreshToken string) (string, error) {
 		return claims["userid"].(string), nil
 	} else {
 		return "", errors.New("Invalid refresh token (claims)")
+	}
+}
+
+// ValidateWsToken validates the websocket token is valid and not expired and returns the token claims
+func ValidateWsToken(wsToken string) (interfaces.WsTokenClaims, error) {
+	token, err := jwt.Parse(wsToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("Unexpected signing method")
+		}
+		return []byte(JWTKeyWS), nil
+	})
+
+	if err != nil {
+		return interfaces.WsTokenClaims{}, errors.New("Invalid websocket token (parse)")
+	}
+
+	// validate token
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		exp, err := time.Parse(time.RFC3339, claims["expire"].(string))
+
+		if err != nil {
+			return interfaces.WsTokenClaims{}, errors.New("Invalid websocket token (expire format)")
+		}
+
+		if exp.Before(time.Now()) {
+			return interfaces.WsTokenClaims{}, errors.New("Websocket token expired")
+		}
+
+		return interfaces.WsTokenClaims{
+			UserID:    claims["user_id"].(string),
+			GymID:     claims["gym_id"].(string),
+			Latitude:  claims["latitude"].(float64),
+			Longitude: claims["longitude"].(float64),
+		}, nil
+	} else {
+		return interfaces.WsTokenClaims{}, errors.New("Invalid websocket token (claims)")
 	}
 }

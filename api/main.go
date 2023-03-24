@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/routes"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ func main() {
 		Combats: make(map[string]*interfaces.WsClient),
 	}
 
+	configuration.Globals.WsHub = &hub
 	routes.SetupWebSocketRoutes(engine, &hub)
 
 	// Start the server

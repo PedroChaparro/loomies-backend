@@ -11,6 +11,7 @@ type Globals struct {
 	AccessTokenSecret           string
 	RefreshTokenSecret          string
 	WsTokenSecret               string
+	WsHub                       *WsHub
 	MinLoomiesGenerationTimeout int
 	MaxLoomiesGenerationTimeout int
 	MinLoomiesGenerationAmount  int
@@ -202,4 +203,11 @@ type CaughtLoomie struct {
 	HP      int                  `json:"hp"     bson:"hp"`
 	Attack  int                  `json:"attack"     bson:"attack"`
 	Defense int                  `json:"defense"     bson:"defense"`
+}
+
+type Combat struct {
+	Id       primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	PlayerId primitive.ObjectID `json:"player_id"      bson:"player_id"`
+	GymId    primitive.ObjectID `json:"gym_id"      bson:"gym_id"`
+	// TODO: Add the rest of the fields
 }

@@ -3,10 +3,23 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
+	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
+
+// The upgrader is used to upgrade the http connection to a websocket connection
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	// Initialy, this accept all the origins
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
 
 // HandleCombatRegister creates a token for the user to authenticate
 // with the websocket endpoint
@@ -31,5 +44,54 @@ func HandleCombatRegister(c *gin.Context) {
 }
 
 func HandleCombatInit(c *gin.Context) {
-	// Receive the gym id and the token from the params
+	// Receive the token from the params
+	token := c.Query("token")
+
+	if token == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The token is required"})
+		return
+	}
+
+	// Validate the token and get the claims
+	claims, err := utils.ValidateWsToken(token)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "The token is invalid"})
+		return
+	}
+
+	// Check the gym is not already in combat
+	hub := configuration.Globals.WsHub
+	inCombat := hub.Includes(claims.GymID)
+
+	if inCombat {
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": true, "message": "The gym is already in combat"})
+		return
+	}
+
+	// Upgrade the connection
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to upgrade the connection to a websocket connection"})
+		return
+	}
+
+	connection := &interfaces.WsClient{
+		Connection: conn,
+		Channel:    make(chan<- string),
+	}
+
+	// Initialize the combat on database
+	err = models.InitializeCombat(claims)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to initialize the combat. Please try again later."})
+		return
+	}
+
+	// Register the connection on the hub
+	hub.Register(claims.GymID, connection)
+
+	// NOTE: The response is sended automatically when upgrading the connection
 }
