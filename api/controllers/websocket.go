@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -99,8 +100,9 @@ func HandleCombatInit(c *gin.Context) {
 	}
 
 	connection := &interfaces.WsClient{
-		Connection: conn,
-		Channel:    make(chan<- string),
+		GymID:                claims.GymID,
+		Connection:           conn,
+		LastMessageTimestamp: time.Now().Unix(),
 	}
 
 	// Initialize the combat on database
@@ -113,6 +115,7 @@ func HandleCombatInit(c *gin.Context) {
 
 	// Register the connection on the hub
 	hub.Register(claims.GymID, connection)
+	connection.Listen(hub)
 
 	// NOTE: The response is sended automatically when upgrading the connection
 }
