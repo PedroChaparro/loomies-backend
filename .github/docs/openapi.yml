@@ -188,7 +188,131 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
-                
+  
+  # --- --- --
+  # Session routes
+  /session/login: 
+    post: 
+      tags: [ Session ]
+      description: Login.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+                password:
+                  type: string
+                  example: "Password2023#"
+        required: true
+      responses: 
+        "200": 
+          description: The user was found and the passwors was correct, so, the user get their access and refresh token. 
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error: 
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: Successfully logged in
+                  user: 
+                    type: object
+                    properties: 
+                      email: 
+                        type: string
+                        example: loomies@gmail.com
+                      username: 
+                        type: string
+                        example: loomies
+                  accessToken: 
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOiIyMDIzLTAzLTI0VDA4OjA3OjU1LjM2MjQ0MjM3LTA1OjAwIiwibm90QmVmb3JlIjoiMjAyMy0wMy0yNFQwNzozNzo1NS4zNjI0NDE4MzgtMDU6MDAiLCJ1c2VyaWQiOiI2M2ZjMjUyZjQwMGQwOWFiNTkzN2NkMWUifQ.6gDSRsGoq2g9svrtI1nx8_MRHyODQKmZWqZNkP_-GZc"
+                  refreshToken: 
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOiIyMDIzLTA4LTI0VDA3OjM3OjU1LjM2MjQ2NzM3Mi0wNTowMCIsIm5vdEJlZm9yZSI6IjIwMjMtMDMtMjRUMDc6Mzc6NTUuMzYyNDY3MjIyLTA1OjAwIiwidXNlcmlkIjoiNjNmYzI1MmY0MDBkMDlhYjU5MzdjZDFlIn0.bASrFc5aNVP4oBfzhqvSwlcbaoml1sttPR_IM40eoE8"
+        "400":
+          description: Bad request. Mayby the username or password fields are empty. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The password is not correct or the email wasn't found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /session/whoami: 
+    get: 
+      tags: [ Session ]
+      description: Get the user information from the access token.
+      security: 
+        - basicAuth: [Access-Token]
+      responses: 
+        "200": 
+          description: The token is valid and the user information are successfully retreived.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The loomies were retrieved successfully"
+                  user: 
+                    type: object
+                    properties: 
+                      email: 
+                        type: string
+                        example: loomies@gmail.com
+                      username: 
+                        type: string
+                        example: loomies
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /session/refresh: 
+    get: 
+      tags: [ Session ]
+      description: Get a new Access Token from the Refresh one.
+      security: 
+        - basicAuth: [Refresh-Token]
+      responses: 
+        "200": 
+          description: The token is valid and the user gets a new access token.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The loomies were retrieved successfully"
+                  accessToken: 
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOiIyMDIzLTAzLTI0VDA4OjA3OjU1LjM2MjQ0MjM3LTA1OjAwIiwibm90QmVmb3JlIjoiMjAyMy0wMy0yNFQwNzozNzo1NS4zNjI0NDE4MzgtMDU6MDAiLCJ1c2VyaWQiOiI2M2ZjMjUyZjQwMGQwOWFiNTkzN2NkMWUifQ.6gDSRsGoq2g9svrtI1nx8_MRHyODQKmZWqZNkP_-GZc"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
 # --- --- ---
 # Reusable components
 components: 
