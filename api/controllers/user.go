@@ -19,28 +19,28 @@ func HandleSignUp(c *gin.Context) {
 	var form interfaces.SignUpForm
 
 	if err := c.BindJSON(&form); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
 
 	//Check if exists empty fields
 	if form.Username == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Username cannot be empty"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Username cannot be empty"})
 		return
 	}
 
 	_, err = mail.ParseAddress(form.Email)
 
 	if form.Email == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email cannot be empty"})
 		return
 	} else if err != nil { //Check email format
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email is invalid"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email is invalid"})
 		return
 	}
 
 	if form.Password == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Password cannot be empty"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password cannot be empty"})
 		return
 	}
 
@@ -48,11 +48,11 @@ func HandleSignUp(c *gin.Context) {
 	if len(form.Password) >= 8 {
 		message := models.ValidPassword(form.Password)
 		if message != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": message.Error()})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": message.Error()})
 			return
 		}
 	} else {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Password is too short"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password is too short"})
 		return
 	}
 
@@ -62,7 +62,7 @@ func HandleSignUp(c *gin.Context) {
 	if !(err != nil) {
 		if !(err == mongo.ErrNoDocuments) {
 			c.AbortWithStatusJSON(http.StatusConflict,
-				gin.H{"message": "Email already exists"})
+				gin.H{"error": true, "message": "Email already exists"})
 			return
 		}
 	}
@@ -73,7 +73,7 @@ func HandleSignUp(c *gin.Context) {
 	if !(err != nil) {
 		if !(err == mongo.ErrNoDocuments) {
 			c.AbortWithStatusJSON(http.StatusConflict,
-				gin.H{"message": "Username already exists"})
+				gin.H{"error": true, "message": "Username already exists"})
 			return
 		}
 	}
@@ -82,7 +82,7 @@ func HandleSignUp(c *gin.Context) {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(form.Password), 8)
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 		return
 	}
 
@@ -100,69 +100,71 @@ func HandleSignUp(c *gin.Context) {
 
 	if err != nil {
 		fmt.Println(err)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 		return
 	}
 
 	//send mail of verification
 	err = utils.SendEmail(form.Email, "Here is your validation code", validationCode)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "User created successfully"})
+	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "User created successfully"})
 }
 
+// Controller to validate a user code
 func HandleCodeValidation(c *gin.Context) {
 	var form interfaces.ValidationCode
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
 	//Check if there is no code
 	if form.ValidationCode == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Verification code cannot be empty"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Verification code cannot be empty"})
 		return
 	}
 	//Check if there is no email
 	if form.Email == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email cannot be empty"})
 		return
 	}
 	// code validation
 	exists := models.CheckCodeExistence(form.Email, form.ValidationCode)
 	if exists {
-		c.IndentedJSON(http.StatusOK, gin.H{"message": "Email has been verified"})
+		c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Email has been verified"})
 		return
 	} else {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "Code was incorrect or time has expired"})
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Code was incorrect or time has expired"})
 		return
 	}
 }
 
+// controller to generate new code
 func HandleNewCodeValidation(c *gin.Context) {
 	var form interfaces.EmailForm
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
 	//Check if there is no email
 	if form.Email == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email cannot be empty"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email cannot be empty"})
 		return
 	}
 
 	_, err := models.GetUserByEmail(form.Email)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "This Email has not been registered"})
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "This Email has not been registered"})
 		return
 	}
 	_, err = models.GetUserByEmailAndVerifStatus(form.Email)
 	if err == nil {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "This Email has been already verified"})
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "This Email has been already verified"})
 		return
 	}
 	//generate code
@@ -171,18 +173,50 @@ func HandleNewCodeValidation(c *gin.Context) {
 	err = models.UpdateCode(form.Email, validationCode)
 	if err != nil {
 		fmt.Println(err)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 		return
 	}
 
 	//send mail of verification
 	err = utils.SendEmail(form.Email, "Here is validation code requested", validationCode)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Code created and sended"})
+	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "New Code created and sended"})
+}
+
+// controller to obtain the loomies from an user
+func HandleGetLoomies(c *gin.Context) {
+	userid, _ := c.Get("userid")
+
+	user, err := models.GetUserById(userid.(string))
+
+	// user exists or not
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "User was not found"})
+			return
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+	}
+
+	loomies, err := models.GetLoomiesByIds(user.Loomies)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
+	}
+
+	// Prevent null responses and obtain an empty array if user don't have loomies
+	if loomies == nil {
+		loomies = []interfaces.UserLoomiesRes{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"error": false, "loomies": loomies})
 }
 
 // controller to create and send a code to reset the password
@@ -216,6 +250,7 @@ func HandleCodeResetPassword(c *gin.Context) {
 
 	//send mail with code to help reset password
 	err = utils.SendEmail(form.Email, "Here is your validation code, to reset your password", resetPasswordCode)
+
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 		return
@@ -247,6 +282,7 @@ func HandleResetPassword(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Verification code cannot be empty"})
 		return
 	}
+
 	//Check password format
 	if len(form.Password) >= 8 {
 		message := models.ValidPassword(form.Password)
@@ -282,5 +318,4 @@ func HandleResetPassword(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Code was incorrect or time has expired"})
 		return
 	}
-
 }
