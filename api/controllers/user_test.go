@@ -29,10 +29,10 @@ func TestSignupSuccessAndConflict(t *testing.T) {
 
 	// Setup router to create the requests
 	router := tests.SetupGinRouter()
-	router.POST("/signup", HandleSignUp)
+	router.POST("/user/signup", HandleSignUp)
 
 	// Make the request and get the JSON response
-	w, req := tests.SetupPostRequest("/signup", payload)
+	w, req := tests.SetupPostRequest("/user/signup", payload)
 	_, err := ioutil.ReadAll(w.Body)
 	router.ServeHTTP(w, req)
 	var response map[string]string
@@ -51,7 +51,7 @@ func TestSignupSuccessAndConflict(t *testing.T) {
 	c.Equal(payload.Username, user.Username)
 
 	// 2. Conflict request with the same email
-	w, req = tests.SetupPostRequest("/signup", payload)
+	w, req = tests.SetupPostRequest("/user/signup", payload)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -62,7 +62,7 @@ func TestSignupSuccessAndConflict(t *testing.T) {
 	// 3. Conflict request with the same username
 	oldEmail := payload.Email
 	payload.Email = tests.FakerInstance.Internet().Email()
-	w, req = tests.SetupPostRequest("/signup", payload)
+	w, req = tests.SetupPostRequest("/user/signup", payload)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
