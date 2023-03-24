@@ -185,6 +185,14 @@ func HandleValidateLoomieExists(c *gin.Context) {
 
 	exists, _ := models.ValidateLoomieExists(loomie_id.LoomieId)
 
+	if !exists {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+			"error":  true,
+			"exists": exists,
+		})
+		return
+	}
+
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"error":  false,
 		"exists": exists,
