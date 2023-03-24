@@ -11,6 +11,7 @@ import (
 // secret keys
 var JWTKeyAC = configuration.GetAccessTokenSecret()
 var JWTKeyRF = configuration.GetRefreshTokenSecret()
+var JWTKeyWS = configuration.GetWsTokenSecret()
 
 func CreateAccessToken(userID string) (string, error) {
 	// 30 minutes short lived token
@@ -46,6 +47,24 @@ func CreateRefreshToken(userID string) (string, error) {
 	}
 
 	return refreshTokenString, nil
+}
+
+func CreateWsToken(userID string) (string, error) {
+	// 5 minutes short lived token
+	wsToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"userid":    userID,
+		"notBefore": time.Now(),
+		"expire":    time.Now().Add(time.Minute * 5),
+	})
+
+	// sign with secret and get encoded token
+	var err error
+	wsTokenString, err := wsToken.SignedString([]byte(JWTKeyWS))
+	if err != nil {
+		return "", errors.New("Could not create websocket token")
+	}
+
+	return wsTokenString, nil
 }
 
 // ValidateRefreshToken validates the refresh token is valid and not expired and returns the user id
