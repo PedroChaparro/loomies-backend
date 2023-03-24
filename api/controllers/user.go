@@ -184,3 +184,103 @@ func HandleNewCodeValidation(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Code created and sended"})
 }
+
+// controller to create and send a code to reset the password
+func HandleCodeResetPassword(c *gin.Context) {
+	var form interfaces.EmailForm
+	if err := c.BindJSON(&form); err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
+		return
+	}
+	//Check if there is no email
+	if form.Email == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email cannot be empty"})
+		return
+	}
+
+	_, err := models.GetUserByEmail(form.Email)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "This Email has not been registered"})
+		return
+	}
+	//generate code
+	resetPasswordCode := utils.GetValidationCode()
+
+	//update in database reset password code
+	err = models.UpdateResetPassCode(form.Email, resetPasswordCode)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
+	}
+
+	//send mail with code to help reset password
+	err = utils.SendEmail(form.Email, "Here is your validation code, to reset your password", resetPasswordCode)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "New Code, to reset password, created and sended"})
+}
+
+// Controller to reset password having a code
+func HandleResetPassword(c *gin.Context) {
+	var form interfaces.ResetPasswordCode
+	if err := c.BindJSON(&form); err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
+		return
+	}
+	//Check if there is no email
+	if form.Email == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email cannot be empty"})
+		return
+	}
+	//Check if there is no password
+	if form.Password == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password cannot be empty"})
+		return
+	}
+	//Check if there is no code
+	if form.ResetPassCode == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Verification code cannot be empty"})
+		return
+	}
+	//Check password format
+	if len(form.Password) >= 8 {
+		message := models.ValidPassword(form.Password)
+		if message != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": message.Error()})
+			return
+		}
+	} else {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password is too short"})
+		return
+	}
+
+	// code validation
+	match := models.CheckResetPassCodeExistence(form.Email, form.ResetPassCode)
+	if match {
+		//encrypt password
+		hashed, err := bcrypt.GenerateFromPassword([]byte(form.Password), 8)
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+
+		err = models.UpdatePasword(form.Email, string(hashed))
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+		c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Password has been changed successfully"})
+		return
+	} else {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Code was incorrect or time has expired"})
+		return
+	}
+
+}
