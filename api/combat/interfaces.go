@@ -2,7 +2,6 @@ package combat
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -122,10 +121,10 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 		var wsMessage WsMessage
 		err = json.Unmarshal(message, &wsMessage)
 
-		// Just print the message for now
-		if err == nil {
-			combat.LastMessageTimestamp = time.Now().Unix()
-			fmt.Println("Message received: ", wsMessage)
+		// Check the message type and send to the corresponding handler
+		switch wsMessage.Type {
+		case "greeting":
+			handleGreetingMessageType(combat)
 		}
 	}
 }
