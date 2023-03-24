@@ -118,6 +118,7 @@ type User struct {
 	Password                        string               `json:"password"  bson:"password"`
 	Items                           []InventoryItem      `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
+	LoomieTeam                      []primitive.ObjectID `json:"loomie_team"   bson:"loomie_team"`
 	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
 	ValidationCodeExp               int64                `json:"validationCodeExp"   bson:"validationCodeExp"`
 	ResetPassCode                   string               `json:"resetPassCode"  bson:"resetPassCode"`

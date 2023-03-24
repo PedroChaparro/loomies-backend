@@ -91,6 +91,31 @@ func HandleCombatInit(c *gin.Context) {
 		return
 	}
 
+	// Get the user and gym loomies
+	user, _ := models.GetUserById(claims.UserID)
+	gym, _ := models.GetGymFromID(claims.GymID)
+	userLoomies, _ := models.GetLoomiesByIds(user.LoomieTeam)
+	gymLoomies, _ := models.GetLoomiesByIds(gym.Protectors)
+
+	// Uncomment this to see the user and gym loomies
+	// NOTE: This can be removed in further pull requests
+	/*
+		fmt.Println("User loomies:")
+		for _, loomie := range userLoomies {
+			fmt.Printf("%+v\n", loomie)
+		}
+
+		fmt.Println("Gym loomies:")
+		for _, loomie := range gymLoomies {
+			fmt.Printf("%+v\n", loomie)
+		}
+	*/
+
+	if len(userLoomies) == 0 || len(gymLoomies) == 0 {
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": true, "message": "You or the gym doesn't have loomies. Please catch some loomies or search for a gym with loomies."})
+		return
+	}
+
 	// Upgrade the connection
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 
