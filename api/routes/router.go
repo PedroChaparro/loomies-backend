@@ -12,6 +12,8 @@ func SetupRoutes(engine *gin.Engine) {
 	engine.POST("/code_validation", controllers.HandleCodeValidation)
 	engine.POST("/new_code", controllers.HandleNewCodeValidation)
 	engine.GET("/user/loomies", middlewares.MustProvideAccessToken(), controllers.HandleGetLoomies)
+	engine.POST("/user/password/code", controllers.HandleCodeResetPassword)
+	engine.PUT("/user/password", controllers.HandleResetPassword)
 
 	// Session
 	engine.POST("/login", controllers.HandleLogIn)
