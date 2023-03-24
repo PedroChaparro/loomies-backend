@@ -93,9 +93,8 @@ func HandleCombatInit(c *gin.Context) {
 
 	// Get the user and gym loomies
 	user, _ := models.GetUserById(claims.UserID)
-	gym, _ := models.GetGymFromID(claims.GymID)
 	userLoomies, _ := models.GetLoomiesByIds(user.LoomieTeam)
-	gymLoomies, _ := models.GetLoomiesByIds(gym.Protectors)
+	gymLoomies, _ := models.GetLoomiesByIds(gymDoc.Protectors)
 
 	// Uncomment this to see the user and gym loomies
 	// NOTE: This can be removed in further pull requests
