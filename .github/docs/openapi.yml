@@ -1,0 +1,290 @@
+openapi: 3.0.0
+
+info:
+  description: |
+    Loomies Rest API documentation.
+  version: "1.0.0"
+  title: Loomies Rest API
+  
+tags:
+  - name: User
+  - name: Session
+  - name: Gyms
+  - name: Loomies
+  - name: Websocket
+  
+paths:
+  # --- --- --
+  # User routes
+  /user/signup: 
+    post: 
+      tags: [ User ]
+      description: Creates a new account.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                username: 
+                  type: string
+                  example: "loomies"
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+                password:
+                  type: string
+                  example: "Password2023#"
+        required: true
+      responses: 
+        "201": 
+          description: All the fields were OK and the user was created successfully, also, the user should receive an email with their validation code. 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: The given password isn't valid. The password should contain one Uppercase letter, one Lowercase letter, one number, one special character and a minimum length of 8.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "409":
+          description: There is already another user using the given username / email.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/validate/code: 
+    post: 
+      tags: [ User ]
+      description: Request a new account validation code. 
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+        required: true
+      responses: 
+        "200": 
+          description: A new verification code was created and sended via e-mail to the user. 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request. Maybe the "email" field wasn't received. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any user with the give e-mail. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/validate: 
+    post: 
+      tags: [ User ]
+      description: Validate an account.
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                email: 
+                  type: string
+                  example: "loomies@gmail.com"
+                validationCode: 
+                  type: string
+                  example: "234508"
+        required: true
+      responses: 
+        "200": 
+          description: The code was valid and the account was successfully validated. 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request. Maybe the "email" or "validationCode" field wasn't received. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any user with the give e-mail or t he validation code was incorrect / expired.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/items: 
+    get: 
+      tags: [ User ]
+      description: Get the items of the given user.
+      security: 
+        - basicAuth: [Access-Token]
+      responses: 
+        "200": 
+          description: There wasn't any error and the items are retrieved.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The items were retrieved successfully"
+                  items: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicItem"
+                  loomballs: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicLoomBall"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/loomies: 
+    get: 
+      tags: [ User ]
+      description: Get the items of the given user.
+      security: 
+        - basicAuth: [Access-Token]
+      responses: 
+        "200": 
+          description: There wasn't any error and the items are retrieved.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The loomies were retrieved successfully"
+                  items: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicLoomie"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+                
+# --- --- ---
+# Reusable components
+components: 
+  # --- --- ---
+  # Authorization schemas
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  # --- --- ---
+  # Reusable schemas
+  schemas: 
+    SuccessResponse:
+      type: object
+      properties:
+        error:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Request was successfully completed"
+    FailResponse:
+      type: object
+      properties:
+        error:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Request wasn't successfully completed. Please, try again later."
+    PublicItem: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        name: 
+          type: string
+          example: "Small Aid Kit"
+        description: 
+          type: string 
+          example: "Heals 100 HP"
+        target: 
+          type: string
+          example: "Loomie"
+        is_combat_item: 
+          type: boolean
+          example: true
+        quantity: 
+          type: number
+          example: 1
+    PublicLoomBall: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        name:   
+          type: string
+          example: "LoomBall Tier 2"
+        quantity: 
+          type: number
+          example: 1
+    PublicLoomie: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        serial: 
+          type: number
+          example: 17
+        name: 
+          type: string
+          example: "4 Legged Mushroom"
+        types: 
+          type: array
+          items: 
+            type: string
+            example: "Rock"
+        rarity:
+          type: string
+          example: "Common"
+        hp: 
+          type: number
+          example: 85
+        attack: 
+          type: number
+          example: 12
+        defense: 
+          type: number
+          example: 18
+        is_busy: 
+          type: boolean
+          example: false
+        level: 
+          type: number
+          example: 1
