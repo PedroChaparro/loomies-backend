@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/PedroChaparro/loomies-backend/combat"
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
@@ -123,7 +124,7 @@ func HandleCombatInit(c *gin.Context) {
 		return
 	}
 
-	Combat := &interfaces.WsCombat{
+	Combat := &combat.WsCombat{
 		GymID:                claims.GymID,
 		Connection:           conn,
 		LastMessageTimestamp: time.Now().Unix(),
@@ -137,7 +138,7 @@ func HandleCombatInit(c *gin.Context) {
 	hub.Register(claims.GymID, Combat)
 
 	// Send the initial loomies to the client
-	Combat.SendMessage(interfaces.WsMessage{
+	Combat.SendMessage(combat.WsMessage{
 		Type:    "start",
 		Message: "The combat has started with the following loomies",
 		Payload: gin.H{

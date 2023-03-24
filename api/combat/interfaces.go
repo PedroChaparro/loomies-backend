@@ -1,10 +1,11 @@
-package interfaces
+package combat
 
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/gorilla/websocket"
 )
 
@@ -20,11 +21,11 @@ type WsCombat struct {
 	// the connection if the client is inactive for too long
 	LastMessageTimestamp int64
 	// Loomie teams in combat
-	GymLoomies    []UserLoomiesRes
-	PlayerLoomies []UserLoomiesRes
+	GymLoomies    []interfaces.UserLoomiesRes
+	PlayerLoomies []interfaces.UserLoomiesRes
 	// Current loomie in combat
-	CurrentGymLoomie    *UserLoomiesRes
-	CurrentPlayerLoomie *UserLoomiesRes
+	CurrentGymLoomie    *interfaces.UserLoomiesRes
+	CurrentPlayerLoomie *interfaces.UserLoomiesRes
 }
 
 // WsMessage is the message that is sent to the client

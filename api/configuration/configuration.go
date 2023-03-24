@@ -8,13 +8,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var Globals = interfaces.Globals{}
+var Globals = TGlobals{}
 
 // load loads the .env file if the environment is not production and create connections
 func load() {

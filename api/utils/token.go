@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/PedroChaparro/loomies-backend/combat"
 	"github.com/PedroChaparro/loomies-backend/configuration"
-	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -132,7 +132,7 @@ func ValidateRefreshToken(refreshToken string) (string, error) {
 }
 
 // ValidateWsToken validates the websocket token is valid and not expired and returns the token claims
-func ValidateWsToken(wsToken string) (interfaces.WsTokenClaims, error) {
+func ValidateWsToken(wsToken string) (combat.WsTokenClaims, error) {
 	token, err := jwt.Parse(wsToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("Unexpected signing method")
@@ -141,7 +141,7 @@ func ValidateWsToken(wsToken string) (interfaces.WsTokenClaims, error) {
 	})
 
 	if err != nil {
-		return interfaces.WsTokenClaims{}, errors.New("Invalid websocket token (parse)")
+		return combat.WsTokenClaims{}, errors.New("Invalid websocket token (parse)")
 	}
 
 	// validate token
@@ -149,20 +149,20 @@ func ValidateWsToken(wsToken string) (interfaces.WsTokenClaims, error) {
 		exp, err := time.Parse(time.RFC3339, claims["expire"].(string))
 
 		if err != nil {
-			return interfaces.WsTokenClaims{}, errors.New("Invalid websocket token (expire format)")
+			return combat.WsTokenClaims{}, errors.New("Invalid websocket token (expire format)")
 		}
 
 		if exp.Before(time.Now()) {
-			return interfaces.WsTokenClaims{}, errors.New("Websocket token expired")
+			return combat.WsTokenClaims{}, errors.New("Websocket token expired")
 		}
 
-		return interfaces.WsTokenClaims{
+		return combat.WsTokenClaims{
 			UserID:    claims["user_id"].(string),
 			GymID:     claims["gym_id"].(string),
 			Latitude:  claims["latitude"].(float64),
 			Longitude: claims["longitude"].(float64),
 		}, nil
 	} else {
-		return interfaces.WsTokenClaims{}, errors.New("Invalid websocket token (claims)")
+		return combat.WsTokenClaims{}, errors.New("Invalid websocket token (claims)")
 	}
 }
