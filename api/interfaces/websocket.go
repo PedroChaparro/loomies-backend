@@ -22,6 +22,9 @@ type WsCombat struct {
 	// Loomie teams in combat
 	GymLoomies    []UserLoomiesRes
 	PlayerLoomies []UserLoomiesRes
+	// Current loomie in combat
+	CurrentGymLoomie    *UserLoomiesRes
+	CurrentPlayerLoomie *UserLoomiesRes
 }
 
 // WsMessage is the message that is sent to the client
@@ -30,6 +33,8 @@ type WsMessage struct {
 	// Eg. "Attack", "Change current loomie", etc.
 	Type    string `json:"type"`
 	Message string `json:"message"`
+	// The payload field allows to send any kind of data in JSON format
+	Payload interface{} `json:"payload,omitempty"`
 }
 
 // WsHub is the hub that stores all the clients
@@ -72,6 +77,14 @@ func (hub *WsHub) Unregister(gym string) bool {
 	return true
 }
 
+// SendMessage sends a message to the client
+func (combat *WsCombat) SendMessage(message WsMessage) {
+	jsonMessage, _ := json.Marshal(message)
+	stringJson := string(jsonMessage)
+	combat.Connection.WriteJSON(stringJson)
+}
+
+// Listen is the function that listens for messages from the client
 func (combat *WsCombat) Listen(hub *WsHub) {
 	// --- Close the connection when the function ends ---
 	defer func() {

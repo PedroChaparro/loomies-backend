@@ -130,11 +130,24 @@ func HandleCombatInit(c *gin.Context) {
 		LastMessageTimestamp: time.Now().Unix(),
 		PlayerLoomies:        userLoomies,
 		GymLoomies:           gymLoomies,
+		CurrentGymLoomie:     &gymLoomies[0],
+		CurrentPlayerLoomie:  &userLoomies[0],
 	}
 
 	// Register the connection on the hub
 	hub.Register(claims.GymID, Combat)
-	Combat.Listen(hub)
 
+	// Send the initial loomies to the client
+	Combat.SendMessage(interfaces.WsMessage{
+		Type:    "start",
+		Message: "The combat has started with the following loomies",
+		Payload: gin.H{
+			"player": Combat.CurrentPlayerLoomie,
+			"gym":    Combat.CurrentGymLoomie,
+		},
+	})
+
+	// Listen for messages
+	Combat.Listen(hub)
 	// NOTE: The response is sended automatically when upgrading the connection
 }
