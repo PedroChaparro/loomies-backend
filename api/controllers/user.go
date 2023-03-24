@@ -205,13 +205,13 @@ func HandleGetLoomies(c *gin.Context) {
 	}
 
 	loomies, err := models.GetLoomiesByIds(user.Loomies)
-  
-  if err != nil {
-    c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
-    return
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
 	}
-  
-  // Prevent null responses and obtain an empty array if user don't have loomies
+
+	// Prevent null responses and obtain an empty array if user don't have loomies
 	if loomies == nil {
 		loomies = []interfaces.UserLoomiesRes{}
 	}
@@ -250,12 +250,12 @@ func HandleCodeResetPassword(c *gin.Context) {
 
 	//send mail with code to help reset password
 	err = utils.SendEmail(form.Email, "Here is your validation code, to reset your password", resetPasswordCode)
-  
-  if err != nil {
-    c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
-    return
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
 	}
-  
+
 	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "New Code, to reset password, created and sended"})
 }
 
@@ -282,7 +282,7 @@ func HandleResetPassword(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Verification code cannot be empty"})
 		return
 	}
-  
+
 	//Check password format
 	if len(form.Password) >= 8 {
 		message := models.ValidPassword(form.Password)
