@@ -179,7 +179,7 @@ func HandleValidateLoomieExists(c *gin.Context) {
 	}
 
 	if loomie_id.LoomieId == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID was provided"})
 		return
 	}
 
@@ -188,7 +188,7 @@ func HandleValidateLoomieExists(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 			"error":   true,
-			"message": "Loomie no exists",
+			"message": "Loomie doesn't exists",
 		})
 		return
 	}
