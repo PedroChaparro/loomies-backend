@@ -544,16 +544,13 @@ paths:
       description: Validate if Loomie still exists.
       security: 
         - basicAuth: [Access-Token]
-      requestBody: 
-        content: 
-          application/json: 
-            schema: 
-              type: object
-              properties:
-                loomie_id: 
-                  type: string
-                  example: "641e1562d928b0e05a639862"
-        required: true
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+            example: "641e1562d928b0e05a639862"
+          required: true
       responses: 
         "200": 
           description: There wasn't any error and the loomie exists.
@@ -568,6 +565,9 @@ paths:
                   message: 
                       type: string
                       example: "Loomie exists"
+                  loomie_id: 
+                      type: string
+                      example: "641e1562d928b0e05a639862"
         "400":
           description: Bad request. Maybe the loomie id field is empty. 
           content:
