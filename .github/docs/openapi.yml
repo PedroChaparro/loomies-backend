@@ -538,14 +538,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
-  /loomies/exists: 
+  /loomies/exists/{id}: 
     get: 
       tags: [ Loomies ]
       description: Validate if Loomie still exists.
       security: 
         - basicAuth: [Access-Token]
       parameters:
-        - in: query
+        - in: path
           name: id
           schema:
             type: string
@@ -568,12 +568,6 @@ paths:
                   loomie_id: 
                       type: string
                       example: "641e1562d928b0e05a639862"
-        "400":
-          description: Bad request. Maybe the loomie id field is empty. 
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailResponse"
         "401":
           description: The access token wasn't provided or isn't valid.
           content:

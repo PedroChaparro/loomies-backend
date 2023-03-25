@@ -169,9 +169,9 @@ func HandleNearLoomies(c *gin.Context) {
 }
 
 func HandleValidateLoomieExists(c *gin.Context) {
-	loomie_id, loomie_id_empty := c.GetQuery("id")
+	loomie_id := c.Param("id")
 
-	if !loomie_id_empty {
+	if loomie_id == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
