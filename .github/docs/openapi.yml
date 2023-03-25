@@ -569,7 +569,7 @@ paths:
                       type: string
                       example: "Loomie exists"
         "400":
-          description: Bad request. Mayby the loomie id field are empty. 
+          description: Bad request. Maybe the loomie id field is empty. 
           content:
             application/json:
               schema:
@@ -581,7 +581,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FailResponse"
         "404":
-          description: Loomie not exists in collection wild_loomies
+          description: Loomie doesn't exists in wild_loomies collection
           content:
             application/json:
               schema:
@@ -592,7 +592,7 @@ paths:
                       example: true
                   message: 
                       type: string
-                      example: "Loomie no exists"
+                      example: "Loomie doesn't exists"
 # --- --- ---
 # Reusable components
 components: 
