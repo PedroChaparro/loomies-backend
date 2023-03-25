@@ -170,12 +170,12 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	return loomies, nil
 }
 
-func ValidateLoomieExists(loomie_id string) (bool, error) {
+func ValidateLoomieExists(loomie_id string) error {
 	id, err := primitive.ObjectIDFromHex(loomie_id)
 	var loomie interfaces.WildLoomie
 
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	err = wildLoomiesCollection.FindOne(
@@ -183,9 +183,5 @@ func ValidateLoomieExists(loomie_id string) (bool, error) {
 		bson.D{{Key: "_id", Value: id}},
 	).Decode(&loomie)
 
-	if err != nil {
-		return false, err
-	}
-
-	return true, err
+	return err
 }
