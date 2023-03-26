@@ -510,7 +510,7 @@ paths:
         required: true
       responses: 
         "200": 
-          description: There wasn't any error and the neares loomies are retrieved.
+          description: There wasn't any error and the nearest loomies are retrieved.
           content: 
             application/json: 
               schema: 
@@ -528,12 +528,6 @@ paths:
                       $ref: "#/components/schemas/PublicWildLoomie"
         "401":
           description: The access token wasn't provided or isn't valid.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailResponse"
-        "404":
-          description: No loomies were found near the user coordinates.
           content:
             application/json:
               schema:
