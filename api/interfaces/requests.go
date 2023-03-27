@@ -21,6 +21,12 @@ type ClaimGymRewardReq struct {
 	Longitude float64 `json:"longitude"`
 }
 
+type RegisterCombatReq struct {
+	GymID     string  `json:"gym_id"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
 type LoomieExistsForm struct {
 	LoomieId string `json:"loomie_id"`
 }

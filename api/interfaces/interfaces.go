@@ -2,21 +2,7 @@ package interfaces
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
-
-type Globals struct {
-	Loaded                      bool
-	MongoClient                 *mongo.Client
-	AccessTokenSecret           string
-	RefreshTokenSecret          string
-	MinLoomiesGenerationTimeout int
-	MaxLoomiesGenerationTimeout int
-	MinLoomiesGenerationAmount  int
-	MaxLoomiesGenerationAmount  int
-	LoomiesGenerationRadius     float64
-	MaxLoomiesPerZone           int
-}
 
 type Coordinates struct {
 	Latitude  float64 `json:"latitude" bson:"latitude"`
@@ -116,6 +102,7 @@ type User struct {
 	Password                        string               `json:"password"  bson:"password"`
 	Items                           []InventoryItem      `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
+	LoomieTeam                      []primitive.ObjectID `json:"loomie_team"   bson:"loomie_team"`
 	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
 	ValidationCodeExp               int64                `json:"validationCodeExp"   bson:"validationCodeExp"`
 	ResetPassCode                   string               `json:"resetPassCode"  bson:"resetPassCode"`
