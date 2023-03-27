@@ -488,7 +488,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FailResponse"
   # --- --- ---
-  # Gyms routes
+  # Loomies routes
   /loomies/near: 
     post: 
       tags: [ Loomies ]
@@ -532,6 +532,55 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
+  /loomies/exists/{id}: 
+    get: 
+      tags: [ Loomies ]
+      description: Validate if Loomie still exists.
+      security: 
+        - basicAuth: [Access-Token]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            example: "641e1562d928b0e05a639862"
+          required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the loomie exists.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  error:
+                      type: boolean
+                      example: false
+                  message: 
+                      type: string
+                      example: "Loomie exists"
+                  loomie_id: 
+                      type: string
+                      example: "641e1562d928b0e05a639862"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: Loomie doesn't exists in wild_loomies collection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                      type: boolean
+                      example: true
+                  message: 
+                      type: string
+                      example: "Loomie doesn't exists"
   # --- --- ---
   # Web socket routes
   /combat/register:

@@ -157,3 +157,28 @@ func HandleNearLoomies(c *gin.Context) {
 		"loomies": wildLoomies,
 	})
 }
+
+func HandleValidateLoomieExists(c *gin.Context) {
+	loomie_id := c.Param("id")
+
+	if loomie_id == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID was provided"})
+		return
+	}
+
+	err := models.ValidateLoomieExists(loomie_id)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+			"error":   true,
+			"message": "Loomie doesn't exists",
+		})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"error":     false,
+		"message":   "Loomie exists",
+		"loomie_id": loomie_id,
+	})
+}
