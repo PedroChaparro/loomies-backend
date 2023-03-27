@@ -3,6 +3,7 @@ package utils
 import (
 	"math"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -55,4 +56,15 @@ func GetValidationCode() string {
 	}
 
 	return validationCode
+}
+
+func IsNear(target interfaces.Coordinates, origin interfaces.Coordinates) bool {
+	zoneRadiusStr := configuration.GetEnvironmentVariable("GAME_ZONE_RADIUS")
+	zoneRadius, _ := strconv.ParseFloat(zoneRadiusStr, 64)
+
+	if math.Abs(target.Latitude-origin.Latitude) > zoneRadius || math.Abs(target.Longitude-origin.Longitude) > zoneRadius {
+		return false
+	}
+
+	return true
 }
