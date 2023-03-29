@@ -581,6 +581,54 @@ paths:
                   message: 
                       type: string
                       example: "Loomie doesn't exists"
+  /loomies/capture: 
+    post: 
+      tags: [ Loomies ]
+      description: User caught a Loomie
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                loomie_id: 
+                  type: string
+                  example: 641e1562d928b0e05a639864
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the nearest loomies are retrieved.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "Loomie caught"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: Loomie was not found or user was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
   # --- --- ---
   # Web socket routes
   /combat/register:
