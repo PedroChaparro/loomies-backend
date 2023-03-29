@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"errors"
+	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -184,20 +186,22 @@ func HandleValidateLoomieExists(c *gin.Context) {
 }
 
 func HandleCaptureLoomie(c *gin.Context) {
-	loomie_id := interfaces.LoomieForm{}
+	loomie_req := interfaces.LoomieForm{}
 	userid, _ := c.Get("userid")
 
-	if err := c.BindJSON(&loomie_id); err != nil {
+	if err := c.BindJSON(&loomie_req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
 
-	if loomie_id.LoomieId == "" {
+	if loomie_req.LoomieId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID was provided"})
 		return
 	}
 
-	loomie, err := models.ValidateLoomieExists(loomie_id.LoomieId)
+	zoneRadiusStr := configuration.GetEnvironmentVariable("GAME_ZONE_RADIUS")
+	zoneRadius, _ := strconv.ParseFloat(zoneRadiusStr, 64)
+	loomie, err := models.ValidateLoomieExists(loomie_req.LoomieId)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -207,6 +211,11 @@ func HandleCaptureLoomie(c *gin.Context) {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 			return
 		}
+	}
+
+	if math.Abs(loomie.Latitude-loomie_req.Latitude) > zoneRadius || math.Abs(loomie.Longitude-loomie_req.Longitude) > zoneRadius {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User is not near the loomie"})
+		return
 	}
 
 	user, err := models.GetUserById(userid.(string))

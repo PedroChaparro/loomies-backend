@@ -596,6 +596,12 @@ paths:
                 loomie_id: 
                   type: string
                   example: 641e1562d928b0e05a639864
+                latitude: 
+                  type: number
+                  example:  7.1167
+                longitude: 
+                  type: number
+                  example: -73.1140
         required: true
       responses: 
         "200": 
@@ -612,7 +618,7 @@ paths:
                     type: string
                     example: "Loomie caught"
         "400":
-          description: Bad request
+          description: Bad request or the user isn't near the loomie coordinates.
           content:
             application/json:
               schema:

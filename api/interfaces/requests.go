@@ -28,5 +28,7 @@ type RegisterCombatReq struct {
 }
 
 type LoomieForm struct {
-	LoomieId string `json:"loomie_id"`
+	LoomieId  string  `json:"loomie_id"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
