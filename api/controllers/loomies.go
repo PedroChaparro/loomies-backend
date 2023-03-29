@@ -166,7 +166,7 @@ func HandleValidateLoomieExists(c *gin.Context) {
 		return
 	}
 
-	err := models.ValidateLoomieExists(loomie_id)
+	_, err := models.ValidateLoomieExists(loomie_id)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
@@ -180,5 +180,73 @@ func HandleValidateLoomieExists(c *gin.Context) {
 		"error":     false,
 		"message":   "Loomie exists",
 		"loomie_id": loomie_id,
+	})
+}
+
+func HandleCaptureLoomie(c *gin.Context) {
+	loomie_id := interfaces.LoomieForm{}
+	userid, _ := c.Get("userid")
+
+	if err := c.BindJSON(&loomie_id); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
+		return
+	}
+
+	if loomie_id.LoomieId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID was provided"})
+		return
+	}
+
+	loomie, err := models.ValidateLoomieExists(loomie_id.LoomieId)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Loomie was not found"})
+			return
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+	}
+
+	user, err := models.GetUserById(userid.(string))
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "User was not found"})
+			return
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+	}
+
+	caught_loomies := interfaces.CaughtLoomie{Owner: user.Id,
+		IsBusy:  true,
+		Serial:  loomie.Serial,
+		Name:    loomie.Name,
+		Types:   loomie.Types,
+		Rarity:  loomie.Rarity,
+		HP:      loomie.HP,
+		Attack:  loomie.Attack,
+		Defense: loomie.Defense}
+
+	caught_loomies_id, err := models.InsertInCaughtLoomies(caught_loomies)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
+	}
+
+	err = models.InsertInUserLoomie(user, caught_loomies_id)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"error":   false,
+		"message": "Loomie caught",
 	})
 }

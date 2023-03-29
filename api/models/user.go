@@ -383,3 +383,15 @@ func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomie
 
 	return loomies, err
 }
+
+func InsertInUserLoomie(user interfaces.User, loomie_id primitive.ObjectID) error {
+	user.Loomies = append(user.Loomies, loomie_id)
+	filter := bson.D{{Key: "_id", Value: user.Id}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "loomies", Value: user.Loomies},
+	},
+	}}
+	_, err := UserCollection.UpdateOne(context.TODO(), filter, update)
+
+	return err
+}

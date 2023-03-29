@@ -15,6 +15,7 @@ import (
 var zonesCollection = configuration.ConnectToMongoCollection("zones")
 var baseLoomiesCollection = configuration.ConnectToMongoCollection("base_loomies")
 var wildLoomiesCollection = configuration.ConnectToMongoCollection("wild_loomies")
+var CaughtLoomiesCollection = configuration.ConnectToMongoCollection("caught_loomies")
 
 // GetBaseLoomies returns the base loomies
 func GetBaseLoomies() ([]interfaces.BaseLoomiesWithPopulatedRarity, error) {
@@ -170,12 +171,12 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	return loomies, nil
 }
 
-func ValidateLoomieExists(loomie_id string) error {
+func ValidateLoomieExists(loomie_id string) (interfaces.WildLoomie, error) {
 	id, err := primitive.ObjectIDFromHex(loomie_id)
 	var loomie interfaces.WildLoomie
 
 	if err != nil {
-		return err
+		return loomie, err
 	}
 
 	err = wildLoomiesCollection.FindOne(
@@ -183,5 +184,17 @@ func ValidateLoomieExists(loomie_id string) error {
 		bson.D{{Key: "_id", Value: id}},
 	).Decode(&loomie)
 
-	return err
+	return loomie, err
+}
+
+func InsertInCaughtLoomies(caught_loomies interfaces.CaughtLoomie) (primitive.ObjectID, error) {
+	insert_id, err := CaughtLoomiesCollection.InsertOne(context.TODO(), caught_loomies)
+
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	id, _ := insert_id.InsertedID.(primitive.ObjectID)
+
+	return id, err
 }
