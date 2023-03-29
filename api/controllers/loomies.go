@@ -222,7 +222,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 	}
 
 	caught_loomies := interfaces.CaughtLoomie{Owner: user.Id,
-		IsBusy:  true,
+		IsBusy:  false,
 		Serial:  loomie.Serial,
 		Name:    loomie.Name,
 		Types:   loomie.Types,
