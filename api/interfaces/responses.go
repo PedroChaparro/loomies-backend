@@ -32,16 +32,17 @@ type UserLoomballsRes struct {
 
 // Show info of user loomies
 type UserLoomiesRes struct {
-	Id      primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Serial  int                `json:"serial"      bson:"serial"`
-	Name    string             `json:"name"      bson:"name"`
-	Types   []string           `json:"types"     bson:"types"`
-	Rarity  string             `json:"rarity"     bson:"rarity"`
-	Hp      int                `json:"hp"     bson:"hp"`
-	Attack  int                `json:"attack"     bson:"attack"`
-	IsBusy  bool               `json:"is_busy"     bson:"is_busy"`
-	Defense int                `json:"defense"     bson:"defense"`
-	Level   int                `json:"level"     bson:"level"`
+	Id         primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial     int                `json:"serial"      bson:"serial"`
+	Name       string             `json:"name"      bson:"name"`
+	Types      []string           `json:"types"     bson:"types"`
+	Rarity     string             `json:"rarity"     bson:"rarity"`
+	Hp         int                `json:"hp"     bson:"hp"`
+	Attack     int                `json:"attack"     bson:"attack"`
+	IsBusy     bool               `json:"is_busy"     bson:"is_busy"`
+	Defense    int                `json:"defense"     bson:"defense"`
+	Level      int                `json:"level"     bson:"level"`
+	Experience int                `json:"experience"     bson:"experience"`
 }
 
 // This is an aux for show info user loomies
