@@ -2,20 +2,15 @@ package models
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 	"unicode"
 
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
-
-var UserCollection *mongo.Collection = configuration.ConnectToMongoCollection("users")
-
-var LoomiesCollection *mongo.Collection = configuration.ConnectToMongoCollection("caught_loomies")
 
 func InsertUser(data interfaces.User) error {
 	// Set the current time as the "last time the user generated loomies"
@@ -354,7 +349,7 @@ func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomie
 	}
 
 	// Make the query
-	cursor, err := LoomiesCollection.Aggregate(context.TODO(), []bson.M{matchFilter, lookupIntoRarity, lookupIntoTypes})
+	cursor, err := CaughtLoomiesCollection.Aggregate(context.TODO(), []bson.M{matchFilter, lookupIntoRarity, lookupIntoTypes})
 
 	if err != nil {
 		return nil, err
@@ -382,4 +377,60 @@ func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomie
 	}
 
 	return loomies, err
+}
+
+// FuseLoomies Allows to fuse two loomies updating the first one and deleting the second one
+func FuseLoomies(userId primitive.ObjectID, loomieToUpdate, loomieToDelete interfaces.UserLoomiesRes) error {
+	// Update the first loomie in the caught loomies collection
+	_, err := CaughtLoomiesCollection.UpdateOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: loomieToUpdate.Id},
+		},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "hp", Value: loomieToUpdate.Hp},
+				{Key: "attack", Value: loomieToUpdate.Attack},
+				{Key: "defense", Value: loomieToUpdate.Defense},
+			}},
+		},
+	)
+
+	if err != nil {
+		return errors.New("Error updating the first loomie")
+	}
+
+	// Delete the second loomie in the user's inventory and the loomie_team
+	fmt.Println(loomieToDelete.Id)
+
+	_, err = UserCollection.UpdateOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: userId},
+		},
+		bson.D{
+			{Key: "$pull", Value: bson.D{
+				{Key: "loomies", Value: loomieToDelete.Id},
+				{Key: "loomie_team", Value: loomieToDelete.Id},
+			}},
+		},
+	)
+
+	if err != nil {
+		return errors.New("Error deleting the second loomie from the user's inventory")
+	}
+
+	// Delete the second loomie in the caught loomies collection
+	_, err = CaughtLoomiesCollection.DeleteOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: loomieToDelete.Id},
+		},
+	)
+
+	if err != nil {
+		return errors.New("Error deleting the second loomie from the caught loomies collection")
+	}
+
+	return nil
 }

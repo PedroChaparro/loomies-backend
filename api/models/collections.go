@@ -6,7 +6,7 @@ import (
 )
 
 var UserCollection *mongo.Collection = configuration.ConnectToMongoCollection("users")
-var LoomiesCollection *mongo.Collection = configuration.ConnectToMongoCollection("caught_loomies")
+var CaughtLoomiesCollection *mongo.Collection = configuration.ConnectToMongoCollection("caught_loomies")
 var ZonesCollection = configuration.ConnectToMongoCollection("zones")
 var BaseLoomiesCollection = configuration.ConnectToMongoCollection("base_loomies")
 var WildLoomiesCollection = configuration.ConnectToMongoCollection("wild_loomies")

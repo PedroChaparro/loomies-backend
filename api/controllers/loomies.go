@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/mroth/weightedrand/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -180,5 +182,89 @@ func HandleValidateLoomieExists(c *gin.Context) {
 		"error":     false,
 		"message":   "Loomie exists",
 		"loomie_id": loomie_id,
+	})
+}
+
+func HandleFuseLoomies(c *gin.Context) {
+	userId, _ := c.Get("userid")
+
+	// Get the loomies ids from the request body
+	var req interfaces.FuseLoomiesReq
+
+	if err := c.BindJSON(&req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request. Ensuure you are sendint a JSON body with the required fields"})
+		return
+	}
+
+	if req.LoomieId1 == "" || req.LoomieId2 == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Both loomies ids are required"})
+		return
+	}
+
+	// Check the user owns the loomies
+	user, _ := models.GetUserById(userId.(string))
+	userMongoId, _ := primitive.ObjectIDFromHex(userId.(string))
+	firstLoomieMongoId, _ := primitive.ObjectIDFromHex(req.LoomieId1)
+	secondLoomieMongoId, _ := primitive.ObjectIDFromHex(req.LoomieId2)
+	var containsLoomie1, containsLoomie2 bool
+
+	for _, id := range user.Loomies {
+		if id == firstLoomieMongoId {
+			containsLoomie1 = true
+		} else if id == secondLoomieMongoId {
+			containsLoomie2 = true
+		}
+
+		if containsLoomie1 && containsLoomie2 {
+			break
+		}
+	}
+
+	if !containsLoomie1 || !containsLoomie2 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You should own both loomies to fuse them"})
+		return
+	}
+
+	// Take the max stats from the loomies
+	loomiesDocs, err := models.GetLoomiesByIds([]primitive.ObjectID{firstLoomieMongoId, secondLoomieMongoId})
+
+	if err != nil || len(loomiesDocs) != 2 {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Error getting the loomies. Please try again later."})
+		return
+	}
+
+	maxHp := math.Max(float64(loomiesDocs[0].Hp), float64(loomiesDocs[1].Hp))
+	maxAttack := math.Max(float64(loomiesDocs[0].Attack), float64(loomiesDocs[1].Attack))
+	maxDefense := math.Max(float64(loomiesDocs[0].Defense), float64(loomiesDocs[1].Defense))
+
+	// "Fuse" the loomies (Delete one and update the other)
+	var loomieToUpdate, loomieToDelete interfaces.UserLoomiesRes
+
+	// The loomie with the highest level will be the one that will be updated
+	if loomiesDocs[0].Level > loomiesDocs[1].Level {
+		loomieToUpdate = loomiesDocs[0]
+		loomieToDelete = loomiesDocs[1]
+	} else {
+		loomieToUpdate = loomiesDocs[1]
+		loomieToDelete = loomiesDocs[0]
+	}
+
+	// Update the loomie
+	loomieToUpdate.Hp = int(maxHp)
+	loomieToUpdate.Attack = int(maxAttack)
+	loomieToUpdate.Defense = int(maxDefense)
+	err = models.FuseLoomies(userMongoId, loomieToUpdate, loomieToDelete)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Error fusing the loomies. Please try again later."})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"error":      false,
+		"message":    "Loomies fused successfully",
+		"maxHp":      maxHp,
+		"maxAttack":  maxAttack,
+		"maxDefense": maxDefense,
 	})
 }
