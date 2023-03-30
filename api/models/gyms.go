@@ -3,13 +3,10 @@ package models
 import (
 	"context"
 
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-var GymsCollection = configuration.ConnectToMongoCollection("gyms")
 
 // GetNearGymsFromID returns the gym with the given ID if it exists or an error otherwise
 func GetGymFromID(gymID string) (g interfaces.Gym, e error) {

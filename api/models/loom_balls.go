@@ -3,13 +3,10 @@ package models
 import (
 	"context"
 
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-var LoomballsCollection = configuration.ConnectToMongoCollection("loom_balls")
 
 // GetLoomballsFromIds returns an array of loomballs from an array of loomballs ids
 func GetLoomballsFromIds(ids []primitive.ObjectID) ([]interfaces.Loomball, error) {
