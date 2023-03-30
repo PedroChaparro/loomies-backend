@@ -46,7 +46,7 @@ func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
 	return int(coordX), int(coordY)
 }
 
-// get a code of 6 digits
+// GetValidationCode Get a code of 6 digits
 func GetValidationCode() string {
 
 	numbers := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
@@ -58,6 +58,7 @@ func GetValidationCode() string {
 	return validationCode
 }
 
+// IsNear returns true if the target coordinates are near the origin coordinates
 func IsNear(target interfaces.Coordinates, origin interfaces.Coordinates) bool {
 	zoneRadiusStr := configuration.GetEnvironmentVariable("GAME_ZONE_RADIUS")
 	zoneRadius, _ := strconv.ParseFloat(zoneRadiusStr, 64)
@@ -67,4 +68,16 @@ func IsNear(target interfaces.Coordinates, origin interfaces.Coordinates) bool {
 	}
 
 	return true
+}
+
+// GetLoomiesExperience returns the experience needed to reach the given level
+func GetRequiredExperience(level int) float64 {
+	min, factor := configuration.GetLoomiesExperienceParameters()
+	return math.Log10(float64(level))*factor + min
+}
+
+// GetLevelFromExperience returns the level of the given experience
+func GetLevelFromExperience(experience float64) int {
+	min, factor := configuration.GetLoomiesExperienceParameters()
+	return int(math.Pow(10, (experience-min)/factor))
 }
