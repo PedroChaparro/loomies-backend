@@ -18,4 +18,7 @@ type TGlobals struct {
 	MaxLoomiesGenerationAmount  int
 	LoomiesGenerationRadius     float64
 	MaxLoomiesPerZone           int
+	// Global settings to calculate the experience required to level up
+	MinLoomieRequiredExperience float64
+	LoomieExperienceFactor      float64
 }
