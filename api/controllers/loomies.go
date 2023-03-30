@@ -2,9 +2,7 @@ package controllers
 
 import (
 	"errors"
-	"math"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -199,8 +197,6 @@ func HandleCaptureLoomie(c *gin.Context) {
 		return
 	}
 
-	zoneRadiusStr := configuration.GetEnvironmentVariable("GAME_ZONE_RADIUS")
-	zoneRadius, _ := strconv.ParseFloat(zoneRadiusStr, 64)
 	loomie, err := models.ValidateLoomieExists(loomie_req.LoomieId)
 
 	if err != nil {
@@ -213,8 +209,16 @@ func HandleCaptureLoomie(c *gin.Context) {
 		}
 	}
 
-	if math.Abs(loomie.Latitude-loomie_req.Latitude) > zoneRadius || math.Abs(loomie.Longitude-loomie_req.Longitude) > zoneRadius {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User is not near the loomie"})
+	isNear := utils.IsNear(interfaces.Coordinates{
+		Latitude:  loomie.Latitude,
+		Longitude: loomie.Longitude,
+	}, interfaces.Coordinates{
+		Latitude:  loomie_req.Latitude,
+		Longitude: loomie_req.Longitude,
+	})
+
+	if !isNear {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "User is not near the loomie"})
 		return
 	}
 
