@@ -225,7 +225,7 @@ func HandleFuseLoomies(c *gin.Context) {
 		return
 	}
 
-	// Take the max stats from the loomies
+	// Check both loomies are of the same type
 	loomiesDocs, err := models.GetLoomiesByIds([]primitive.ObjectID{firstLoomieMongoId, secondLoomieMongoId})
 
 	if err != nil || len(loomiesDocs) != 2 {
@@ -233,6 +233,12 @@ func HandleFuseLoomies(c *gin.Context) {
 		return
 	}
 
+	if loomiesDocs[0].Serial != loomiesDocs[1].Serial {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Both loomies should be of the same type"})
+		return
+	}
+
+	// Take the max stats from the loomies
 	maxHp := math.Max(float64(loomiesDocs[0].Hp), float64(loomiesDocs[1].Hp))
 	maxAttack := math.Max(float64(loomiesDocs[0].Attack), float64(loomiesDocs[1].Attack))
 	maxDefense := math.Max(float64(loomiesDocs[0].Defense), float64(loomiesDocs[1].Defense))
