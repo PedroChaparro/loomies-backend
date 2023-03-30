@@ -245,20 +245,36 @@ func HandleFuseLoomies(c *gin.Context) {
 
 	// "Fuse" the loomies (Delete one and update the other)
 	var loomieToUpdate, loomieToDelete interfaces.UserLoomiesRes
+	var accumulatedExperience float64
+	var minLvl int
+	accumulatedExperience = float64(loomiesDocs[0].Experience) + float64(loomiesDocs[1].Experience)
 
 	// The loomie with the highest level will be the one that will be updated
 	if loomiesDocs[0].Level > loomiesDocs[1].Level {
 		loomieToUpdate = loomiesDocs[0]
 		loomieToDelete = loomiesDocs[1]
+		minLvl = loomiesDocs[1].Level
 	} else {
 		loomieToUpdate = loomiesDocs[1]
 		loomieToDelete = loomiesDocs[0]
+		minLvl = loomiesDocs[0].Level
+	}
+
+	accumulatedExperience += utils.GetRequiredExperience(minLvl)
+
+	// Check if the loomie has leveled up
+	// This is done by checking if the accumulated experience is greater than the required experience for the next level
+	// The following for loop is equivalent to a regular while loop.
+	for accumulatedExperience >= utils.GetRequiredExperience(loomieToUpdate.Level+1) {
+		// fmt.Println("Leveling up...")
+		loomieToUpdate.Level++
 	}
 
 	// Update the loomie
 	loomieToUpdate.Hp = int(maxHp)
 	loomieToUpdate.Attack = int(maxAttack)
 	loomieToUpdate.Defense = int(maxDefense)
+	loomieToUpdate.Experience = accumulatedExperience
 	err = models.FuseLoomies(userMongoId, loomieToUpdate, loomieToDelete)
 
 	if err != nil {

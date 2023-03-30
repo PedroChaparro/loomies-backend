@@ -198,5 +198,5 @@ type CaughtLoomie struct {
 	Attack     int                  `json:"attack"     bson:"attack"`
 	Defense    int                  `json:"defense"     bson:"defense"`
 	Level      int                  `json:"level"     bson:"level"`
-	Experience int                  `json:"experience"     bson:"experience"`
+	Experience float64              `json:"experience"     bson:"experience"`
 }

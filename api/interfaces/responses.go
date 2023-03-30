@@ -42,7 +42,7 @@ type UserLoomiesRes struct {
 	IsBusy     bool               `json:"is_busy"     bson:"is_busy"`
 	Defense    int                `json:"defense"     bson:"defense"`
 	Level      int                `json:"level"     bson:"level"`
-	Experience int                `json:"experience"     bson:"experience"`
+	Experience float64            `json:"experience"     bson:"experience"`
 }
 
 // This is an aux for show info user loomies

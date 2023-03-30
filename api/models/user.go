@@ -392,6 +392,8 @@ func FuseLoomies(userId primitive.ObjectID, loomieToUpdate, loomieToDelete inter
 				{Key: "hp", Value: loomieToUpdate.Hp},
 				{Key: "attack", Value: loomieToUpdate.Attack},
 				{Key: "defense", Value: loomieToUpdate.Defense},
+				{Key: "experience", Value: loomieToUpdate.Experience},
+				{Key: "level", Value: loomieToUpdate.Level},
 			}},
 		},
 	)
