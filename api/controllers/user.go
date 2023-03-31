@@ -344,5 +344,5 @@ func HandleGetLoomieTeam(c *gin.Context) {
 		loomies = []interfaces.UserLoomiesRes{}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"error": false, "message": "The loomie team has been obtained successfully", "loomies": loomies})
+	c.JSON(http.StatusOK, gin.H{"error": false, "message": "The loomie team has been obtained successfully", "team": loomies})
 }
