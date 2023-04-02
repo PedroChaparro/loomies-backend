@@ -177,37 +177,27 @@ func CheckCodeExistence(email string, code string) bool {
 }
 
 func CheckResetPassCodeExistence(email string, code string) bool {
+	var codeDoc interfaces.AuthenticationCode
+	filter := bson.D{{Key: "email", Value: email}, {Key: "type", Value: "RESET_PASSWORD"}}
+	err := AuthenticationCodesCollection.FindOne(context.TODO(), filter).Decode(&codeDoc)
 
-	var usercode interfaces.ResetPasswordCode
-	filter := bson.D{{Key: "email", Value: email}}
-	err := UserCollection.FindOne(context.TODO(), filter).Decode(&usercode)
 	if err != nil {
 		fmt.Println(err)
-	}
-	// check time expiration
-	if !time.Now().Before(time.Unix(usercode.ResetPassCodeExp, 0)) {
-		// clean ResetPassCode field
-		filter := bson.D{{Key: "email", Value: usercode.Email}}
-		update := bson.D{{Key: "$set", Value: bson.D{
-			{Key: "resetPassCode", Value: nil},
-		},
-		}}
-		UserCollection.UpdateOne(context.TODO(), filter, update)
 		return false
 	}
 
-	// verify code
-	if code != usercode.ResetPassCode {
+	// If the code has expired, delete it and return false
+	if !time.Now().Before(time.Unix(codeDoc.ExpiresAt, 0)) {
+		AuthenticationCodesCollection.DeleteOne(context.TODO(), filter)
+		return false
+	}
+
+	// Check the given code is equal
+	if code != codeDoc.Code {
 		return false
 	} else {
-		// clean fields related to reset password code
-		filter := bson.D{{Key: "email", Value: usercode.Email}}
-		update := bson.D{{Key: "$set", Value: bson.D{
-			{Key: "resetPassCode", Value: nil},
-			{Key: "resetPassCodeExp", Value: nil},
-		},
-		}}
-		UserCollection.UpdateOne(context.TODO(), filter, update)
+		// If the code is correct, delete it and return true
+		AuthenticationCodesCollection.DeleteOne(context.TODO(), filter)
 		return true
 	}
 }
@@ -229,18 +219,29 @@ func UpdateCode(email string, validationCode string) error {
 
 // update the fields of code to reset password and its expiration time in db
 func UpdateResetPassCode(email string, resetPassCode string) error {
-	// update code and expiration time
-	filter := bson.D{{Key: "email", Value: email}}
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "resetPassCode", Value: resetPassCode},
-		{Key: "resetPassCodeExp", Value: time.Now().Add(time.Minute * 15).Unix()},
-	},
-	}}
-	_, err := UserCollection.UpdateOne(context.TODO(), filter, update)
+	// Remove older codes
+	filter := bson.D{{Key: "email", Value: email}, {Key: "type", Value: "RESET_PASSWORD"}}
+	_, err := AuthenticationCodesCollection.DeleteMany(context.TODO(), filter)
+
 	if err != nil {
 		fmt.Println(err)
+		return fmt.Errorf("Error deleting old reset password codes")
 	}
-	return err
+
+	// Insert the new code
+	_, err = AuthenticationCodesCollection.InsertOne(context.TODO(), interfaces.AuthenticationCode{
+		Email:     email,
+		Code:      resetPassCode,
+		Type:      "RESET_PASSWORD",
+		ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		return fmt.Errorf("Error inserting new reset password code")
+	}
+
+	return nil
 }
 
 // AddItemToUserInventory adds an item to the user's inventory
