@@ -107,8 +107,6 @@ type User struct {
 	LoomieTeam                      []primitive.ObjectID `json:"loomie_team"   bson:"loomie_team"`
 	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
 	ValidationCodeExp               int64                `json:"validationCodeExp"   bson:"validationCodeExp"`
-	ResetPassCode                   string               `json:"resetPassCode"  bson:"resetPassCode"`
-	ResetPassCodeExp                int64                `json:"resetPassCodeExp"   bson:"resetPassCodeExp"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
@@ -173,6 +171,14 @@ type WildLoomie struct {
 	Latitude    float64              `json:"latitude"     bson:"latitude"`
 	Longitude   float64              `json:"longitude"     bson:"longitude"`
 	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
+}
+
+type AuthenticationCode struct {
+	Id        primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Type      string             `json:"type"      bson:"type"`
+	Email     string             `json:"email"      bson:"email"`
+	Code      string             `json:"code"      bson:"code"`
+	ExpiresAt int64              `json:"expires_at"      bson:"expires_at"`
 }
 
 type ValidationCode struct {
