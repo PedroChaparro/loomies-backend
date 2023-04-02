@@ -76,7 +76,10 @@ const LoomieRaritySchema = new Schema(
 
 const BaseLoomieSchema = new Schema(
   {
-    serial: Number,
+    serial: {
+      type: Number,
+      unique: true,
+    },
     name: String,
     types: {
       type: [Schema.Types.ObjectId],
@@ -138,6 +141,10 @@ const CaughtLoomieSchema = new Schema(
 const ItemsSchema = new Schema(
   {
     name: String,
+    serial: {
+      type: Number,
+      unique: true,
+    },
     description: String,
     target: {
       type: String,
@@ -164,6 +171,10 @@ const ItemsSchema = new Schema(
 const LoomBallsSchema = new Schema(
   {
     name: String,
+    serial: {
+      type: Number,
+      unique: true,
+    },
     effective_until: Number,
     decay_until: Number,
     minimum_probability: {
