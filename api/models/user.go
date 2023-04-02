@@ -140,38 +140,53 @@ func UpdateUserGenerationTimes(userId string, lastGenerated int64, newTimeout in
 }
 
 func CheckCodeExistence(email string, code string) bool {
+	var codeDoc interfaces.AuthenticationCode
+	filter := bson.D{{Key: "email", Value: email}, {Key: "type", Value: "ACCOUNT_VERIFICATION"}}
+	err := AuthenticationCodesCollection.FindOne(context.TODO(), filter).Decode(&codeDoc)
 
-	var usercode interfaces.ValidationCode
-	filter := bson.D{{Key: "email", Value: email}}
-	err := UserCollection.FindOne(context.TODO(), filter).Decode(&usercode)
 	if err != nil {
 		fmt.Println(err)
-	}
-	// check time expire
-	if !time.Now().Before(time.Unix(usercode.ValidationCodeExp, 0)) {
-		// clean validationCode field
-		filter := bson.D{{Key: "email", Value: usercode.Email}}
-		update := bson.D{{Key: "$set", Value: bson.D{
-			{Key: "validationCode", Value: nil},
-		},
-		}}
-		UserCollection.UpdateOne(context.TODO(), filter, update)
 		return false
 	}
 
-	// verify code
-	if code != usercode.ValidationCode {
+	// check time expire
+	if !time.Now().Before(time.Unix(codeDoc.ExpiresAt, 0)) {
+		// If the code has expired, delete it
+		AuthenticationCodesCollection.DeleteOne(context.TODO(), filter)
+		return false
+	}
+
+	// Check if the code is correct
+	if code != codeDoc.Code {
 		return false
 	} else {
-		// update status verified and delete one
-		filter := bson.D{{Key: "email", Value: usercode.Email}}
-		update := bson.D{{Key: "$set", Value: bson.D{
-			{Key: "isVerified", Value: true},
-			{Key: "validationCode", Value: nil},
-			{Key: "validationCodeExp", Value: nil},
-		},
-		}}
-		UserCollection.UpdateOne(context.TODO(), filter, update)
+		// Update the user docuement
+		filter := bson.D{{Key: "email", Value: email}}
+
+		update := bson.D{
+			{
+				Key: "$set", Value: bson.D{
+					{Key: "isVerified", Value: true},
+				},
+			},
+		}
+
+		_, err := UserCollection.UpdateOne(context.TODO(), filter, update)
+
+		if err != nil {
+			fmt.Println(err)
+			return false
+		}
+
+		// Remove the code
+		_, err = AuthenticationCodesCollection.DeleteOne(context.TODO(), filter)
+
+		if err != nil {
+			// Print the error but return true because at this point, the user
+			// is verified
+			fmt.Println(err)
+		}
+
 		return true
 	}
 }
@@ -203,18 +218,20 @@ func CheckResetPassCodeExistence(email string, code string) bool {
 }
 
 func UpdateCode(email string, validationCode string) error {
-	// update code and expiration time
-	filter := bson.D{{Key: "email", Value: email}}
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "validationCode", Value: validationCode},
-		{Key: "validationCodeExp", Value: time.Now().Add(time.Minute * 15).Unix()},
-	},
-	}}
-	_, err := UserCollection.UpdateOne(context.TODO(), filter, update)
+	// Insert the code in the codes collection
+	_, err := AuthenticationCodesCollection.InsertOne(context.TODO(), interfaces.AuthenticationCode{
+		Email:     email,
+		Code:      validationCode,
+		Type:      "ACCOUNT_VERIFICATION",
+		ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+	})
+
 	if err != nil {
 		fmt.Println(err)
+		return fmt.Errorf("Error while inserting the code in the database")
 	}
-	return err
+
+	return nil
 }
 
 // update the fields of code to reset password and its expiration time in db
