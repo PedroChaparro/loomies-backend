@@ -88,7 +88,7 @@ func HandleSignUp(c *gin.Context) {
 	// Generate validation code
 	validationCode := utils.GetValidationCode()
 
-	err = models.UpdateCode(form.Email, validationCode)
+	err = models.UpdateAccountVerificationCode(form.Email, validationCode)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to create user. Please try again later"})
@@ -141,7 +141,7 @@ func HandleCodeValidation(c *gin.Context) {
 	}
 
 	// Check the code
-	exists := models.CheckCodeExistence(form.Email, form.ValidationCode)
+	exists := models.CompareAccountVerificationCode(form.Email, form.ValidationCode)
 	if exists {
 		c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Email has been verified"})
 		return
@@ -181,7 +181,7 @@ func HandleNewCodeValidation(c *gin.Context) {
 	validationCode := utils.GetValidationCode()
 
 	//update in database
-	err = models.UpdateCode(form.Email, validationCode)
+	err = models.UpdateAccountVerificationCode(form.Email, validationCode)
 
 	if err != nil {
 		fmt.Println(err)
@@ -254,7 +254,7 @@ func HandleCodeResetPassword(c *gin.Context) {
 	resetPasswordCode := utils.GetValidationCode()
 
 	//update in database reset password code
-	err = models.UpdateResetPassCode(form.Email, resetPasswordCode)
+	err = models.UpdatePasswordResetCode(form.Email, resetPasswordCode)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 		return
@@ -311,7 +311,7 @@ func HandleResetPassword(c *gin.Context) {
 	}
 
 	// code validation
-	match := models.CheckResetPassCodeExistence(form.Email, form.ResetPassCode)
+	match := models.ComparePasswordResetCode(form.Email, form.ResetPassCode)
 
 	if match {
 		//encrypt password
