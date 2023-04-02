@@ -105,8 +105,6 @@ type User struct {
 	Items                           []InventoryItem      `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
 	LoomieTeam                      []primitive.ObjectID `json:"loomie_team"   bson:"loomie_team"`
-	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
-	ValidationCodeExp               int64                `json:"validationCodeExp"   bson:"validationCodeExp"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`

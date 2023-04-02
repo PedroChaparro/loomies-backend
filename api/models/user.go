@@ -218,6 +218,10 @@ func CheckResetPassCodeExistence(email string, code string) bool {
 }
 
 func UpdateCode(email string, validationCode string) error {
+	// Remove possible older codes
+	filter := bson.D{{Key: "email", Value: email}, {Key: "type", Value: "ACCOUNT_VERIFICATION"}}
+	AuthenticationCodesCollection.DeleteMany(context.TODO(), filter)
+
 	// Insert the code in the codes collection
 	_, err := AuthenticationCodesCollection.InsertOne(context.TODO(), interfaces.AuthenticationCode{
 		Email:     email,

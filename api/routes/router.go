@@ -12,8 +12,8 @@ func SetupRoutes(engine *gin.Engine) {
 	engine.POST("/user/password/code", controllers.HandleCodeResetPassword)
 	engine.PUT("/user/password", controllers.HandleResetPassword)
 	engine.POST("/user/signup", controllers.HandleSignUp)
-	engine.POST("/user/validate", controllers.HandleCodeValidation)
 	engine.POST("/user/validate/code", controllers.HandleNewCodeValidation)
+	engine.POST("/user/validate", controllers.HandleCodeValidation)
 
 	// Session
 	engine.POST("/session/login", controllers.HandleLogIn)

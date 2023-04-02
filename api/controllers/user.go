@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/mail"
-	"time"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
@@ -86,21 +85,27 @@ func HandleSignUp(c *gin.Context) {
 		return
 	}
 
-	//generate code
+	// Generate validation code
 	validationCode := utils.GetValidationCode()
 
+	err = models.UpdateCode(form.Email, validationCode)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to create user. Please try again later"})
+		return
+	}
+
+	// Creathe the user doc
 	data := interfaces.User{Username: form.Username,
-		Email:             form.Email,
-		Password:          string(hashed),
-		ValidationCode:    validationCode,
-		ValidationCodeExp: time.Now().Add(time.Minute * 15).Unix(),
-		IsVerified:        false}
+		Email:      form.Email,
+		Password:   string(hashed),
+		IsVerified: false}
 
 	err = models.InsertUser(data)
 
 	if err != nil {
 		fmt.Println(err)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to create user. Please try again later"})
 		return
 	}
 
@@ -122,17 +127,20 @@ func HandleCodeValidation(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
+
 	//Check if there is no code
 	if form.ValidationCode == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Verification code cannot be empty"})
 		return
 	}
+
 	//Check if there is no email
 	if form.Email == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email cannot be empty"})
 		return
 	}
-	// code validation
+
+	// Check the code
 	exists := models.CheckCodeExistence(form.Email, form.ValidationCode)
 	if exists {
 		c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Email has been verified"})
@@ -151,26 +159,30 @@ func HandleNewCodeValidation(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
+
 	//Check if there is no email
 	if form.Email == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email cannot be empty"})
 		return
 	}
 
-	_, err := models.GetUserByEmail(form.Email)
+	userDoc, err := models.GetUserByEmail(form.Email)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "This Email has not been registered"})
 		return
 	}
-	_, err = models.GetUserByEmailAndVerifStatus(form.Email)
-	if err == nil {
+
+	if userDoc.IsVerified {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "This Email has been already verified"})
 		return
 	}
+
 	//generate code
 	validationCode := utils.GetValidationCode()
+
 	//update in database
 	err = models.UpdateCode(form.Email, validationCode)
+
 	if err != nil {
 		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
@@ -267,16 +279,19 @@ func HandleResetPassword(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
 		return
 	}
+
 	//Check if there is no email
 	if form.Email == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Email cannot be empty"})
 		return
 	}
+
 	//Check if there is no password
 	if form.Password == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password cannot be empty"})
 		return
 	}
+
 	//Check if there is no code
 	if form.ResetPassCode == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Verification code cannot be empty"})
@@ -297,6 +312,7 @@ func HandleResetPassword(c *gin.Context) {
 
 	// code validation
 	match := models.CheckResetPassCodeExistence(form.Email, form.ResetPassCode)
+
 	if match {
 		//encrypt password
 		hashed, err := bcrypt.GenerateFromPassword([]byte(form.Password), 8)
