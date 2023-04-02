@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"time"
-	"unicode"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -17,6 +16,7 @@ var UserCollection *mongo.Collection = configuration.ConnectToMongoCollection("u
 
 var LoomiesCollection *mongo.Collection = configuration.ConnectToMongoCollection("caught_loomies")
 
+// InsertUser Creates a new user in the database and returns an error if any
 func InsertUser(data interfaces.User) error {
 	// Set the current time as the "last time the user generated loomies"
 	data.LastLoomieGenerationTime = time.Now().Unix()
@@ -30,24 +30,6 @@ func InsertUser(data interfaces.User) error {
 	_, err := UserCollection.InsertOne(context.TODO(), data)
 
 	return err
-}
-
-func ValidPassword(s string) error {
-next:
-	for name, classes := range map[string][]*unicode.RangeTable{
-		"upper case": {unicode.Upper, unicode.Title},
-		"lower case": {unicode.Lower},
-		"numeric":    {unicode.Number, unicode.Digit},
-		"special":    {unicode.Space, unicode.Symbol, unicode.Punct, unicode.Mark},
-	} {
-		for _, r := range s {
-			if unicode.IsOneOf(classes, r) {
-				continue next
-			}
-		}
-		return fmt.Errorf("password must have at least one %s character", name)
-	}
-	return nil
 }
 
 // update password when its reset

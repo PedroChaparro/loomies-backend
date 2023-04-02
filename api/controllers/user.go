@@ -45,7 +45,7 @@ func HandleSignUp(c *gin.Context) {
 
 	//Check password format
 	if len(form.Password) >= 8 {
-		message := models.ValidPassword(form.Password)
+		message := utils.CheckPasswordSchema(form.Password)
 		if message != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": message.Error()})
 			return
@@ -300,7 +300,7 @@ func HandleResetPassword(c *gin.Context) {
 
 	//Check password format
 	if len(form.Password) >= 8 {
-		message := models.ValidPassword(form.Password)
+		message := utils.CheckPasswordSchema(form.Password)
 		if message != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": message.Error()})
 			return
