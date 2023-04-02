@@ -123,6 +123,7 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 
 // GetNearWildLoomies returns the wild loomies that are near the coordinates
 func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLoomie, error) {
+	candidateLoomies := []interfaces.WildLoomie{}
 	loomies := []interfaces.WildLoomie{}
 
 	// Get the zone coordinates
@@ -164,7 +165,19 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	for cursor.Next(context.Background()) {
 		var zone interfaces.ZoneWithPopulatedLoomies
 		cursor.Decode(&zone)
-		loomies = append(loomies, zone.PopulatedLoomies...)
+		candidateLoomies = append(candidateLoomies, zone.PopulatedLoomies...)
+	}
+
+	loomieTTL := configuration.GetWildLoomiesTTL()
+	currentTime := time.Now()
+
+	// Keep only the loomies that are not expired
+	for _, loomie := range candidateLoomies {
+		loomieDeadline := time.Unix(loomie.GeneratedAt, 0).Add(time.Minute * time.Duration(loomieTTL))
+
+		if currentTime.Before(loomieDeadline) {
+			loomies = append(loomies, loomie)
+		}
 	}
 
 	return loomies, nil
