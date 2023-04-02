@@ -24,6 +24,7 @@ func InsertUser(data interfaces.User) error {
 	// Set the items and loomies as empty arrays
 	data.Items = []interfaces.InventoryItem{}
 	data.Loomies = []primitive.ObjectID{}
+	data.LoomieTeam = []primitive.ObjectID{}
 
 	//Insert User in database
 	_, err := UserCollection.InsertOne(context.TODO(), data)
