@@ -233,31 +233,31 @@ func HandleCaptureLoomie(c *gin.Context) {
 			return
 		}
 	}
+	/*
+		caught_loomies := interfaces.CaughtLoomie{Owner: user.Id,
+			IsBusy:  false,
+			Serial:  loomie.Serial,
+			Name:    loomie.Name,
+			Types:   loomie.Types,
+			Rarity:  loomie.Rarity,
+			HP:      loomie.HP,
+			Attack:  loomie.Attack,
+			Defense: loomie.Defense}
 
-	caught_loomies := interfaces.CaughtLoomie{Owner: user.Id,
-		IsBusy:  false,
-		Serial:  loomie.Serial,
-		Name:    loomie.Name,
-		Types:   loomie.Types,
-		Rarity:  loomie.Rarity,
-		HP:      loomie.HP,
-		Attack:  loomie.Attack,
-		Defense: loomie.Defense}
+		caught_loomies_id, err := models.InsertInCaughtLoomies(caught_loomies)
 
-	caught_loomies_id, err := models.InsertInCaughtLoomies(caught_loomies)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
 
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
-		return
-	}
+		err = models.InsertInUserLoomie(user, caught_loomies_id)
 
-	err = models.InsertInUserLoomie(user, caught_loomies_id)
-
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
-		return
-	}
-
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+	*/
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"error":   false,
 		"message": "Loomie caught",

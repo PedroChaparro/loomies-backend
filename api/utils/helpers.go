@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"strconv"
@@ -67,4 +68,12 @@ func IsNear(target interfaces.Coordinates, origin interfaces.Coordinates) bool {
 	}
 
 	return true
+}
+
+func IsCaptureSuccessful(loomBall interfaces.Loomball) bool {
+	chance := 0
+	capture := GetRandomInt(0, 100)
+	fmt.Println(chance)
+	fmt.Println(capture)
+	return false
 }
