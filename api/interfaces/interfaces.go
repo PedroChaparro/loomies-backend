@@ -68,6 +68,7 @@ type Gym struct {
 type Item struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
+	Serial                int                `json:"serial" bson:"serial"`
 	Description           string             `json:"description"      bson:"description"`
 	Target                string             `json:"target"      bson:"target"`
 	IsCombatItem          bool               `json:"is_combat_item"      bson:"is_combat_item"`
@@ -80,6 +81,7 @@ type Item struct {
 type Loomball struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
+	Serial                int                `json:"serial" bson:"serial"`
 	EffectiveUntil        int64              `json:"effective_until"      bson:"effective_until"`
 	DecayUntil            int64              `json:"decay_until"      bson:"decay_until"`
 	MinimumProbability    float64            `json:"minimum_probability"      bson:"minimum_probability"`
