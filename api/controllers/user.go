@@ -120,7 +120,7 @@ func HandleSignUp(c *gin.Context) {
 }
 
 // Controller to validate a user code
-func HandleCodeValidation(c *gin.Context) {
+func HandleAccountValidation(c *gin.Context) {
 	var form interfaces.ValidationCode
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
@@ -152,7 +152,7 @@ func HandleCodeValidation(c *gin.Context) {
 }
 
 // controller to generate new code
-func HandleNewCodeValidation(c *gin.Context) {
+func HandleAccountValidationCodeRequest(c *gin.Context) {
 	var form interfaces.EmailForm
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
@@ -232,7 +232,7 @@ func HandleGetLoomies(c *gin.Context) {
 }
 
 // controller to create and send a code to reset the password
-func HandleCodeResetPassword(c *gin.Context) {
+func HandleResetPasswordCodeReuest(c *gin.Context) {
 	var form interfaces.EmailForm
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
