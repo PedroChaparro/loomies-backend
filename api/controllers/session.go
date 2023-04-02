@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// HandleLogIn Handle the request to login with the user credentials
 func HandleLogIn(c *gin.Context) {
 	var err error
 	var form interfaces.LogInForm
@@ -78,7 +79,7 @@ func HandleLogIn(c *gin.Context) {
 	})
 }
 
-// HandleWhoami returns the user information (to recover the user session in the frontend)
+// HandleWhoami Handle the request to obtain the user's information from the access token
 func HandleWhoami(c *gin.Context) {
 	userid, _ := c.Get("userid")
 	user, err := models.GetUserById(userid.(string))
@@ -100,7 +101,7 @@ func HandleWhoami(c *gin.Context) {
 	})
 }
 
-// HandleRefresh returns a new access token
+// HandleRefresh Handle the request to refresh the access token from the refresh token
 func HandleRefresh(c *gin.Context) {
 	userid, _ := c.Get("userid")
 

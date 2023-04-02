@@ -14,6 +14,7 @@ var JWTKeyAC = configuration.GetAccessTokenSecret()
 var JWTKeyRF = configuration.GetRefreshTokenSecret()
 var JWTKeyWS = configuration.GetWsTokenSecret()
 
+// CreateAccessToken creates a new access token signed with the access token secret
 func CreateAccessToken(userID string) (string, error) {
 	// 30 minutes short lived token
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -32,6 +33,7 @@ func CreateAccessToken(userID string) (string, error) {
 	return accessTokenString, nil
 }
 
+// CreateRefreshToken creates a new refresh token signed with the refresh token secret
 func CreateRefreshToken(userID string) (string, error) {
 	// 5 months long lived token
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -50,6 +52,7 @@ func CreateRefreshToken(userID string) (string, error) {
 	return refreshTokenString, nil
 }
 
+// CreateWsToken creates a new websocket token signed with the websocket token secret
 func CreateWsToken(userID string, gymId string, latitude float64, longitude float64) (string, error) {
 	wsToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":   userID,

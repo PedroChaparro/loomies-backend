@@ -9,7 +9,7 @@ import (
 func SetupRoutes(engine *gin.Engine) {
 	// User
 	engine.GET("/user/loomies", middlewares.MustProvideAccessToken(), controllers.HandleGetLoomies)
-	engine.POST("/user/password/code", controllers.HandleResetPasswordCodeReuest)
+	engine.POST("/user/password/code", controllers.HandleResetPasswordCodeRequest)
 	engine.PUT("/user/password", controllers.HandleResetPassword)
 	engine.POST("/user/signup", controllers.HandleSignUp)
 	engine.POST("/user/validate/code", controllers.HandleAccountValidationCodeRequest)

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// HandleSignUp Handle the request to create a new user
 func HandleSignUp(c *gin.Context) {
 	var err error
 	var form interfaces.SignUpForm
@@ -119,7 +120,7 @@ func HandleSignUp(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "User created successfully"})
 }
 
-// Controller to validate a user code
+// HandleAccountValidation Handle the request to validate the user account
 func HandleAccountValidation(c *gin.Context) {
 	var form interfaces.ValidationCode
 	if err := c.BindJSON(&form); err != nil {
@@ -151,7 +152,7 @@ func HandleAccountValidation(c *gin.Context) {
 	}
 }
 
-// controller to generate new code
+// HandleAccountValidationCodeRequest Handle the request to generate a new validation code for the user account
 func HandleAccountValidationCodeRequest(c *gin.Context) {
 	var form interfaces.EmailForm
 	if err := c.BindJSON(&form); err != nil {
@@ -199,7 +200,7 @@ func HandleAccountValidationCodeRequest(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "New Code created and sended"})
 }
 
-// controller to obtain the loomies from an user
+// HandleGetLoomies Handle the request to get the loomies of the user
 func HandleGetLoomies(c *gin.Context) {
 	userid, _ := c.Get("userid")
 
@@ -231,8 +232,8 @@ func HandleGetLoomies(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"error": false, "loomies": loomies})
 }
 
-// controller to create and send a code to reset the password
-func HandleResetPasswordCodeReuest(c *gin.Context) {
+// HandleResetPasswordCodeReuest Handle the request to generate a new reset password code for the user account
+func HandleResetPasswordCodeRequest(c *gin.Context) {
 	var form interfaces.EmailForm
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
@@ -271,7 +272,7 @@ func HandleResetPasswordCodeReuest(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "New Code, to reset password, created and sended"})
 }
 
-// Controller to reset password having a code
+// HandleResetPassword Handle the request to reset the password of the user
 func HandleResetPassword(c *gin.Context) {
 	var form interfaces.ResetPasswordCode
 	if err := c.BindJSON(&form); err != nil {

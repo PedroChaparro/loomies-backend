@@ -56,6 +56,7 @@ func GetRandomCoordinatesNear(coordinates interfaces.Coordinates) interfaces.Coo
 	}
 }
 
+// GetZoneCoordinatesFromGPS returns the (x, y) coordinates of the zone that contains the given coordinates
 func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
 	// initial zones calculations
 	const initialLatitude = 6.9595
@@ -67,7 +68,7 @@ func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
 	return int(coordX), int(coordY)
 }
 
-// get a code of 6 digits
+// GetValidationCode returns a random 6 digit string
 func GetValidationCode() string {
 
 	numbers := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
@@ -79,6 +80,7 @@ func GetValidationCode() string {
 	return validationCode
 }
 
+// IsNear returns true if the target coordinates are near the origin coordinates
 func IsNear(target interfaces.Coordinates, origin interfaces.Coordinates) bool {
 	zoneRadiusStr := configuration.GetEnvironmentVariable("GAME_ZONE_RADIUS")
 	zoneRadius, _ := strconv.ParseFloat(zoneRadiusStr, 64)
