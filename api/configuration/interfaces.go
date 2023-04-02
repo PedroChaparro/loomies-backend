@@ -12,6 +12,7 @@ type TGlobals struct {
 	RefreshTokenSecret          string
 	WsTokenSecret               string
 	WsHub                       *combat.WsHub
+	WildLoomiesTTL              int
 	MinLoomiesGenerationTimeout int
 	MaxLoomiesGenerationTimeout int
 	MinLoomiesGenerationAmount  int
