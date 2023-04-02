@@ -283,10 +283,7 @@ func HandleFuseLoomies(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{
-		"error":      false,
-		"message":    "Loomies fused successfully",
-		"maxHp":      maxHp,
-		"maxAttack":  maxAttack,
-		"maxDefense": maxDefense,
+		"error":   false,
+		"message": "Loomies fused successfully",
 	})
 }
