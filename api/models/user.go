@@ -318,7 +318,6 @@ func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.GymRe
 
 // GetLoomiesByUser returns an array of loomies according with user
 func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomiesRes, error) {
-
 	// Filter
 	filter := bson.M{
 		"_id": bson.M{
@@ -359,21 +358,22 @@ func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomie
 
 	for cursor.Next(context.Background()) {
 		var loomieAux interfaces.UserLoomiesResAux
-		var loomie interfaces.UserLoomiesRes
-
 		var types []string
+		var rarity string
 
-		cursor.Decode(&loomieAux)
-		cursor.Decode(&loomie)
+		err := cursor.Decode(&loomieAux)
+
+		if err != nil {
+			fmt.Println("Error decoding the first loomie")
+		}
 
 		for _, t := range loomieAux.Types {
 			types = append(types, t.Name)
 		}
 
-		loomie.Rarity = loomieAux.Rarity[0].Name
-		loomie.Types = types
-
-		loomies = append(loomies, loomie)
+		rarity = loomieAux.Rarity[0].Name
+		finalLoomie := loomieAux.ToUserLoomiesRes(rarity, types)
+		loomies = append(loomies, *finalLoomie)
 	}
 
 	return loomies, err
