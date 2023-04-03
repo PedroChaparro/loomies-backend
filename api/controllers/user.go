@@ -174,7 +174,7 @@ func HandleAccountValidationCodeRequest(c *gin.Context) {
 	}
 
 	if userDoc.IsVerified {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "This Email has been already verified"})
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": true, "message": "This Email has been already verified"})
 		return
 	}
 
