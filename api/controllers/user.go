@@ -147,7 +147,7 @@ func HandleAccountValidation(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Email has been verified"})
 		return
 	} else {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Code was incorrect or time has expired"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "Code was incorrect or time has expired"})
 		return
 	}
 }

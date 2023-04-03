@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"testing"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -158,5 +159,94 @@ func TestAccountValidationCodeBadRequest(t *testing.T) {
 
 	// Delete user
 	err := tests.DeleteUser(randomUser.Email)
+	c.NoError(err)
+}
+
+// TestAccountValidationSuccess Test the success case for /user/validate endpoint
+func TestAccountValidationSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Create a random user
+	randomUser := tests.GenerateRandomUser()
+	router := tests.SetupGinRouter()
+	tests.InsertUser(randomUser, router, HandleSignUp)
+
+	// Get the code from the database
+	var code interfaces.AuthenticationCode
+	err := authenticationCodesCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}, {Key: "type", Value: "ACCOUNT_VERIFICATION"}}).Decode(&code)
+	c.NoError(err)
+
+	// Make the request and get the JSON response
+	router.POST("/user/validate", HandleAccountValidation)
+	w, req := tests.SetupPostRequest("/user/validate", map[string]string{"email": randomUser.Email, "validationCode": code.Code})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	// Check the response
+	c.Equal(http.StatusOK, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal("Email has been verified", response["message"])
+}
+
+// TestAccountValidationBadRequest Test the Bad Request cases for /user/validate endpoint
+func TestAccountValidationBadRequest(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Create a random user
+	randomUser := tests.GenerateRandomUser()
+	router := tests.SetupGinRouter()
+	tests.InsertUser(randomUser, router, HandleSignUp)
+
+	// Get the code from the database
+	var code interfaces.AuthenticationCode
+	err := authenticationCodesCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}, {Key: "type", Value: "ACCOUNT_VERIFICATION"}}).Decode(&code)
+	c.NoError(err)
+	codeNumber, _ := strconv.Atoi(code.Code)
+
+	// 1. Test without JSON payload
+	router.POST("/user/validate", HandleAccountValidation)
+	w, req := tests.SetupPostRequest("/user/validate", nil)
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Bad request", response["message"])
+
+	// 2. Test with empty email
+	w, req = tests.SetupPostRequest("/user/validate", map[string]string{"email": "", "validationCode": code.Code})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Email cannot be empty", response["message"])
+
+	// 3. Test with empty validationCode
+	w, req = tests.SetupPostRequest("/user/validate", map[string]string{"email": randomUser.Email, "validationCode": ""})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Verification code cannot be empty", response["message"])
+
+	// 4. Test with incorrect validationCode
+	w, req = tests.SetupPostRequest("/user/validate", map[string]string{"email": randomUser.Email, "validationCode": strconv.Itoa(codeNumber + 1)})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusUnauthorized, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Code was incorrect or time has expired", response["message"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email)
 	c.NoError(err)
 }
