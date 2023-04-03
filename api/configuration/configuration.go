@@ -78,6 +78,22 @@ func GetRefreshTokenSecret() string {
 	return Globals.RefreshTokenSecret
 }
 
+// GetWildLoomiesTTL Returns the value of the GAME_WILD_LOOMIES_TTL environment variable and update the global variable if it is empty
+func GetWildLoomiesTTL() int {
+	if Globals.WildLoomiesTTL == 0 {
+		// Get the value (as a string) from the environment
+		wildLoomiesTTLString := GetEnvironmentVariable("GAME_WILD_LOOMIES_TTL")
+
+		// Convert the string to an integer
+		wildLoomiesTTL, _ := strconv.Atoi(wildLoomiesTTLString)
+
+		// Set the value in the globals
+		Globals.WildLoomiesTTL = wildLoomiesTTL
+	}
+
+	return Globals.WildLoomiesTTL
+}
+
 // GetLoomiesGenerationTimeouts returns the values of the GAME_MIN_LOOMIES_GENERATION_TIMEOUT and GAME_MAX_LOOMIES_GENERATION_TIMEOUT environment variables and update the global variables if they are empty
 func GetLoomiesGenerationTimeouts() (int, int) {
 	if Globals.MinLoomiesGenerationTimeout == 0 || Globals.MaxLoomiesGenerationTimeout == 0 {

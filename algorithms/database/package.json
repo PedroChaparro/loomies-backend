@@ -7,8 +7,8 @@
   "scripts": {
     "bulk": "node bulk.js",
     "test": "vitest",
-    "clear:outdated": "node cronjobs/remove_outdated_loomies/remove.js --outdated",
-    "clear:all": "node cronjobs/remove_outdated_loomies/remove.js --all",
+    "clear_loomies:outdated": "node cronjobs/remove_outdated_loomies/remove.js --outdated",
+    "clear_loomies:all": "node cronjobs/remove_outdated_loomies/remove.js --all",
     "update:rewards": "node cronjobs/update_gyms_rewards/update.js"
   },
   "keywords": [],
