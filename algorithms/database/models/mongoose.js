@@ -137,8 +137,8 @@ const CaughtLoomieSchema = new Schema(
     },
     experience: {
       type: Number,
-      min: 100,
-      default: 100,
+      min: 0,
+      default: 0,
     },
     // The caught loomie can be busy if it's
     is_busy: Boolean,
