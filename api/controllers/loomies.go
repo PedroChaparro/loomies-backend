@@ -103,7 +103,7 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 	return nil
 }
 
-// HandleNearLoomies generates loomies for the user
+// HandleNearLoomies Handle the request to get the loomies near the user and generate new loomies as possible
 func HandleNearLoomies(c *gin.Context) {
 	// 0. Get the coordinates from the request body
 	coordinates := interfaces.Coordinates{}
@@ -158,6 +158,7 @@ func HandleNearLoomies(c *gin.Context) {
 	})
 }
 
+// HandleValidateLoomieExists Handle the request to validate if a loomie exists
 func HandleValidateLoomieExists(c *gin.Context) {
 	loomie_id := c.Param("id")
 
