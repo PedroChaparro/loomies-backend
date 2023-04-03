@@ -161,7 +161,7 @@ paths:
   /user/loomies: 
     get: 
       tags: [ User ]
-      description: Get the items of the given user.
+      description: Get the loomies of the given user.
       security: 
         - basicAuth: [Access-Token]
       responses: 
@@ -178,7 +178,37 @@ paths:
                   message: 
                     type: string
                     example: "The loomies were retrieved successfully"
-                  items: 
+                  loomies: 
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/PublicLoomie"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /user/loomie-team: 
+    get: 
+      tags: [ User ]
+      description: Get the loomie team of the given user.
+      security: 
+        - basicAuth: [Access-Token]
+      responses: 
+        "200": 
+          description: There wasn't any error and the loomie team is retreived. 
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "The loomie team has been obtained successfully"
+                  team: 
                     type: array
                     items: 
                       $ref: "#/components/schemas/PublicLoomie"
@@ -774,6 +804,9 @@ components:
         level: 
           type: number
           example: 1
+        experience: 
+          type: number
+          example: 200
     PublicReward: 
       type: object
       properties: 

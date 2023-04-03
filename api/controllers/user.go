@@ -336,3 +336,30 @@ func HandleResetPassword(c *gin.Context) {
 		return
 	}
 }
+
+// HandleGetLoomieTeam Respond the detailed list of the user's loomie team
+func HandleGetLoomieTeam(c *gin.Context) {
+	// Get the user
+	userid, _ := c.Get("userid")
+	user, err := models.GetUserById(userid.(string))
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error getting the user"})
+		return
+	}
+
+	// Get the loomies details from the LoomieTeam array
+	loomies, err := models.GetLoomiesByIds(user.LoomieTeam)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error getting the loomies"})
+		return
+	}
+
+	// Prevent null responses and obtain an empty array if user don't have loomies
+	if loomies == nil {
+		loomies = []interfaces.UserLoomiesRes{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"error": false, "message": "The loomie team has been obtained successfully", "team": loomies})
+}
