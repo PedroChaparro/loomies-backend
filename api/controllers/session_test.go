@@ -76,7 +76,8 @@ func TestLoginForbidden(t *testing.T) {
 	c.Equal("User has not been verified", response["message"])
 
 	// Delete the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
+	err := tests.DeleteUser(randomUser.Email)
+	c.NoError(err)
 }
 
 // TestSignupSuccess tests the signup endpoint with a verified user
@@ -131,7 +132,8 @@ func TestLoginSuccess(t *testing.T) {
 	c.Equal(databaseUser.Id.Hex(), refreshTokenClaims["userid"])
 
 	// Delete the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
+	err = tests.DeleteUser(randomUser.Email)
+	c.NoError(err)
 }
 
 // TestRefreshUnauthorized tests the refresh endpoint without a refresh token
@@ -183,7 +185,8 @@ func TestRefreshSuccess(t *testing.T) {
 	c.Equal(databaseUser.Id.Hex(), accessTokenClaims["userid"])
 
 	// Remove the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: databaseUser.Email}})
+	err = tests.DeleteUser(databaseUser.Email)
+	c.NoError(err)
 }
 
 // TestWhoamiUnauthorized tests the whoami endpoint without a valid access token
@@ -229,5 +232,6 @@ func TestWhoamiSuccess(t *testing.T) {
 	c.Equal(databaseUser.Username, whoamiResponseUser["username"])
 
 	// Remove the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: databaseUser.Email}})
+	err := tests.DeleteUser(databaseUser.Email)
+	c.NoError(err)
 }

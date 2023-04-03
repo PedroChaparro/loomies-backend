@@ -2,14 +2,20 @@ package tests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/gin-gonic/gin"
 	"github.com/jaswdr/faker"
+	"go.mongodb.org/mongo-driver/bson"
 )
+
+var usersCollection = configuration.ConnectToMongoCollection("users")
+var authenticationCodesCollection = configuration.ConnectToMongoCollection("authentication_codes")
 
 // ### Types / Structs
 type CustomHeader struct {
@@ -28,9 +34,17 @@ func SetupGinRouter() *gin.Engine {
 
 // SetupPostRequest creates a new POST request with the given payload and headers (if any)
 func SetupPostRequest(endpoint string, payload interface{}, headers ...CustomHeader) (*httptest.ResponseRecorder, *http.Request) {
-	payloadBytes, _ := json.Marshal(payload)
-	req, _ := http.NewRequest("POST", endpoint, bytes.NewReader(payloadBytes))
-	req.Header.Set("Content-Type", "application/json")
+	var req *http.Request
+
+	if payload != nil {
+		payloadBytes, _ := json.Marshal(payload)
+		r, _ := http.NewRequest("POST", endpoint, bytes.NewReader(payloadBytes))
+		req = r
+		req.Header.Set("Content-Type", "application/json")
+	} else {
+		r, _ := http.NewRequest("POST", endpoint, nil)
+		req = r
+	}
 
 	// Set the custom headers
 	if len(headers) > 0 {
@@ -74,4 +88,16 @@ func InsertUser(user interfaces.User, router *gin.Engine, handler gin.HandlerFun
 	router.POST("/user/signup", handler)
 	w, req := SetupPostRequest("/user/signup", user)
 	router.ServeHTTP(w, req)
+}
+
+// DeleteUser Deletes a user from the database
+func DeleteUser(email string) error {
+	_, err := usersCollection.DeleteOne(context.Background(), bson.D{{Key: "email", Value: email}})
+
+	if err != nil {
+		return err
+	}
+
+	_, err = authenticationCodesCollection.DeleteMany(context.Background(), bson.D{{Key: "email", Value: email}})
+	return err
 }
