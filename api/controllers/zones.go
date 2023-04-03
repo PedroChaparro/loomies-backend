@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// HandleNearGyms Handle the request to obtain the gyms near the user coordinates
 func HandleNearGyms(c *gin.Context) {
 	bodyCoord := interfaces.Coordinates{}
 

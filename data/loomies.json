@@ -1,6 +1,6 @@
 [
   {
-    "serial": "0001",
+    "serial": 1,
     "name": "Plague bird",
     "types": ["Flying", "Psychic"],
     "rarity": "Rare",
@@ -9,7 +9,7 @@
     "extra_atk": 20
   },
   {
-    "serial": "0002",
+    "serial": 2,
     "name": "Caterpillar",
     "types": ["Bug", "Poison"],
     "rarity": "Common",
@@ -18,7 +18,7 @@
     "extra_atk": 0
   },
   {
-    "serial": "0003",
+    "serial": 3,
     "name": "Armored Squirrel",
     "types": ["Plant"],
     "rarity": "Normal",
@@ -27,7 +27,7 @@
     "extra_atk": 10
   },
   {
-    "serial": "0004",
+    "serial": 4,
     "name": "Two Feetted Dog",
     "types": ["Iron"],
     "rarity": "Common",
@@ -36,7 +36,7 @@
     "extra_atk": 20
   },
   {
-    "serial": "0005",
+    "serial": 5,
     "name": "Spiky Crab",
     "types": ["Electric", "Water"],
     "rarity": "Normal",
@@ -45,7 +45,7 @@
     "extra_atk": 10
   },
   {
-    "serial": "0006",
+    "serial": 6,
     "name": "Fire Raccoon",
     "types": ["Fire"],
     "rarity": "Normal",
@@ -54,7 +54,7 @@
     "extra_atk": 20
   },
   {
-    "serial": "0007",
+    "serial": 7,
     "name": "Bone Rhino",
     "types": ["Rock"],
     "rarity": "Common",
@@ -63,7 +63,7 @@
     "extra_atk": 10
   },
   {
-    "serial": "0008",
+    "serial": 8,
     "name": "Masked Corned Ghost",
     "types": ["Psychic", "Plant"],
     "rarity": "Rare",
@@ -72,7 +72,7 @@
     "extra_atk": 25
   },
   {
-    "serial": "0009",
+    "serial": 9,
     "name": "Handed Snake",
     "types": ["Poison"],
     "rarity": "Common",
@@ -81,7 +81,7 @@
     "extra_atk": 10
   },
   {
-    "serial": "0010",
+    "serial": 10,
     "name": "Big Mouth Fish",
     "types": ["Water", "Psychic"],
     "rarity": "Normal",
@@ -90,7 +90,7 @@
     "extra_atk": 5
   },
   {
-    "serial": "0011",
+    "serial": 11,
     "name": "6 Legged Giant Squid",
     "types": ["Water", "Poison"],
     "rarity": "Normal",
@@ -99,7 +99,7 @@
     "extra_atk": 10
   },
   {
-    "serial": "0012",
+    "serial": 12,
     "name": "Dolphin in Shell",
     "types": ["Water"],
     "rarity": "Common",
@@ -108,7 +108,7 @@
     "extra_atk": 0
   },
   {
-    "serial": "0013",
+    "serial": 13,
     "name": "Camalote Bird",
     "types": ["Flying", "Plant"],
     "rarity": "Normal",
@@ -117,7 +117,7 @@
     "extra_atk": 5
   },
   {
-    "serial": "0014",
+    "serial": 14,
     "name": "Alien Shrimp",
     "types": ["Iron", "Bug"],
     "rarity": "Rare",
@@ -126,7 +126,7 @@
     "extra_atk": 15
   },
   {
-    "serial": "0015",
+    "serial": 15,
     "name": "Infected Cute Little Bunny",
     "types": ["Fire"],
     "rarity": "Rare",
@@ -135,7 +135,7 @@
     "extra_atk": 40
   },
   {
-    "serial": "0016",
+    "serial": 16,
     "name": "Wasp",
     "types": ["Bug", "Iron"],
     "rarity": "Normal",
@@ -144,7 +144,7 @@
     "extra_atk": 30
   },
   {
-    "serial": "0017",
+    "serial": 17,
     "name": "4 Legged Mushroom",
     "types": ["Plant", "Rock"],
     "rarity": "Common",
@@ -153,7 +153,7 @@
     "extra_atk": 0
   },
   {
-    "serial": "0018",
+    "serial": 18,
     "name": "Carnivorius Plant",
     "types": ["Plant"],
     "rarity": "Normal",
@@ -162,7 +162,7 @@
     "extra_atk": 20
   },
   {
-    "serial": "0019",
+    "serial": 19,
     "name": "Cable Can Creature",
     "types": ["Electric", "Fire"],
     "rarity": "Rare",

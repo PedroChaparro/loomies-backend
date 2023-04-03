@@ -251,6 +251,7 @@ console.log("📦 Inserting items...");
 for await (const item of items) {
   const {
     name,
+    serial,
     description,
     target,
     is_combat_item,
@@ -262,6 +263,7 @@ for await (const item of items) {
 
   const newItem = new ItemModel({
     name,
+    serial,
     description,
     target,
     is_combat_item,
@@ -282,6 +284,7 @@ console.log("🎱 Inserting loomballs...");
 for await (const loomball of loomballs) {
   const {
     name,
+    serial,
     effective_until,
     decay_until,
     minimum_probability,
@@ -293,6 +296,7 @@ for await (const loomball of loomballs) {
 
   const newLoomball = new LoomBallModel({
     name,
+    serial,
     effective_until,
     decay_until,
     minimum_probability,
