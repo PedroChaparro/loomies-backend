@@ -7,6 +7,7 @@ import (
 	gomail "gopkg.in/gomail.v2"
 )
 
+// SendEmail sends an email to the specified address usint the specified subject and body
 func SendEmail(email string, subject string, validationCode string) error {
 	sender := os.Getenv("EMAIL_MAIL")
 	msg := gomail.NewMessage()

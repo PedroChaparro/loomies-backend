@@ -33,6 +33,7 @@ func load() {
 	Globals.Loaded = true
 }
 
+// GetEnvironmentVariable returns the value of the environment variable with the given name
 func GetEnvironmentVariable(name string) string {
 	if Globals.Loaded == false {
 		load()
@@ -47,6 +48,7 @@ func GetEnvironmentVariable(name string) string {
 	return value
 }
 
+// GetAccessTokenSecret returns the value of the ACCESS_TOKEN_SECRET environment variable and update the global variable if it is empty
 func GetAccessTokenSecret() string {
 	if Globals.AccessTokenSecret == "" {
 		accessTokenSecret := GetEnvironmentVariable("ACCESS_TOKEN_SECRET")
@@ -56,6 +58,7 @@ func GetAccessTokenSecret() string {
 	return Globals.AccessTokenSecret
 }
 
+// GetWsTokenSecret returns the value of the WS_TOKEN_SECRET environment variable and update the global variable if it is empty
 func GetWsTokenSecret() string {
 	if Globals.WsTokenSecret == "" {
 		wsTokenSecret := GetEnvironmentVariable("WS_TOKEN_SECRET")
@@ -65,6 +68,7 @@ func GetWsTokenSecret() string {
 	return Globals.WsTokenSecret
 }
 
+// GetRefreshTokenSecret returns the value of the REFRESH_TOKEN_SECRET environment variable and update the global variable if it is empty
 func GetRefreshTokenSecret() string {
 	if Globals.RefreshTokenSecret == "" {
 		refreshTokenSecret := GetEnvironmentVariable("REFRESH_TOKEN_SECRET")
@@ -74,6 +78,7 @@ func GetRefreshTokenSecret() string {
 	return Globals.RefreshTokenSecret
 }
 
+// GetLoomiesGenerationTimeouts returns the values of the GAME_MIN_LOOMIES_GENERATION_TIMEOUT and GAME_MAX_LOOMIES_GENERATION_TIMEOUT environment variables and update the global variables if they are empty
 func GetLoomiesGenerationTimeouts() (int, int) {
 	if Globals.MinLoomiesGenerationTimeout == 0 || Globals.MaxLoomiesGenerationTimeout == 0 {
 		// Get values (as strings) from the environment
@@ -92,6 +97,7 @@ func GetLoomiesGenerationTimeouts() (int, int) {
 	return Globals.MinLoomiesGenerationTimeout, Globals.MaxLoomiesGenerationTimeout
 }
 
+// GetLoomiesGenerationAmounts returns the values of the GAME_MIN_LOOMIES_GENERATION_AMOUNT and GAME_MAX_LOOMIES_GENERATION_AMOUNT environment variables and update the global variables if they are empty
 func GetLoomiesGenerationAmounts() (int, int) {
 	if Globals.MinLoomiesGenerationAmount == 0 || Globals.MaxLoomiesGenerationAmount == 0 {
 		// Get values (as strings) from the environment
@@ -110,6 +116,7 @@ func GetLoomiesGenerationAmounts() (int, int) {
 	return Globals.MinLoomiesGenerationAmount, Globals.MaxLoomiesGenerationAmount
 }
 
+// GetLoomiesGenerationRadius returns the value of the GAME_LOOMIES_GENERATION_RADIUS environment variable and update the global variable if it is empty
 func GetLoomiesGenerationRadius() float64 {
 	if Globals.LoomiesGenerationRadius == 0 {
 		// Get value (as string) from the environment
@@ -125,6 +132,7 @@ func GetLoomiesGenerationRadius() float64 {
 	return Globals.LoomiesGenerationRadius
 }
 
+// GetMaxLoomiesPerZone returns the value of the GAME_MAX_LOOMIES_PER_ZONE environment variable and update the global variable if it is empty
 func GetMaxLoomiesPerZone() int {
 	if Globals.MaxLoomiesPerZone == 0 {
 		// Get value (as string) from the environment
@@ -159,7 +167,7 @@ func GetLoomiesExperienceParameters() (float64, float64) {
 	return Globals.MinLoomieRequiredExperience, Globals.LoomieExperienceFactor
 }
 
-// connectToMongo returns a MongoDB client
+// getMongoClient returns a MongoDB client
 func getMongoClient() *mongo.Client {
 	// Create the connection if it does not exist
 	if Globals.MongoClient == nil {
@@ -184,7 +192,7 @@ func getMongoClient() *mongo.Client {
 	return Globals.MongoClient
 }
 
-// connectToMongoCollection returns a MongoDB collection
+// ConnectToMongoCollection Connects to a MongoDB collection and returns it
 func ConnectToMongoCollection(collectionName string) *mongo.Collection {
 	client := getMongoClient()
 	return client.Database(os.Getenv("MONGO_DATABASE")).Collection(collectionName)

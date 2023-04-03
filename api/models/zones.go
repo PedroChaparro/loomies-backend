@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// GetNearGyms Returns an array of gyms near the current coordinates
 func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfaces.NearGymsRes, e error) {
 	coordX, coordY := utils.GetZoneCoordinatesFromGPS(interfaces.Coordinates{
 		Latitude:  currentLatitude,

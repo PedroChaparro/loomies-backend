@@ -45,7 +45,7 @@ func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.UserItemsR
 		var data interfaces.UserItemsRes
 		cursor.Decode(&item)
 
-		data = interfaces.UserItemsRes{Id: item.Id, Name: item.Name, Description: item.Description, Target: item.Target, Is_combat_item: item.IsCombatItem, Quantity: userItems[item.Id].ItemQuantity}
+		data = interfaces.UserItemsRes{Id: item.Id, Name: item.Name, Serial: item.Serial, Description: item.Description, Target: item.Target, Is_combat_item: item.IsCombatItem, Quantity: userItems[item.Id].ItemQuantity}
 		items = append(items, data)
 	}
 
@@ -67,7 +67,7 @@ func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.UserItemsR
 		var data interfaces.UserLoomballsRes
 		cursor.Decode(&loomball)
 
-		data = interfaces.UserLoomballsRes{Id: loomball.Id, Name: loomball.Name, Quantity: userLoomballs[loomball.Id].ItemQuantity}
+		data = interfaces.UserLoomballsRes{Id: loomball.Id, Name: loomball.Name, Serial: loomball.Serial, Quantity: userLoomballs[loomball.Id].ItemQuantity}
 		loomballs = append(loomballs, data)
 	}
 

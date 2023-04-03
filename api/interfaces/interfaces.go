@@ -68,6 +68,7 @@ type Gym struct {
 type Item struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
+	Serial                int                `json:"serial" bson:"serial"`
 	Description           string             `json:"description"      bson:"description"`
 	Target                string             `json:"target"      bson:"target"`
 	IsCombatItem          bool               `json:"is_combat_item"      bson:"is_combat_item"`
@@ -80,6 +81,7 @@ type Item struct {
 type Loomball struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
+	Serial                int                `json:"serial" bson:"serial"`
 	EffectiveUntil        int64              `json:"effective_until"      bson:"effective_until"`
 	DecayUntil            int64              `json:"decay_until"      bson:"decay_until"`
 	MinimumProbability    float64            `json:"minimum_probability"      bson:"minimum_probability"`
@@ -103,10 +105,6 @@ type User struct {
 	Items                           []InventoryItem      `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
 	LoomieTeam                      []primitive.ObjectID `json:"loomie_team"   bson:"loomie_team"`
-	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
-	ValidationCodeExp               int64                `json:"validationCodeExp"   bson:"validationCodeExp"`
-	ResetPassCode                   string               `json:"resetPassCode"  bson:"resetPassCode"`
-	ResetPassCodeExp                int64                `json:"resetPassCodeExp"   bson:"resetPassCodeExp"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
@@ -171,6 +169,14 @@ type WildLoomie struct {
 	Latitude    float64              `json:"latitude"     bson:"latitude"`
 	Longitude   float64              `json:"longitude"     bson:"longitude"`
 	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
+}
+
+type AuthenticationCode struct {
+	Id        primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Type      string             `json:"type"      bson:"type"`
+	Email     string             `json:"email"      bson:"email"`
+	Code      string             `json:"code"      bson:"code"`
+	ExpiresAt int64              `json:"expires_at"      bson:"expires_at"`
 }
 
 type ValidationCode struct {

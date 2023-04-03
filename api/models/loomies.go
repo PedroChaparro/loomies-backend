@@ -166,6 +166,7 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	return loomies, nil
 }
 
+// ValidateLoomieExists Check if the loomie exists by the id
 func ValidateLoomieExists(loomie_id string) error {
 	id, err := primitive.ObjectIDFromHex(loomie_id)
 	var loomie interfaces.WildLoomie

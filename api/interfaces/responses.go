@@ -16,6 +16,7 @@ type NearGymsRes struct {
 type UserItemsRes struct {
 	Id             primitive.ObjectID `json:"_id" bson:"_id"`
 	Name           string             `json:"name"      bson:"name"`
+	Serial         int                `json:"serial"      bson:"serial"`
 	Description    string             `json:"description"      bson:"description"`
 	Target         string             `json:"target"      bson:"target"`
 	Is_combat_item bool               `json:"is_combat_item"      bson:"is_combat_item"`
@@ -27,6 +28,7 @@ type UserItemsRes struct {
 type UserLoomballsRes struct {
 	Id       primitive.ObjectID `json:"_id" bson:"_id"`
 	Name     string             `json:"name"      bson:"name"`
+	Serial   int                `json:"serial"      bson:"serial"`
 	Quantity int                `json:"quantity"      bson:"quantity"`
 }
 

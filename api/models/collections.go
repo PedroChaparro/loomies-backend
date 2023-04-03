@@ -13,3 +13,4 @@ var WildLoomiesCollection = configuration.ConnectToMongoCollection("wild_loomies
 var GymsCollection = configuration.ConnectToMongoCollection("gyms")
 var ItemsCollection = configuration.ConnectToMongoCollection("items")
 var LoomballsCollection = configuration.ConnectToMongoCollection("loom_balls")
+var AuthenticationCodesCollection = configuration.ConnectToMongoCollection("authentication_codes")
