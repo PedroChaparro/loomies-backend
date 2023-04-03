@@ -148,12 +148,12 @@ func GetMaxLoomiesPerZone() int {
 	return Globals.MaxLoomiesPerZone
 }
 
-// GetLoomiesExperienceParameters returns the minimum required experience and the experience factor to calculate the experience of a loomie
+// GetLoomiesExperienceParameters Returns the values of the GAME_LOOMIE_MIN_REQUIRED_EXPERIENCE and GAME_LOOMIE_EXPERIENCE_FACTOR environment variables and update the global variables if they are empty
 func GetLoomiesExperienceParameters() (float64, float64) {
 	if Globals.MinLoomieRequiredExperience == 0 || Globals.LoomieExperienceFactor == 0 {
 		// Get values (as strings) from the environment
-		minLoomieRequiredExperienceString := GetEnvironmentVariable("GAME_MIN_REQUIRED_EXPERIENCE")
-		loomieExperienceFactorString := GetEnvironmentVariable("GAME_EXPERIENCE_FACTOR")
+		minLoomieRequiredExperienceString := GetEnvironmentVariable("GAME_LOOMIE_MIN_REQUIRED_EXPERIENCE")
+		loomieExperienceFactorString := GetEnvironmentVariable("GAME_LOOMIE_EXPERIENCE_FACTOR")
 
 		// Convert the strings to integers
 		minLoomieRequiredExperience, _ := strconv.ParseFloat(minLoomieRequiredExperienceString, 64)
