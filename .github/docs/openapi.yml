@@ -218,6 +218,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
+    put: 
+      tags: [ User ]
+      description: Updates t he loomie team of the given user. 
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties: 
+                loomie_team: 
+                  type: array
+                  items: 
+                    type: string
+                    example: "6429dc69f1c17765c6a205fd"
+      responses: 
+        "200": 
+          description: There wasn't any error and the loomie tean was updated. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": 
+          description: Bad request. Check the response message for more details. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "409": 
+          description: One or all the loomies are not available (Are busy / protecting a gym) and cannot be added to the Loomie Team.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
   /user/password/code: 
     post: 
       tags: [ User ]
