@@ -670,6 +670,9 @@ paths:
                 loomie_id: 
                   type: string
                   example: 641e1562d928b0e05a639864
+                loomie_ball_id: 
+                  type: string
+                  example: 6429de53ddab67490ae12307
                 latitude: 
                   type: number
                   example:  7.1167
@@ -679,18 +682,27 @@ paths:
         required: true
       responses: 
         "200": 
-          description: There wasn't any error and the nearest loomies are retrieved.
+          description: There wasn't any error.
           content: 
             application/json: 
-              schema: 
-                type: object
-                properties: 
-                  error:
-                    type: boolean
-                    example: false
-                  message: 
-                    type: string
-                    example: "Loomie caught"
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Capture'
+                  - $ref: '#/components/schemas/NotCapture'
+              examples:
+                car:
+                  summary: Capture
+                  value:
+                    capture: true
+                    error: false
+                    message: Loomie caught
+                bike:
+                  summary: Not Capture
+                  value:
+                    capture: false
+                    error: false
+                    message: Loomie not caught
+
         "400":
           description: Bad request or the user isn't near the loomie coordinates.
           content:
@@ -704,7 +716,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FailResponse"
         "404":
-          description: Loomie was not found or user was not found
+          description: Loomie or LoomBall was not found or user was not found
           content:
             application/json:
               schema:
@@ -958,3 +970,21 @@ components:
         generated_at: 
           type: number
           example: 1678241587
+    Capture:
+      type: object
+      properties:
+        capture:
+          type: boolean
+        error:
+          type: boolean
+        message:
+          type: string
+    NotCapture:
+      type: object
+      properties:
+        capture:
+          type: boolean
+        error:
+          type: boolean
+        message:
+          type: string

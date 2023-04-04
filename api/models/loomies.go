@@ -180,7 +180,7 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 }
 
 // ValidateLoomieExists Check if the loomie exists by the id
-func ValidateLoomieExists(loomie_id string) error {
+func ValidateLoomieExists(loomie_id string) (interfaces.WildLoomie, error) {
 	id, err := primitive.ObjectIDFromHex(loomie_id)
 	var loomie interfaces.WildLoomie
 
@@ -206,4 +206,22 @@ func InsertInCaughtLoomies(caught_loomies interfaces.CaughtLoomie) (primitive.Ob
 	id, _ := insert_id.InsertedID.(primitive.ObjectID)
 
 	return id, err
+}
+
+func IsCaptureSuccessful(loomie interfaces.WildLoomie, ball interfaces.Loomball) bool {
+	chance := 0
+	capture := utils.GetRandomInt(0, 100)
+	if loomie.Level >= int(ball.DecayUntil) {
+		chance = int(ball.MinimumProbability * 100)
+	} else if loomie.Level <= int(ball.EffectiveUntil) {
+		chance = 100
+	} else {
+		chance = -((100-int(ball.MinimumProbability*100))/(int(ball.DecayUntil)-int(ball.EffectiveUntil)))*(loomie.Level-int(ball.EffectiveUntil)) + 100
+	}
+
+	if capture <= chance {
+		return true
+	}
+
+	return false
 }

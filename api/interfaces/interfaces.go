@@ -169,6 +169,8 @@ type WildLoomie struct {
 	Latitude    float64              `json:"latitude"     bson:"latitude"`
 	Longitude   float64              `json:"longitude"     bson:"longitude"`
 	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
+	Level       int                  `json:"level"     bson:"level"`
+	Experience  float64              `json:"experience"     bson:"experience"`
 }
 
 type AuthenticationCode struct {

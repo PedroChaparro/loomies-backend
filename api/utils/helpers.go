@@ -109,10 +109,13 @@ func FixeFloat(float float64, decimals int) float64 {
 	return float64(math.Round(float*pow)) / pow
 }
 
-func IsCaptureSuccessful(loomBall interfaces.Loomball) bool {
-	chance := 0
-	capture := GetRandomInt(0, 100)
-	fmt.Println(chance)
-	fmt.Println(capture)
-	return false
+func GetRandomLevel() int {
+	sample := rand.NormFloat64()*3 + 10
+	level := int(sample)
+	if level <= 0 {
+		level = 1
+	} else if level > 30 {
+		level = 30
+	}
+	return level
 }

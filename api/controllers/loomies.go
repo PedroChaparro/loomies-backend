@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 	"strings"
@@ -88,9 +89,11 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 			Latitude:  randomCoordinates.Latitude,
 			Longitude: randomCoordinates.Longitude,
 			// Randomly increase or decrease the stats
-			HP:      result.BaseHp + utils.GetRandomInt(-5, 5),
-			Attack:  result.BaseAttack + utils.GetRandomInt(-5, 5),
-			Defense: result.BaseDefense + utils.GetRandomInt(-5, 5),
+			HP:         result.BaseHp + utils.GetRandomInt(-5, 5),
+			Attack:     result.BaseAttack + utils.GetRandomInt(-5, 5),
+			Defense:    result.BaseDefense + utils.GetRandomInt(-5, 5),
+			Level:      utils.GetRandomLevel(),
+			Experience: 0,
 		}
 
 		// Insert the new loomie in the database
@@ -354,16 +357,49 @@ func HandleCaptureLoomie(c *gin.Context) {
 			return
 		}
 	}
-	/*
+
+	mongoid, err := primitive.ObjectIDFromHex(loomie_req.LoomieBallId)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
+	}
+
+	err = models.RemoveItemsToUserInventory(user.Id, mongoid, 0)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Item not found"})
+		return
+	}
+
+	array_ball := []primitive.ObjectID{}
+
+	array_ball = append(array_ball, mongoid)
+
+	loomball, err := models.GetLoomballsFromIds(array_ball)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
+	}
+
+	isCapture := models.IsCaptureSuccessful(loomie, loomball[0])
+
+	fmt.Println(isCapture)
+
+	if isCapture {
 		caught_loomies := interfaces.CaughtLoomie{Owner: user.Id,
-			IsBusy:  false,
-			Serial:  loomie.Serial,
-			Name:    loomie.Name,
-			Types:   loomie.Types,
-			Rarity:  loomie.Rarity,
-			HP:      loomie.HP,
-			Attack:  loomie.Attack,
-			Defense: loomie.Defense}
+			IsBusy:     false,
+			Serial:     loomie.Serial,
+			Name:       loomie.Name,
+			Types:      loomie.Types,
+			Rarity:     loomie.Rarity,
+			HP:         loomie.HP,
+			Attack:     loomie.Attack,
+			Defense:    loomie.Defense,
+			Level:      loomie.Level,
+			Experience: loomie.Experience,
+		}
 
 		caught_loomies_id, err := models.InsertInCaughtLoomies(caught_loomies)
 
@@ -378,9 +414,18 @@ func HandleCaptureLoomie(c *gin.Context) {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
 			return
 		}
-	*/
+
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"error":   false,
+			"capture": isCapture,
+			"message": "Loomie caught",
+		})
+		return
+	}
+
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"error":   false,
-		"message": "Loomie caught",
+		"capture": isCapture,
+		"message": "Loomie not caught",
 	})
 }

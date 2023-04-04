@@ -447,3 +447,47 @@ func InsertInUserLoomie(user interfaces.User, loomie_id primitive.ObjectID) erro
 
 	return err
 }
+
+func RemoveItemsToUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID, quantity int) error {
+	var user interfaces.User
+	found := false
+
+	err := UserCollection.FindOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: userId},
+		},
+	).Decode(&user)
+
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(user.Items); i++ {
+		if user.Items[i].ItemId == itemId {
+			user.Items[i].ItemQuantity = user.Items[i].ItemQuantity - quantity
+			if user.Items[i].ItemQuantity <= 0 {
+				user.Items = append(user.Items[:i], user.Items[i+1:]...)
+			}
+			found = true
+		}
+	}
+
+	if !found {
+		err = errors.New("Item not found")
+		return err
+	}
+
+	filter := bson.D{{Key: "_id", Value: user.Id}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "items", Value: user.Items},
+	},
+	}}
+	_, err = UserCollection.UpdateOne(context.TODO(), filter, update)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
