@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,4 +35,60 @@ func HasUserClaimedReward(gym interfaces.Gym, userID primitive.ObjectID) bool {
 	}
 
 	return false
+}
+
+// GetPopulatedGymFromId Returnd the details for the `/gym/:id` endpoint from the given gym id
+func GetPopulatedGymFromId(Id primitive.ObjectID) (gym interfaces.PopulatedGym, err error) {
+	var auxiliarGymDoc interfaces.PopulatedGymAux
+	var GymDoc interfaces.PopulatedGym
+
+	// Populate the owner collection
+	lookupIntoUsers := bson.M{
+		"$lookup": bson.M{
+			"from":         "users",
+			"localField":   "owner",
+			"foreignField": "_id",
+			"as":           "owner",
+		},
+	}
+
+	// Populate the loomies collection
+	lookupIntoLoomies := bson.M{
+		"$lookup": bson.M{
+			"from":         "caught_loomies",
+			"localField":   "protectors",
+			"foreignField": "_id",
+			"as":           "protectors",
+		},
+	}
+
+	// Query the database
+	cursor, err := GymsCollection.Aggregate(context.Background(), []bson.M{
+		{"$match": bson.M{"_id": Id}},
+		lookupIntoUsers,
+		lookupIntoLoomies,
+	})
+
+	if err != nil {
+		fmt.Println("Database query error", err)
+		return interfaces.PopulatedGym{}, nil
+	}
+
+	// Decode the result (There is only one gym)
+	if cursor.Next(context.Background()) {
+		err = cursor.Decode(&auxiliarGymDoc)
+
+		if err != nil {
+			fmt.Println("Decoding error", err)
+			return interfaces.PopulatedGym{}, nil
+		}
+	} else {
+		fmt.Println("No gym found")
+		return interfaces.PopulatedGym{}, nil
+	}
+
+	// Parse the auxiliar gym into a populated gym
+	fmt.Println(len(auxiliarGymDoc.Protectors))
+	GymDoc = *auxiliarGymDoc.ToPopulatedGym()
+	return GymDoc, nil
 }
