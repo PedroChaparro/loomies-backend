@@ -166,5 +166,19 @@ func HandleGetGym(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Details of the gym were successfully obtained", "gym": gym})
+	// Create the response (This is needed to allow null values on the Owner field)
+	response := gin.H{
+		"_id":                gym.Id,
+		"name":               gym.Name,
+		"protectors":         gym.Protectors,
+		"was_reward_claimed": gym.WasRewardClaimed,
+	}
+
+	if gym.Owner == "" {
+		response["owner"] = nil
+	} else {
+		response["owner"] = gym.Owner
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Details of the gym were successfully obtained", "gym": response})
 }

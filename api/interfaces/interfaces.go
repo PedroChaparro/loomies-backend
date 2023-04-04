@@ -245,15 +245,20 @@ func (caughtLoomie *CaughtLoomie) ToGymProtector() *GymProtector {
 func (aux *PopulatedGymAux) ToPopulatedGym() *PopulatedGym {
 	// Remove unneded fields form the loomies
 	var loomies []GymProtector = []GymProtector{}
+	populatedGym := PopulatedGym{
+		Id:   aux.Id,
+		Name: aux.Name,
+	}
 
 	for _, loomie := range aux.Protectors {
 		loomies = append(loomies, *loomie.ToGymProtector())
 	}
 
-	return &PopulatedGym{
-		Id:         aux.Id,
-		Name:       aux.Name,
-		Owner:      aux.Owner[0].Username,
-		Protectors: loomies,
+	populatedGym.Protectors = loomies
+
+	if len(aux.Owner) == 1 {
+		populatedGym.Owner = aux.Owner[0].Username
 	}
+
+	return &populatedGym
 }
