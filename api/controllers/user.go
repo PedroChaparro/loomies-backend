@@ -9,6 +9,7 @@ import (
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -217,7 +218,7 @@ func HandleGetLoomies(c *gin.Context) {
 		}
 	}
 
-	loomies, err := models.GetLoomiesByIds(user.Loomies)
+	loomies, err := models.GetLoomiesByIds(user.Loomies, user.Id)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
@@ -349,7 +350,7 @@ func HandleGetLoomieTeam(c *gin.Context) {
 	}
 
 	// Get the loomies details from the LoomieTeam array
-	loomies, err := models.GetLoomiesByIds(user.LoomieTeam)
+	loomies, err := models.GetLoomiesByIds(user.LoomieTeam, user.Id)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error getting the loomies"})
@@ -362,4 +363,71 @@ func HandleGetLoomieTeam(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"error": false, "message": "The loomie team has been obtained successfully", "team": loomies})
+}
+
+// HandleUpdateLoomieTeam Handle the request to update the loomie team of the user
+func HandleUpdateLoomieTeam(c *gin.Context) {
+	// Get the user id from the "context"
+	userid, _ := c.Get("userid")
+	userIdMongo, _ := primitive.ObjectIDFromHex(userid.(string))
+
+	// Bind the payload
+	var form interfaces.UpdateLoomieTeamReq
+
+	if err := c.BindJSON(&form); err != nil {
+		fmt.Println(err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request. The JSON payload is not valid"})
+		return
+	}
+
+	// Check the length of the team is valid
+	if len(form.LoomieTeam) > 6 || len(form.LoomieTeam) < 1 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The team cannot have more than 6 members or less than 1"})
+		return
+	}
+
+	// Parese the srings to mongo ids
+	loomiesMongoIds := make([]primitive.ObjectID, len(form.LoomieTeam))
+
+	for i, loomie := range form.LoomieTeam {
+		loomieMongoId, err := primitive.ObjectIDFromHex(loomie)
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Error parsing one of the loomies ids"})
+			return
+		}
+
+		loomiesMongoIds[i] = loomieMongoId
+	}
+
+	// Check the user owns all the loomies
+	loomies, err := models.GetLoomiesByIds(loomiesMongoIds, userIdMongo)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error getting the loomies. Please try again later"})
+		return
+	}
+
+	if len(loomies) != len(form.LoomieTeam) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You must own all the loomies in the team"})
+		return
+	}
+
+	// Check all the loomies are nor busy
+	for _, loomie := range loomies {
+		if loomie.IsBusy {
+			c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": true, "message": "All the loomies must be available to be added to the team"})
+			return
+		}
+	}
+
+	// Update the loomie team
+	err = models.ReplaceLoomieTeam(userIdMongo, loomiesMongoIds)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error updating the loomie team. Please try again later"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "The loomie team has been updated successfully"})
 }

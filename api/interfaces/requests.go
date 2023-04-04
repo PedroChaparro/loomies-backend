@@ -35,3 +35,7 @@ type FuseLoomiesReq struct {
 	LoomieId1 string `json:"loomie_id_1"`
 	LoomieId2 string `json:"loomie_id_2"`
 }
+
+type UpdateLoomieTeamReq struct {
+	LoomieTeam []string `json:"loomie_team"`
+}

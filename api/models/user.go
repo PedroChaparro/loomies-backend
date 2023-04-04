@@ -436,3 +436,19 @@ func FuseLoomies(userId primitive.ObjectID, loomieToUpdate, loomieToDelete inter
 
 	return nil
 }
+
+// ReplaceLoomieTeam Replaces the loomie team of the user
+func ReplaceLoomieTeam(userId primitive.ObjectID, loomiesIds []primitive.ObjectID) error {
+	// Update the user document to add the item to the inventory
+	_, err := UserCollection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: userId}},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "loomie_team", Value: loomiesIds},
+			}},
+		},
+	)
+
+	return err
+}
