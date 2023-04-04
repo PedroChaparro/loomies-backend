@@ -193,14 +193,16 @@ type ResetPasswordCode struct {
 }
 
 type CaughtLoomie struct {
-	Owner   primitive.ObjectID   `json:"owner,omitempty"       bson:"owner,omitempty"`
-	IsBusy  bool                 `json:"is_busy"      bson:"is_busy"`
-	Id      primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Serial  int                  `json:"serial"      bson:"serial"`
-	Name    string               `json:"name"      bson:"name"`
-	Types   []primitive.ObjectID `json:"types"     bson:"types"`
-	Rarity  primitive.ObjectID   `json:"rarity"     bson:"rarity"`
-	HP      int                  `json:"hp"     bson:"hp"`
-	Attack  int                  `json:"attack"     bson:"attack"`
-	Defense int                  `json:"defense"     bson:"defense"`
+	Owner      primitive.ObjectID   `json:"owner,omitempty"       bson:"owner,omitempty"`
+	IsBusy     bool                 `json:"is_busy"      bson:"is_busy"`
+	Id         primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial     int                  `json:"serial"      bson:"serial"`
+	Name       string               `json:"name"      bson:"name"`
+	Types      []primitive.ObjectID `json:"types"     bson:"types"`
+	Rarity     primitive.ObjectID   `json:"rarity"     bson:"rarity"`
+	HP         int                  `json:"hp"     bson:"hp"`
+	Attack     int                  `json:"attack"     bson:"attack"`
+	Defense    int                  `json:"defense"     bson:"defense"`
+	Level      int                  `json:"level"     bson:"level"`
+	Experience float64              `json:"experience"     bson:"experience"`
 }

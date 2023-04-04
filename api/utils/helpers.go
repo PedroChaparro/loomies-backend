@@ -70,7 +70,6 @@ func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
 
 // GetValidationCode returns a random 6 digit string
 func GetValidationCode() string {
-
 	numbers := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
 	var validationCode string = ""
 	for i := 0; i < 6; i++ {
@@ -90,4 +89,22 @@ func IsNear(target interfaces.Coordinates, origin interfaces.Coordinates) bool {
 	}
 
 	return true
+}
+
+// GetLoomiesExperience returns the experience needed to reach the given level
+func GetRequiredExperience(level int) float64 {
+	min, factor := configuration.GetLoomiesExperienceParameters()
+	return math.Log10(float64(level))*factor + min
+}
+
+// GetLevelFromExperience returns the level of the given experience
+func GetLevelFromExperience(experience float64) int {
+	min, factor := configuration.GetLoomiesExperienceParameters()
+	return int(math.Pow(10, (experience-min)/factor))
+}
+
+// FixeFloat Returns the given float with the given number of decimals
+func FixeFloat(float float64, decimals int) float64 {
+	pow := math.Pow(10, float64(decimals))
+	return float64(math.Round(float*pow)) / pow
 }

@@ -130,6 +130,16 @@ const CaughtLoomieSchema = new Schema(
   {
     // The caught loomie is a copy of the wild loomie
     ...sharedLoomieAttributes,
+    level: {
+      type: Number,
+      min: 1,
+      default: 1,
+    },
+    experience: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
     // The caught loomie can be busy if it's
     is_busy: Boolean,
     // But also has a reference to the user that caught it

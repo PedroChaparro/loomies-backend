@@ -30,3 +30,8 @@ type RegisterCombatReq struct {
 type LoomieExistsForm struct {
 	LoomieId string `json:"loomie_id"`
 }
+
+type FuseLoomiesReq struct {
+	LoomieId1 string `json:"loomie_id_1"`
+	LoomieId2 string `json:"loomie_id_2"`
+}
