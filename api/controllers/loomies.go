@@ -246,9 +246,9 @@ func HandleFuseLoomies(c *gin.Context) {
 
 	// "Fuse" the loomies (Delete one and update the other)
 	var loomieToUpdate, loomieToDelete interfaces.UserLoomiesRes
-	var accumulatedExperience float64
+	var availableExperience float64
 	var minLvl int
-	accumulatedExperience = float64(loomiesDocs[0].Experience) + float64(loomiesDocs[1].Experience)
+	availableExperience = float64(loomiesDocs[0].Experience) + float64(loomiesDocs[1].Experience)
 
 	// The loomie with the highest level will be the one that will be updated
 	if loomiesDocs[0].Level > loomiesDocs[1].Level {
@@ -261,21 +261,28 @@ func HandleFuseLoomies(c *gin.Context) {
 		minLvl = loomiesDocs[0].Level
 	}
 
-	accumulatedExperience += utils.GetRequiredExperience(minLvl)
+	availableExperience += utils.GetRequiredExperience(minLvl)
+	// We reset the Loomie experience because that experience is already considered in the availableExperience variable
+	loomieToUpdate.Experience = 0
+	var experienceToAdd, neededExperienceToNextLevel float64
 
 	// Check if the loomie has leveled up
-	// This is done by checking if the accumulated experience is greater than the required experience for the next level
-	// The following for loop is equivalent to a regular while loop.
-	for accumulatedExperience >= utils.GetRequiredExperience(loomieToUpdate.Level+1) {
-		// fmt.Println("Leveling up...")
+	for (loomieToUpdate.Experience + availableExperience) >= utils.GetRequiredExperience(loomieToUpdate.Level+1) {
+		neededExperienceToNextLevel = utils.GetRequiredExperience(loomieToUpdate.Level + 1)
+		experienceToAdd = math.Min(availableExperience, neededExperienceToNextLevel)
+		experienceToAdd = utils.FixeFloat(experienceToAdd, 4)
 		loomieToUpdate.Level++
+		loomieToUpdate.Experience = 0
+		availableExperience -= experienceToAdd
 	}
+
+	// Add the remaining experience to the loomie
+	loomieToUpdate.Experience = utils.FixeFloat(availableExperience, 4)
 
 	// Update the loomie
 	loomieToUpdate.Hp = int(maxHp)
 	loomieToUpdate.Attack = int(maxAttack)
 	loomieToUpdate.Defense = int(maxDefense)
-	loomieToUpdate.Experience = accumulatedExperience
 	err = models.FuseLoomies(userMongoId, loomieToUpdate, loomieToDelete)
 
 	if err != nil {
