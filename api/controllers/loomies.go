@@ -227,7 +227,7 @@ func HandleFuseLoomies(c *gin.Context) {
 	}
 
 	// Check both loomies are of the same type
-	loomiesDocs, err := models.GetLoomiesByIds([]primitive.ObjectID{firstLoomieMongoId, secondLoomieMongoId})
+	loomiesDocs, err := models.GetLoomiesByIds([]primitive.ObjectID{firstLoomieMongoId, secondLoomieMongoId}, userMongoId)
 
 	if err != nil || len(loomiesDocs) != 2 {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Error getting the loomies. Please try again later."})
