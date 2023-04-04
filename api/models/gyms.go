@@ -70,8 +70,7 @@ func GetPopulatedGymFromId(Id primitive.ObjectID) (gym interfaces.PopulatedGym, 
 	})
 
 	if err != nil {
-		fmt.Println("Database query error", err)
-		return interfaces.PopulatedGym{}, nil
+		return interfaces.PopulatedGym{}, err
 	}
 
 	// Decode the result (There is only one gym)
@@ -79,12 +78,10 @@ func GetPopulatedGymFromId(Id primitive.ObjectID) (gym interfaces.PopulatedGym, 
 		err = cursor.Decode(&auxiliarGymDoc)
 
 		if err != nil {
-			fmt.Println("Decoding error", err)
-			return interfaces.PopulatedGym{}, nil
+			return interfaces.PopulatedGym{}, err
 		}
 	} else {
-		fmt.Println("No gym found")
-		return interfaces.PopulatedGym{}, nil
+		return interfaces.PopulatedGym{}, fmt.Errorf("EMPTY_RESULTS")
 	}
 
 	// Parse the auxiliar gym into a populated gym

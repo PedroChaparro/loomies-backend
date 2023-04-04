@@ -154,8 +154,8 @@ func HandleGetGym(c *gin.Context) {
 	gym, err := models.GetPopulatedGymFromId(gymIdMongo)
 
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Gym not found"})
+		if err == mongo.ErrNoDocuments || err.Error() == "EMPTY_RESULTS" {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "The gym was not found"})
 			return
 		}
 
