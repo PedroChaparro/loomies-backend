@@ -3,13 +3,10 @@ package models
 import (
 	"context"
 
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-var ItemsCollection = configuration.ConnectToMongoCollection("items")
 
 func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.UserItemsRes, []interfaces.UserLoomballsRes, error) {
 	// Create the maps to store the items to access them faster

@@ -2,19 +2,14 @@ package models
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
-
-var UserCollection *mongo.Collection = configuration.ConnectToMongoCollection("users")
-
-var LoomiesCollection *mongo.Collection = configuration.ConnectToMongoCollection("caught_loomies")
 
 // InsertUser Creates a new user in the database and returns an error if any
 func InsertUser(data interfaces.User) error {
@@ -322,7 +317,6 @@ func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.GymRe
 
 // GetLoomiesByUser Returns an array of loomies according with user
 func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomiesRes, error) {
-
 	// Filter
 	filter := bson.M{
 		"_id": bson.M{
@@ -353,7 +347,7 @@ func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomie
 	}
 
 	// Make the query
-	cursor, err := LoomiesCollection.Aggregate(context.TODO(), []bson.M{matchFilter, lookupIntoRarity, lookupIntoTypes})
+	cursor, err := CaughtLoomiesCollection.Aggregate(context.TODO(), []bson.M{matchFilter, lookupIntoRarity, lookupIntoTypes})
 
 	if err != nil {
 		return nil, err
@@ -363,22 +357,81 @@ func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomie
 
 	for cursor.Next(context.Background()) {
 		var loomieAux interfaces.UserLoomiesResAux
-		var loomie interfaces.UserLoomiesRes
-
 		var types []string
+		var rarity string
 
-		cursor.Decode(&loomieAux)
-		cursor.Decode(&loomie)
+		err := cursor.Decode(&loomieAux)
+
+		if err != nil {
+			fmt.Println("Error decoding the first loomie")
+		}
 
 		for _, t := range loomieAux.Types {
 			types = append(types, t.Name)
 		}
 
-		loomie.Rarity = loomieAux.Rarity[0].Name
-		loomie.Types = types
-
-		loomies = append(loomies, loomie)
+		rarity = loomieAux.Rarity[0].Name
+		finalLoomie := loomieAux.ToUserLoomiesRes(rarity, types)
+		loomies = append(loomies, *finalLoomie)
 	}
 
 	return loomies, err
+}
+
+// FuseLoomies Allows to fuse two loomies updating the first one and deleting the second one
+func FuseLoomies(userId primitive.ObjectID, loomieToUpdate, loomieToDelete interfaces.UserLoomiesRes) error {
+	// Update the first loomie in the caught loomies collection
+	_, err := CaughtLoomiesCollection.UpdateOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: loomieToUpdate.Id},
+		},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "hp", Value: loomieToUpdate.Hp},
+				{Key: "attack", Value: loomieToUpdate.Attack},
+				{Key: "defense", Value: loomieToUpdate.Defense},
+				{Key: "experience", Value: loomieToUpdate.Experience},
+				{Key: "level", Value: loomieToUpdate.Level},
+			}},
+		},
+	)
+
+	if err != nil {
+		return errors.New("Error updating the first loomie")
+	}
+
+	// Delete the second loomie in the user's inventory and the loomie_team
+	fmt.Println(loomieToDelete.Id)
+
+	_, err = UserCollection.UpdateOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: userId},
+		},
+		bson.D{
+			{Key: "$pull", Value: bson.D{
+				{Key: "loomies", Value: loomieToDelete.Id},
+				{Key: "loomie_team", Value: loomieToDelete.Id},
+			}},
+		},
+	)
+
+	if err != nil {
+		return errors.New("Error deleting the second loomie from the user's inventory")
+	}
+
+	// Delete the second loomie in the caught loomies collection
+	_, err = CaughtLoomiesCollection.DeleteOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: loomieToDelete.Id},
+		},
+	)
+
+	if err != nil {
+		return errors.New("Error deleting the second loomie from the caught loomies collection")
+	}
+
+	return nil
 }

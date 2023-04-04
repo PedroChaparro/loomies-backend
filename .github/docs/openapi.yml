@@ -611,6 +611,50 @@ paths:
                   message: 
                       type: string
                       example: "Loomie doesn't exists"
+  /loomies/fuse: 
+    post: 
+      tags: [ Loomies ]
+      description: Fuse the given pair of loomies.
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                loomie_id_1: 
+                  type: string
+                  example: "641e1562d928b0e05a639862"
+                loomie_id_2: 
+                  type: string
+                  example: "641e1562d928b0e05a639862"
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the given loomies were fused. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad request. The reason can be found on the response['message'] field.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "500":
+          description: Internal / unexpected server side error. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
   # --- --- ---
   # Web socket routes
   /combat/register:

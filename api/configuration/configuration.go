@@ -164,6 +164,25 @@ func GetMaxLoomiesPerZone() int {
 	return Globals.MaxLoomiesPerZone
 }
 
+// GetLoomiesExperienceParameters Returns the values of the GAME_LOOMIE_MIN_REQUIRED_EXPERIENCE and GAME_LOOMIE_EXPERIENCE_FACTOR environment variables and update the global variables if they are empty
+func GetLoomiesExperienceParameters() (float64, float64) {
+	if Globals.MinLoomieRequiredExperience == 0 || Globals.LoomieExperienceFactor == 0 {
+		// Get values (as strings) from the environment
+		minLoomieRequiredExperienceString := GetEnvironmentVariable("GAME_LOOMIE_MIN_REQUIRED_EXPERIENCE")
+		loomieExperienceFactorString := GetEnvironmentVariable("GAME_LOOMIE_EXPERIENCE_FACTOR")
+
+		// Convert the strings to integers
+		minLoomieRequiredExperience, _ := strconv.ParseFloat(minLoomieRequiredExperienceString, 64)
+		loomieExperienceFactor, _ := strconv.ParseFloat(loomieExperienceFactorString, 64)
+
+		// Set the values in the globals
+		Globals.MinLoomieRequiredExperience = minLoomieRequiredExperience
+		Globals.LoomieExperienceFactor = loomieExperienceFactor
+	}
+
+	return Globals.MinLoomieRequiredExperience, Globals.LoomieExperienceFactor
+}
+
 // getMongoClient returns a MongoDB client
 func getMongoClient() *mongo.Client {
 	// Create the connection if it does not exist
