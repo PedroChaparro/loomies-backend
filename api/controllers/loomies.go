@@ -261,7 +261,9 @@ func HandleFuseLoomies(c *gin.Context) {
 		minLvl = loomiesDocs[0].Level
 	}
 
-	availableExperience += utils.GetRequiredExperience(minLvl)
+	// Increment the available experience by 30% of the experience of the loomie with the lowest level
+	availableExperience += utils.GetRequiredExperience(minLvl) * 0.30
+
 	// We reset the Loomie experience because that experience is already considered in the availableExperience variable
 	loomieToUpdate.Experience = 0
 	var experienceToAdd, neededExperienceToNextLevel float64
