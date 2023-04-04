@@ -27,8 +27,8 @@ func RegisterClaimedReward(gym interfaces.Gym, userID primitive.ObjectID) error 
 }
 
 // HasUserClaimedReward returns if the user has already claimed the reward for the given gym
-func HasUserClaimedReward(gym interfaces.Gym, userID primitive.ObjectID) bool {
-	for _, userId := range gym.RewardsClaimedBy {
+func HasUserClaimedReward(claimed []primitive.ObjectID, userID primitive.ObjectID) bool {
+	for _, userId := range claimed {
 		if userId == userID {
 			return true
 		}
@@ -38,7 +38,7 @@ func HasUserClaimedReward(gym interfaces.Gym, userID primitive.ObjectID) bool {
 }
 
 // GetPopulatedGymFromId Returnd the details for the `/gym/:id` endpoint from the given gym id
-func GetPopulatedGymFromId(Id primitive.ObjectID) (gym interfaces.PopulatedGym, err error) {
+func GetPopulatedGymFromId(GymId, UserId primitive.ObjectID) (gym interfaces.PopulatedGym, err error) {
 	var auxiliarGymDoc interfaces.PopulatedGymAux
 	var GymDoc interfaces.PopulatedGym
 
@@ -64,7 +64,7 @@ func GetPopulatedGymFromId(Id primitive.ObjectID) (gym interfaces.PopulatedGym, 
 
 	// Query the database
 	cursor, err := GymsCollection.Aggregate(context.Background(), []bson.M{
-		{"$match": bson.M{"_id": Id}},
+		{"$match": bson.M{"_id": GymId}},
 		lookupIntoUsers,
 		lookupIntoLoomies,
 	})
@@ -85,7 +85,7 @@ func GetPopulatedGymFromId(Id primitive.ObjectID) (gym interfaces.PopulatedGym, 
 	}
 
 	// Parse the auxiliar gym into a populated gym
-	fmt.Println(len(auxiliarGymDoc.Protectors))
 	GymDoc = *auxiliarGymDoc.ToPopulatedGym()
+	GymDoc.WasRewardClaimed = HasUserClaimedReward(auxiliarGymDoc.RewardsClaimedBy, UserId)
 	return GymDoc, nil
 }

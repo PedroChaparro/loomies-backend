@@ -18,7 +18,6 @@ import (
 func HandleClaimReward(c *gin.Context) {
 	// Get user from request context
 	userId, _ := c.Get("userid")
-	userId = userId.(string)
 	userIdMongo, _ := primitive.ObjectIDFromHex(userId.(string))
 
 	// Parse request body
@@ -49,7 +48,7 @@ func HandleClaimReward(c *gin.Context) {
 	}
 
 	// 2. Validate the user has not claimed the reward yet
-	if models.HasUserClaimedReward(gym, userIdMongo) {
+	if models.HasUserClaimedReward(gym.RewardsClaimedBy, userIdMongo) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User has already claimed the reward"})
 		return
 	}
@@ -139,6 +138,10 @@ func HandleClaimReward(c *gin.Context) {
 
 // HandleGetGyms Handles the request to get a gym details by id
 func HandleGetGym(c *gin.Context) {
+	// Get the user id from the context
+	userId, _ := c.Get("userid")
+	userIdMongo, _ := primitive.ObjectIDFromHex(userId.(string))
+
 	// Get the gym id from the request
 	gymId := c.Param("id")
 
@@ -151,7 +154,7 @@ func HandleGetGym(c *gin.Context) {
 	}
 
 	// Get Gym from database
-	gym, err := models.GetPopulatedGymFromId(gymIdMongo)
+	gym, err := models.GetPopulatedGymFromId(gymIdMongo, userIdMongo)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments || err.Error() == "EMPTY_RESULTS" {
