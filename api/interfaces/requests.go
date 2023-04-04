@@ -33,3 +33,8 @@ type LoomieForm struct {
 	Longitude    float64 `json:"longitude"`
 	LoomieBallId string  `json:"loomie_ball_id"`
 }
+
+type FuseLoomiesReq struct {
+	LoomieId1 string `json:"loomie_id_1"`
+	LoomieId2 string `json:"loomie_id_2"`
+}

@@ -12,11 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var zonesCollection = configuration.ConnectToMongoCollection("zones")
-var baseLoomiesCollection = configuration.ConnectToMongoCollection("base_loomies")
-var wildLoomiesCollection = configuration.ConnectToMongoCollection("wild_loomies")
-var CaughtLoomiesCollection = configuration.ConnectToMongoCollection("caught_loomies")
-
 // GetBaseLoomies returns the base loomies
 func GetBaseLoomies() ([]interfaces.BaseLoomiesWithPopulatedRarity, error) {
 	baseLoomies := []interfaces.BaseLoomiesWithPopulatedRarity{}
@@ -50,7 +45,7 @@ func GetBaseLoomies() ([]interfaces.BaseLoomiesWithPopulatedRarity, error) {
 	}
 
 	// Decode
-	cursor, err := baseLoomiesCollection.Aggregate(context.TODO(), []bson.M{lookupIntoRarities, aggProject})
+	cursor, err := BaseLoomiesCollection.Aggregate(context.TODO(), []bson.M{lookupIntoRarities, aggProject})
 
 	if err != nil {
 		return []interfaces.BaseLoomiesWithPopulatedRarity{}, err
@@ -70,7 +65,7 @@ func GetLoomiesFromZoneId(id primitive.ObjectID) ([]interfaces.WildLoomie, error
 		"zone_id": id,
 	}
 
-	cursor, err := wildLoomiesCollection.Find(context.Background(), filter)
+	cursor, err := WildLoomiesCollection.Find(context.Background(), filter)
 
 	if err != nil {
 		return []interfaces.WildLoomie{}, err
@@ -109,14 +104,14 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 	// Insert the wild loomie into the database
 	loomie.ZoneId = zone.Id
 	loomie.GeneratedAt = time.Now().Unix()
-	result, err := wildLoomiesCollection.InsertOne(context.Background(), loomie)
+	result, err := WildLoomiesCollection.InsertOne(context.Background(), loomie)
 
 	if err != nil {
 		return interfaces.WildLoomie{}, false
 	}
 
 	// Update the loomies array in the zone
-	_, err = zonesCollection.UpdateOne(context.Background(), bson.M{"_id": zone.Id}, bson.M{"$push": bson.M{"loomies": result.InsertedID}})
+	_, err = ZonesCollection.UpdateOne(context.Background(), bson.M{"_id": zone.Id}, bson.M{"$push": bson.M{"loomies": result.InsertedID}})
 	loomie.Id = result.InsertedID.(primitive.ObjectID)
 
 	return loomie, err == nil
@@ -124,6 +119,7 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 
 // GetNearWildLoomies returns the wild loomies that are near the coordinates
 func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLoomie, error) {
+	candidateLoomies := []interfaces.WildLoomie{}
 	loomies := []interfaces.WildLoomie{}
 
 	// Get the zone coordinates
@@ -156,7 +152,7 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	}
 
 	// Make the query
-	cursor, err := zonesCollection.Aggregate(context.Background(), []bson.M{matchFilter, lookupIntoLoomies})
+	cursor, err := ZonesCollection.Aggregate(context.Background(), []bson.M{matchFilter, lookupIntoLoomies})
 
 	if err != nil {
 		return []interfaces.WildLoomie{}, err
@@ -165,13 +161,26 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	for cursor.Next(context.Background()) {
 		var zone interfaces.ZoneWithPopulatedLoomies
 		cursor.Decode(&zone)
-		loomies = append(loomies, zone.PopulatedLoomies...)
+		candidateLoomies = append(candidateLoomies, zone.PopulatedLoomies...)
+	}
+
+	loomieTTL := configuration.GetWildLoomiesTTL()
+	currentTime := time.Now()
+
+	// Keep only the loomies that are not expired
+	for _, loomie := range candidateLoomies {
+		loomieDeadline := time.Unix(loomie.GeneratedAt, 0).Add(time.Minute * time.Duration(loomieTTL))
+
+		if currentTime.Before(loomieDeadline) {
+			loomies = append(loomies, loomie)
+		}
 	}
 
 	return loomies, nil
 }
 
-func ValidateLoomieExists(loomie_id string) (interfaces.WildLoomie, error) {
+// ValidateLoomieExists Check if the loomie exists by the id
+func ValidateLoomieExists(loomie_id string) error {
 	id, err := primitive.ObjectIDFromHex(loomie_id)
 	var loomie interfaces.WildLoomie
 
@@ -179,7 +188,7 @@ func ValidateLoomieExists(loomie_id string) (interfaces.WildLoomie, error) {
 		return loomie, err
 	}
 
-	err = wildLoomiesCollection.FindOne(
+	err = WildLoomiesCollection.FindOne(
 		context.TODO(),
 		bson.D{{Key: "_id", Value: id}},
 	).Decode(&loomie)

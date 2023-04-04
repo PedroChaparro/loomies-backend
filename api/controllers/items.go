@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// HandleGetItems Handle the request to obtain the user's items
 func HandleGetItems(c *gin.Context) {
 	userid, _ := c.Get("userid")
 	user, err := models.GetUserById(userid.(string))

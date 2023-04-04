@@ -68,6 +68,7 @@ type Gym struct {
 type Item struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
+	Serial                int                `json:"serial" bson:"serial"`
 	Description           string             `json:"description"      bson:"description"`
 	Target                string             `json:"target"      bson:"target"`
 	IsCombatItem          bool               `json:"is_combat_item"      bson:"is_combat_item"`
@@ -80,6 +81,7 @@ type Item struct {
 type Loomball struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
+	Serial                int                `json:"serial" bson:"serial"`
 	EffectiveUntil        int64              `json:"effective_until"      bson:"effective_until"`
 	DecayUntil            int64              `json:"decay_until"      bson:"decay_until"`
 	MinimumProbability    float64            `json:"minimum_probability"      bson:"minimum_probability"`
@@ -103,10 +105,6 @@ type User struct {
 	Items                           []InventoryItem      `json:"items"     bson:"items"`
 	Loomies                         []primitive.ObjectID `json:"loomies"   bson:"loomies"`
 	LoomieTeam                      []primitive.ObjectID `json:"loomie_team"   bson:"loomie_team"`
-	ValidationCode                  string               `json:"validationCode"  bson:"validationCode"`
-	ValidationCodeExp               int64                `json:"validationCodeExp"   bson:"validationCodeExp"`
-	ResetPassCode                   string               `json:"resetPassCode"  bson:"resetPassCode"`
-	ResetPassCodeExp                int64                `json:"resetPassCodeExp"   bson:"resetPassCodeExp"`
 	IsVerified                      bool                 `json:"isVerified"   bson:"isVerified"`
 	CurrentLoomiesGenerationTimeout int64                `json:"currentLoomiesGenerationTimeout"   bson:"currentLoomiesGenerationTimeout"`
 	LastLoomieGenerationTime        int64                `json:"lastLoomieGenerationTime"   bson:"lastLoomieGenerationTime"`
@@ -173,6 +171,14 @@ type WildLoomie struct {
 	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
 }
 
+type AuthenticationCode struct {
+	Id        primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Type      string             `json:"type"      bson:"type"`
+	Email     string             `json:"email"      bson:"email"`
+	Code      string             `json:"code"      bson:"code"`
+	ExpiresAt int64              `json:"expires_at"      bson:"expires_at"`
+}
+
 type ValidationCode struct {
 	Email             string `json:"email"`
 	ValidationCode    string `json:"validationCode"`
@@ -187,14 +193,16 @@ type ResetPasswordCode struct {
 }
 
 type CaughtLoomie struct {
-	Owner   primitive.ObjectID   `json:"owner,omitempty"       bson:"owner,omitempty"`
-	IsBusy  bool                 `json:"is_busy"      bson:"is_busy"`
-	Id      primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Serial  int                  `json:"serial"      bson:"serial"`
-	Name    string               `json:"name"      bson:"name"`
-	Types   []primitive.ObjectID `json:"types"     bson:"types"`
-	Rarity  primitive.ObjectID   `json:"rarity"     bson:"rarity"`
-	HP      int                  `json:"hp"     bson:"hp"`
-	Attack  int                  `json:"attack"     bson:"attack"`
-	Defense int                  `json:"defense"     bson:"defense"`
+	Owner      primitive.ObjectID   `json:"owner,omitempty"       bson:"owner,omitempty"`
+	IsBusy     bool                 `json:"is_busy"      bson:"is_busy"`
+	Id         primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial     int                  `json:"serial"      bson:"serial"`
+	Name       string               `json:"name"      bson:"name"`
+	Types      []primitive.ObjectID `json:"types"     bson:"types"`
+	Rarity     primitive.ObjectID   `json:"rarity"     bson:"rarity"`
+	HP         int                  `json:"hp"     bson:"hp"`
+	Attack     int                  `json:"attack"     bson:"attack"`
+	Defense    int                  `json:"defense"     bson:"defense"`
+	Level      int                  `json:"level"     bson:"level"`
+	Experience float64              `json:"experience"     bson:"experience"`
 }

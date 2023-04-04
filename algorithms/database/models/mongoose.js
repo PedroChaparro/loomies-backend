@@ -76,7 +76,10 @@ const LoomieRaritySchema = new Schema(
 
 const BaseLoomieSchema = new Schema(
   {
-    serial: Number,
+    serial: {
+      type: Number,
+      unique: true,
+    },
     name: String,
     types: {
       type: [Schema.Types.ObjectId],
@@ -127,6 +130,16 @@ const CaughtLoomieSchema = new Schema(
   {
     // The caught loomie is a copy of the wild loomie
     ...sharedLoomieAttributes,
+    level: {
+      type: Number,
+      min: 1,
+      default: 1,
+    },
+    experience: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
     // The caught loomie can be busy if it's
     is_busy: Boolean,
     // But also has a reference to the user that caught it
@@ -138,6 +151,10 @@ const CaughtLoomieSchema = new Schema(
 const ItemsSchema = new Schema(
   {
     name: String,
+    serial: {
+      type: Number,
+      unique: true,
+    },
     description: String,
     target: {
       type: String,
@@ -164,6 +181,10 @@ const ItemsSchema = new Schema(
 const LoomBallsSchema = new Schema(
   {
     name: String,
+    serial: {
+      type: Number,
+      unique: true,
+    },
     effective_until: Number,
     decay_until: Number,
     minimum_probability: {

@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// HandleClaimReward handles the request to claim a gym reward
+// HandleClaimReward Handles the request to claim a gym reward
 func HandleClaimReward(c *gin.Context) {
 	// Get user from request context
 	userId, _ := c.Get("userid")

@@ -23,8 +23,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// HandleCombatRegister creates a token for the user to authenticate
-// with the websocket endpoint
+// HandleCombatRegister Handles the request to register a combat returning a token to authenticate the user with the websocket endpoint
 func HandleCombatRegister(c *gin.Context) {
 	// Receive the request body
 	var payload interfaces.RegisterCombatReq
@@ -45,6 +44,7 @@ func HandleCombatRegister(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Token was created successfully", "combat_token": token})
 }
 
+// HandleCombatInit Handles the request to initialize a combat from a combat token returning the websocket connection
 func HandleCombatInit(c *gin.Context) {
 	// Receive the token from the params
 	token := c.Query("token")
