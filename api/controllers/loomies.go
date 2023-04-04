@@ -239,6 +239,12 @@ func HandleFuseLoomies(c *gin.Context) {
 		return
 	}
 
+	// Check the loomies are not busy
+	if loomiesDocs[0].IsBusy || loomiesDocs[1].IsBusy {
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": true, "message": "Both loomies should not be busy"})
+		return
+	}
+
 	// Take the max stats from the loomies
 	maxHp := math.Max(float64(loomiesDocs[0].Hp), float64(loomiesDocs[1].Hp))
 	maxAttack := math.Max(float64(loomiesDocs[0].Attack), float64(loomiesDocs[1].Attack))
