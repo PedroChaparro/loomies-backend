@@ -2,6 +2,7 @@ package combat
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -29,6 +30,8 @@ type WsCombat struct {
 	CurrentPlayerLoomie *interfaces.UserLoomiesRes
 	// Dodges channel to communicate with the combat loop
 	Dodges chan bool
+	// Close channel to communicate with the combat loop
+	Close chan bool
 }
 
 // WsMessage is the message that is sent to the client
@@ -129,6 +132,9 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 		for {
 			// Wait for the ticker to send a message
 			select {
+			case <-combat.Close:
+				fmt.Println("Closing combat loop")
+				return
 			case <-ticker.C:
 				handleClearDodgeChannel(combat)
 				handleSendAttack(combat)
@@ -157,8 +163,6 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 		// Check the message type and send to the corresponding handler
 		switch wsMessage.Type {
-		case "GREETING":
-			handleGreetingMessageType(combat)
 		case "USER_DODGE":
 			if len(combat.Dodges) < 1 {
 				combat.Dodges <- true
