@@ -127,6 +127,10 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 		for {
 			select {
+			case <-combat.Close:
+				combat.Connection.Close()
+				ticker.Stop()
+				return
 			case <-ticker.C:
 				if time.Now().Unix()-combat.LastMessageTimestamp > 30 {
 					combat.Connection.Close()
@@ -146,7 +150,6 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 			// Wait for the ticker to send a message
 			select {
 			case <-combat.Close:
-				fmt.Println("Closing combat loop")
 				return
 			case <-ticker.C:
 				handleClearDodgeChannel(combat)
