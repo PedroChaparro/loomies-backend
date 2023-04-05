@@ -172,7 +172,7 @@ func HandleValidateLoomieExists(c *gin.Context) {
 		return
 	}
 
-	_, err := models.ValidateLoomieExists(loomie_id)
+	_, err := models.GetWildLoomieById(loomie_id)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
@@ -321,7 +321,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 		return
 	}
 
-	loomie, err := models.ValidateLoomieExists(loomie_req.LoomieId)
+	loomie, err := models.GetWildLoomieById(loomie_req.LoomieId)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
