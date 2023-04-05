@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 	"strings"
@@ -88,11 +89,12 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 			Latitude:  randomCoordinates.Latitude,
 			Longitude: randomCoordinates.Longitude,
 			// Randomly increase or decrease the stats
-			HP:         result.BaseHp + utils.GetRandomInt(-5, 5),
-			Attack:     result.BaseAttack + utils.GetRandomInt(-5, 5),
-			Defense:    result.BaseDefense + utils.GetRandomInt(-5, 5),
-			Level:      utils.GetRandomLevel(),
-			Experience: 0,
+			HP:                     result.BaseHp + utils.GetRandomInt(-5, 5),
+			Attack:                 result.BaseAttack + utils.GetRandomInt(-5, 5),
+			Defense:                result.BaseDefense + utils.GetRandomInt(-5, 5),
+			Level:                  utils.GetRandomLevel(),
+			Experience:             0,
+			UsersAlreadyCapturedIt: []primitive.ObjectID{},
 		}
 
 		// Insert the new loomie in the database
@@ -365,6 +367,16 @@ func HandleCaptureLoomie(c *gin.Context) {
 		}
 	}
 
+	//Check if user id alrady exists in array UsersAlreadyCapturedIt from wild loomie
+	insertUserInWildLoomie := models.CheckIfUserInArrayOfWildLoomie(loomie, user)
+
+	fmt.Println(insertUserInWildLoomie)
+
+	if !insertUserInWildLoomie {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User already caught this loomie"})
+		return
+	}
+
 	//Transform from string to primitive Object ID
 	mongoid, err := primitive.ObjectIDFromHex(loomie_req.LoomballId)
 
@@ -397,6 +409,14 @@ func HandleCaptureLoomie(c *gin.Context) {
 	was_captured := models.WasSuccessfulCapture(loomie, loomball[0])
 
 	if was_captured {
+		//Insert user id in array UsersAlreadyCapturedIt from wild loomie
+		err = models.InsertUserInArrayOfWildLoomie(loomie, user)
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User already caught this loomie"})
+			return
+		}
+
 		caught_loomies := interfaces.CaughtLoomie{Owner: user.Id,
 			IsBusy:     false,
 			Serial:     loomie.Serial,
