@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -109,7 +110,12 @@ TYPES_LOOP:
 	// If the player loomie was weakened, remove it from the player loomies
 	if playerLoomie.Hp <= 0 {
 		weaknedLoomieId := playerLoomie.Id
-		combat.PlayerLoomies = combat.PlayerLoomies[1:]
+
+		if len(combat.PlayerLoomies) > 1 {
+			combat.PlayerLoomies = combat.PlayerLoomies[1:]
+		} else {
+			combat.PlayerLoomies = make([]interfaces.UserLoomiesRes, 0)
+		}
 
 		combat.SendMessage(WsMessage{
 			Type:    "USER_LOOMIE_WEAKENED",
@@ -226,7 +232,12 @@ TYPES_LOOP:
 	// If the gym loomie was weakened, remove it from the gym loomies
 	if gymLoomie.Hp <= 0 {
 		wenakenedLoomieId := gymLoomie.Id
-		combat.GymLoomies = combat.GymLoomies[1:]
+
+		if len(combat.GymLoomies) > 1 {
+			combat.GymLoomies = combat.GymLoomies[1:]
+		} else {
+			combat.GymLoomies = make([]interfaces.UserLoomiesRes, 0)
+		}
 
 		combat.SendMessage(WsMessage{
 			Type:    "GYM_LOOMIE_WEAKENED",
