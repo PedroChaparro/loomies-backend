@@ -27,7 +27,7 @@ type RegisterCombatReq struct {
 	Longitude float64 `json:"longitude"`
 }
 
-type LoomieForm struct {
+type CatchLoomieForm struct {
 	LoomieId     string  `json:"loomie_id"`
 	Latitude     float64 `json:"latitude"`
 	Longitude    float64 `json:"longitude"`

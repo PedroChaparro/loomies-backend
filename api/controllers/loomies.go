@@ -308,7 +308,7 @@ func HandleFuseLoomies(c *gin.Context) {
 }
 
 func HandleCaptureLoomie(c *gin.Context) {
-	loomie_req := interfaces.LoomieForm{}
+	loomie_req := interfaces.CatchLoomieForm{}
 	userid, _ := c.Get("userid")
 
 	if err := c.BindJSON(&loomie_req); err != nil {
