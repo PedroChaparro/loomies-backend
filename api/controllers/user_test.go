@@ -33,7 +33,7 @@ func TestSignupSuccessAndConflict(t *testing.T) {
 	router.POST("/user/signup", HandleSignUp)
 
 	// Make the request and get the JSON response
-	w, req := tests.SetupPostRequest("/user/signup", payload)
+	w, req := tests.SetupPayloadedRequest("/user/signup", "POST", payload)
 	_, err := ioutil.ReadAll(w.Body)
 	router.ServeHTTP(w, req)
 	var response map[string]string
@@ -56,7 +56,7 @@ func TestSignupSuccessAndConflict(t *testing.T) {
 	// -------------------------
 	// 2. Conflict request with the same email
 	// -------------------------
-	w, req = tests.SetupPostRequest("/user/signup", payload)
+	w, req = tests.SetupPayloadedRequest("/user/signup", "POST", payload)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -69,7 +69,7 @@ func TestSignupSuccessAndConflict(t *testing.T) {
 	// -------------------------
 	oldEmail := payload.Email
 	payload.Email = tests.FakerInstance.Internet().Email()
-	w, req = tests.SetupPostRequest("/user/signup", payload)
+	w, req = tests.SetupPayloadedRequest("/user/signup", "POST", payload)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -98,7 +98,7 @@ func TestAccountValidationCodeSuccess(t *testing.T) {
 
 	// Make the request and get the JSON response
 	router.POST("/user/validate/code", HandleAccountValidationCodeRequest)
-	w, req := tests.SetupPostRequest("/user/validate/code", map[string]string{"email": randomUser.Email})
+	w, req := tests.SetupPayloadedRequest("/user/validate/code", "POST", map[string]string{"email": randomUser.Email})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -128,7 +128,7 @@ func TestAccountValidationCodeBadRequest(t *testing.T) {
 	// 1. Test without JSON payload
 	// -------------------------
 	router.POST("/user/validate/code", HandleAccountValidationCodeRequest)
-	w, req := tests.SetupPostRequest("/user/validate/code", nil)
+	w, req := tests.SetupPayloadedRequest("/user/validate/code", "POST", nil)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -139,7 +139,7 @@ func TestAccountValidationCodeBadRequest(t *testing.T) {
 	// -------------------------
 	// 2. Test with empty email
 	// -------------------------
-	w, req = tests.SetupPostRequest("/user/validate/code", map[string]string{"email": ""})
+	w, req = tests.SetupPayloadedRequest("/user/validate/code", "POST", map[string]string{"email": ""})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -150,7 +150,7 @@ func TestAccountValidationCodeBadRequest(t *testing.T) {
 	// -------------------------
 	// 3. Test with unregistred email
 	// -------------------------
-	w, req = tests.SetupPostRequest("/user/validate/code", map[string]string{"email": "unexisting@gmail.com"})
+	w, req = tests.SetupPayloadedRequest("/user/validate/code", "POST", map[string]string{"email": "unexisting@gmail.com"})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -162,7 +162,7 @@ func TestAccountValidationCodeBadRequest(t *testing.T) {
 	// 4. Test with verified email
 	// -------------------------
 	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
-	w, req = tests.SetupPostRequest("/user/validate/code", map[string]string{"email": randomUser.Email})
+	w, req = tests.SetupPayloadedRequest("/user/validate/code", "POST", map[string]string{"email": randomUser.Email})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -194,7 +194,7 @@ func TestAccountValidationSuccess(t *testing.T) {
 
 	// Make the request and get the JSON response
 	router.POST("/user/validate", HandleAccountValidation)
-	w, req := tests.SetupPostRequest("/user/validate", map[string]string{"email": randomUser.Email, "validationCode": code.Code})
+	w, req := tests.SetupPayloadedRequest("/user/validate", "POST", map[string]string{"email": randomUser.Email, "validationCode": code.Code})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -226,7 +226,7 @@ func TestAccountValidationBadRequest(t *testing.T) {
 	// 1. Test without JSON payload
 	// -------------------------
 	router.POST("/user/validate", HandleAccountValidation)
-	w, req := tests.SetupPostRequest("/user/validate", nil)
+	w, req := tests.SetupPayloadedRequest("/user/validate", "POST", nil)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -237,7 +237,7 @@ func TestAccountValidationBadRequest(t *testing.T) {
 	// -------------------------
 	// 2. Test with empty email
 	// -------------------------
-	w, req = tests.SetupPostRequest("/user/validate", map[string]string{"email": "", "validationCode": code.Code})
+	w, req = tests.SetupPayloadedRequest("/user/validate", "POST", map[string]string{"email": "", "validationCode": code.Code})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -248,7 +248,7 @@ func TestAccountValidationBadRequest(t *testing.T) {
 	// -------------------------
 	// 3. Test with empty validationCode
 	// -------------------------
-	w, req = tests.SetupPostRequest("/user/validate", map[string]string{"email": randomUser.Email, "validationCode": ""})
+	w, req = tests.SetupPayloadedRequest("/user/validate", "POST", map[string]string{"email": randomUser.Email, "validationCode": ""})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -259,7 +259,7 @@ func TestAccountValidationBadRequest(t *testing.T) {
 	// -------------------------
 	// 4. Test with incorrect validationCode
 	// -------------------------
-	w, req = tests.SetupPostRequest("/user/validate", map[string]string{"email": randomUser.Email, "validationCode": strconv.Itoa(codeNumber + 1)})
+	w, req = tests.SetupPayloadedRequest("/user/validate", "POST", map[string]string{"email": randomUser.Email, "validationCode": strconv.Itoa(codeNumber + 1)})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -290,7 +290,7 @@ func TestPasswordResetCodeSuccess(t *testing.T) {
 
 	// Make the request and get the JSON response
 	router.POST("/user/password/code", HandleResetPasswordCodeRequest)
-	w, req := tests.SetupPostRequest("/user/password/code", map[string]string{"email": randomUser.Email})
+	w, req := tests.SetupPayloadedRequest("/user/password/code", "POST", map[string]string{"email": randomUser.Email})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -316,7 +316,7 @@ func TestPasswordResetCodeBadRequest(t *testing.T) {
 	// 1. Test without JSON payload
 	// -------------------------
 	router.POST("/user/password/code", HandleResetPasswordCodeRequest)
-	w, req := tests.SetupPostRequest("/user/password/code", nil)
+	w, req := tests.SetupPayloadedRequest("/user/password/code", "POST", nil)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -327,7 +327,7 @@ func TestPasswordResetCodeBadRequest(t *testing.T) {
 	// -------------------------
 	// 2. Test with empty email
 	// -------------------------
-	w, req = tests.SetupPostRequest("/user/password/code", map[string]string{"email": ""})
+	w, req = tests.SetupPayloadedRequest("/user/password/code", "POST", map[string]string{"email": ""})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -338,13 +338,204 @@ func TestPasswordResetCodeBadRequest(t *testing.T) {
 	// -------------------------
 	// 3. Test with non-existent email
 	// -------------------------
-	w, req = tests.SetupPostRequest("/user/password/code", map[string]string{"email": "645031e5-14da-45c8-abb7-714ded7d1ad9@gmail.com"})
+	w, req = tests.SetupPayloadedRequest("/user/password/code", "POST", map[string]string{"email": "645031e5-14da-45c8-abb7-714ded7d1ad9@gmail.com"})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
 	c.Equal(http.StatusNotFound, w.Code)
 	c.Equal(true, response["error"])
 	c.Equal("This Email has not been registered", response["message"])
+}
+
+// TestPasswordResetSuccess Test the success case for /user/password/reset endpoint
+func TestPasswordResetSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Create a random user
+	randomUser := tests.GenerateRandomUser()
+	router := tests.SetupGinRouter()
+	tests.InsertUser(randomUser, router, HandleSignUp)
+
+	// Verify the user directly on the database
+	_, err := models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	c.NoError(err)
+
+	// Send a request to get a new password reset code
+	router.POST("/user/password/code", HandleResetPasswordCodeRequest)
+	w, req := tests.SetupPayloadedRequest("/user/password/code", "POST", map[string]string{"email": randomUser.Email})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(http.StatusOK, w.Code)
+
+	// Get the code from the database
+	var passwordResetCode interfaces.AuthenticationCode
+	err = models.AuthenticationCodesCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}, {Key: "type", Value: "RESET_PASSWORD"}}).Decode(&passwordResetCode)
+	c.NoError(err)
+
+	// -------------------------
+	// 1. Test to reset the password
+	router.PUT("/user/password/reset", HandleResetPassword)
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", map[string]string{"email": randomUser.Email, "resetPassCode": passwordResetCode.Code, "password": "NewPassword2023*/"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusOK, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal("Password has been changed successfully", response["message"])
+
+	// -------------------------
+	// 2. Test to log in with the new password
+	router.POST("/session/login", HandleLogIn)
+	w, req = tests.SetupPayloadedRequest("/session/login", "POST", map[string]string{"email": randomUser.Email, "password": "NewPassword2023*/"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	// Check the response
+	c.Equal(http.StatusOK, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal("Successfully logged in", response["message"])
+
+	// -------------------------
+	// 3. Test to log in with the old password
+	w, req = tests.SetupPayloadedRequest("/session/login", "POST", map[string]string{"email": randomUser.Email, "password": randomUser.Password})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	// Check the response
+	c.Equal(http.StatusUnauthorized, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Wrong Email/Password", response["message"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email)
+	c.NoError(err)
+}
+
+// TestPasswordResetBadRequest Test the bad request cases for /user/password/reset endpoint
+func TestPasswordResetBadRequest(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Create a random user
+	randomUser := tests.GenerateRandomUser()
+	router := tests.SetupGinRouter()
+	tests.InsertUser(randomUser, router, HandleSignUp)
+
+	// Verify the user directly on the database
+	_, err := models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	c.NoError(err)
+
+	// Send a request to get a new password reset code
+	router.POST("/user/password/code", HandleResetPasswordCodeRequest)
+	w, req := tests.SetupPayloadedRequest("/user/password/code", "POST", map[string]string{"email": randomUser.Email})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(http.StatusOK, w.Code)
+
+	// Get the code from the database
+	var passwordResetCode interfaces.AuthenticationCode
+	err = models.AuthenticationCodesCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}, {Key: "type", Value: "RESET_PASSWORD"}}).Decode(&passwordResetCode)
+	c.NoError(err)
+
+	// -------------------------
+	// 1. Test to reset the password with nil payload
+	router.PUT("/user/password/reset", HandleResetPassword)
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", nil)
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Bad request", response["message"])
+
+	// -------------------------
+	// 2. Test to reset the password with empty email
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", map[string]string{"email": "", "resetPassCode": passwordResetCode.Code, "password": "NewPassword2023*/"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Email cannot be empty", response["message"])
+
+	// -------------------------
+	// 3. Test to reset the password with empty resetPassCode
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", map[string]string{"email": randomUser.Email, "resetPassCode": "", "password": "NewPassword2023*/"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Verification code cannot be empty", response["message"])
+
+	// -------------------------
+	// 4. Test to reset the password with empty password
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", map[string]string{"email": randomUser.Email, "resetPassCode": passwordResetCode.Code, "password": ""})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Password cannot be empty", response["message"])
+
+	// -------------------------
+	// 5. Test to reset the password with short password
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", map[string]string{"email": randomUser.Email, "resetPassCode": passwordResetCode.Code, "password": "123"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Password must be at least 8 characters long", response["message"])
+
+	// -------------------------
+	// 6. Test to reset the password with invalid password (No uppercase)
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", map[string]string{"email": randomUser.Email, "resetPassCode": passwordResetCode.Code, "password": "newpassword2023*/"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Password must have at least one upper case character", response["message"])
+
+	// -------------------------
+	// 7. Test to reset the password with invalid password (No lowercase)
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", map[string]string{"email": randomUser.Email, "resetPassCode": passwordResetCode.Code, "password": "NEWPASSWORD2023*/"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Password must have at least one lower case character", response["message"])
+
+	// -------------------------
+	// 8. Test to reset the password with invalid password (No number)
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", map[string]string{"email": randomUser.Email, "resetPassCode": passwordResetCode.Code, "password": "NewPassword*/"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Password must have at least one numeric character", response["message"])
+
+	// -------------------------
+	// 9. Test to reset the password with invalid password (No special character)
+	w, req = tests.SetupPayloadedRequest("/user/password/reset", "PUT", map[string]string{"email": randomUser.Email, "resetPassCode": passwordResetCode.Code, "password": "NewPassword2023"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Password must have at least one special character", response["message"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email)
+	c.NoError(err)
 }
 
 // TestGetLoomiesSuccess Test the success case for /user/loomies endpoint

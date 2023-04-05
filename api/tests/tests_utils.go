@@ -32,17 +32,17 @@ func SetupGinRouter() *gin.Engine {
 	return router
 }
 
-// SetupPostRequest creates a new POST request with the given payload and headers (if any)
-func SetupPostRequest(endpoint string, payload interface{}, headers ...CustomHeader) (*httptest.ResponseRecorder, *http.Request) {
+// SetupPayloadedRequest creates a new POST or PUT request with the given payload and headers (if any)
+func SetupPayloadedRequest(endpoint string, method string, payload interface{}, headers ...CustomHeader) (*httptest.ResponseRecorder, *http.Request) {
 	var req *http.Request
 
 	if payload != nil {
 		payloadBytes, _ := json.Marshal(payload)
-		r, _ := http.NewRequest("POST", endpoint, bytes.NewReader(payloadBytes))
+		r, _ := http.NewRequest(method, endpoint, bytes.NewReader(payloadBytes))
 		req = r
 		req.Header.Set("Content-Type", "application/json")
 	} else {
-		r, _ := http.NewRequest("POST", endpoint, nil)
+		r, _ := http.NewRequest(method, endpoint, nil)
 		req = r
 	}
 
@@ -86,7 +86,7 @@ func GenerateRandomUser() interfaces.User {
 // endpoints that require a user to be logged in whintout having to test the signup endpoint
 func InsertUser(user interfaces.User, router *gin.Engine, handler gin.HandlerFunc) {
 	router.POST("/user/signup", handler)
-	w, req := SetupPostRequest("/user/signup", user)
+	w, req := SetupPayloadedRequest("/user/signup", "POST", user)
 	router.ServeHTTP(w, req)
 }
 

@@ -39,7 +39,7 @@ func loginWithRandomUser() (interfaces.User, map[string]string) {
 	}
 
 	router.POST("/session/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/session/login", loginForm)
+	w, req := tests.SetupPayloadedRequest("/session/login", "POST", loginForm)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -67,7 +67,7 @@ func TestLoginForbidden(t *testing.T) {
 	}
 
 	router.POST("/session/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/session/login", loginForm)
+	w, req := tests.SetupPayloadedRequest("/session/login", "POST", loginForm)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -104,7 +104,7 @@ func TestLoginSuccess(t *testing.T) {
 	}
 
 	router.POST("/session/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/session/login", loginForm)
+	w, req := tests.SetupPayloadedRequest("/session/login", "POST", loginForm)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -144,7 +144,7 @@ func TestRefreshUnauthorized(t *testing.T) {
 	// Try to refresh without a refresh token
 	var refreshResponse map[string]string
 	router.POST("/session/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
-	w, req := tests.SetupPostRequest("/session/refresh", nil)
+	w, req := tests.SetupPayloadedRequest("/session/refresh", "POST", nil)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &refreshResponse)
 
@@ -166,7 +166,7 @@ func TestRefreshSuccess(t *testing.T) {
 	// Get a new access token from the refresh token
 	var refreshResponse map[string]string
 	router.POST("/session/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
-	w, req := tests.SetupPostRequest("/session/refresh", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"]})
+	w, req := tests.SetupPayloadedRequest("/session/refresh", "POST", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"]})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &refreshResponse)
 

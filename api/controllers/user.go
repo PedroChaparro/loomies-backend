@@ -307,7 +307,7 @@ func HandleResetPassword(c *gin.Context) {
 			return
 		}
 	} else {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password is too short"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password must be at least 8 characters long"})
 		return
 	}
 
