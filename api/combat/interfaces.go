@@ -28,8 +28,6 @@ type WsCombat struct {
 	// Current loomie in combat
 	CurrentGymLoomie    *interfaces.UserLoomiesRes
 	CurrentPlayerLoomie *interfaces.UserLoomiesRes
-	// Map to store the strong against types
-	CachedStrongAgainst map[string][]string
 }
 
 // WsMessage is the message that is sent to the client
@@ -47,6 +45,8 @@ type WsHub struct {
 	// The key of the map is the Gym id, so, there can only
 	// be one client per gym
 	Combats map[string]*WsCombat
+	// Map to store the strong against types
+	CachedStrongAgainst map[string][]string
 }
 
 // GlobalWsHub is the global hub that stores all the clients

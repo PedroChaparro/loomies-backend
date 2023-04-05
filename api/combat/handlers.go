@@ -34,7 +34,7 @@ func handleSendAttack(combat *WsCombat) {
 	// For each type (Currently, there is only one or two type per loomie)
 	for _, value := range gymLoomie.Types {
 		// Check if the type was cached before
-		_, ok := combat.CachedStrongAgainst[value]
+		_, ok := GlobalWsHub.CachedStrongAgainst[value]
 
 		// If the type was not obtained before, get it from the database
 		if !ok {
@@ -50,8 +50,8 @@ func handleSendAttack(combat *WsCombat) {
 
 			// Cache the type details
 			// Create the map entry
-			combat.CachedStrongAgainst = make(map[string][]string)
-			combat.CachedStrongAgainst[value] = typeDetails.StrongAgainst
+			GlobalWsHub.CachedStrongAgainst = make(map[string][]string)
+			GlobalWsHub.CachedStrongAgainst[value] = typeDetails.StrongAgainst
 		}
 	}
 
@@ -61,7 +61,7 @@ func handleSendAttack(combat *WsCombat) {
 
 	for _, gymLoomieType := range gymLoomie.Types {
 		for _, playerLoomieType := range playerLoomie.Types {
-			for _, strongAgainst := range combat.CachedStrongAgainst[gymLoomieType] {
+			for _, strongAgainst := range GlobalWsHub.CachedStrongAgainst[gymLoomieType] {
 				if strongAgainst == playerLoomieType {
 					accumulatedDamage *= 2
 					goto CALC
