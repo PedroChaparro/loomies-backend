@@ -214,12 +214,12 @@ func WasSuccessfulCapture(loomie interfaces.WildLoomie, ball interfaces.Loomball
 	chance := 0
 	capture := utils.GetRandomInt(0, 100)
 
-	if loomie.Level >= int(ball.DecayUntil) {
+	if loomie.Level >= ball.DecayUntil {
 		chance = int(ball.MinimumProbability * 100)
 	} else if loomie.Level <= int(ball.EffectiveUntil) {
 		chance = 100
 	} else {
-		chance = -((100-int(ball.MinimumProbability*100))/(int(ball.DecayUntil)-int(ball.EffectiveUntil)))*(loomie.Level-int(ball.EffectiveUntil)) + 100
+		chance = -((100-int(ball.MinimumProbability*100))/(ball.DecayUntil-ball.EffectiveUntil))*(loomie.Level-ball.EffectiveUntil) + 100
 	}
 
 	if capture <= chance {
