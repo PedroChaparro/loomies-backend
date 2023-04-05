@@ -183,11 +183,11 @@ func GetLoomiesExperienceParameters() (float64, float64) {
 	return Globals.MinLoomieRequiredExperience, Globals.LoomieExperienceFactor
 }
 
-// GetCombatTimeouts returns the values of the GAME_COMBAT_MINIMUN_ATTACK_TIMEOUT and GAME_COMBAT_MAXIMUM_ATTACK_TIMEOUT environment variables and update the global variables if they are empty
+// GetCombatTimeouts returns the values of the GAME_COMBAT_MINIMUM_ATTACK_TIMEOUT and GAME_COMBAT_MAXIMUM_ATTACK_TIMEOUT environment variables and update the global variables if they are empty
 func GetCombatTimeouts() (int, int) {
 	if Globals.MinCombatAttackTimeout == 0 || Globals.MaxCombatAttackTimeout == 0 {
 		// Get values (as strings) from the environment
-		minCombatAttackTimeoutString := GetEnvironmentVariable("GAME_COMBAT_MINIMUN_ATTACK_TIMEOUT")
+		minCombatAttackTimeoutString := GetEnvironmentVariable("GAME_COMBAT_MINIMUM_ATTACK_TIMEOUT")
 		maxCombatAttackTimeoutString := GetEnvironmentVariable("GAME_COMBAT_MAXIMUM_ATTACK_TIMEOUT")
 
 		// Convert the strings to integers
