@@ -89,12 +89,12 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 			Latitude:  randomCoordinates.Latitude,
 			Longitude: randomCoordinates.Longitude,
 			// Randomly increase or decrease the stats
-			HP:                     result.BaseHp + utils.GetRandomInt(-5, 5),
-			Attack:                 result.BaseAttack + utils.GetRandomInt(-5, 5),
-			Defense:                result.BaseDefense + utils.GetRandomInt(-5, 5),
-			Level:                  utils.GetRandomLevel(),
-			Experience:             0,
-			UsersAlreadyCapturedIt: []primitive.ObjectID{},
+			HP:         result.BaseHp + utils.GetRandomInt(-5, 5),
+			Attack:     result.BaseAttack + utils.GetRandomInt(-5, 5),
+			Defense:    result.BaseDefense + utils.GetRandomInt(-5, 5),
+			Level:      utils.GetRandomLevel(),
+			Experience: 0,
+			CapturedBy: []primitive.ObjectID{},
 		}
 
 		// Insert the new loomie in the database

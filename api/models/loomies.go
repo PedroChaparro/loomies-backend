@@ -228,9 +228,9 @@ func WasSuccessfulCapture(loomie interfaces.WildLoomie, ball interfaces.Loomball
 	return false
 }
 
-// CheckIfUserInArrayOfWildLoomie check if user id alrady exists in array UsersAlreadyCapturedIt from wild loomie
+// CheckIfUserInArrayOfWildLoomie check if user id alrady exists in array CapturedBy from wild loomie
 func CheckIfUserInArrayOfWildLoomie(loomie interfaces.WildLoomie, user interfaces.User) bool {
-	for _, element := range loomie.UsersAlreadyCapturedIt {
+	for _, element := range loomie.CapturedBy {
 		if element == user.Id {
 			return false
 		}
@@ -239,11 +239,11 @@ func CheckIfUserInArrayOfWildLoomie(loomie interfaces.WildLoomie, user interface
 	return true
 }
 
-// InsertUserInArrayOfWildLoomie insert user id in array UsersAlreadyCapturedIt from wild loomie
+// InsertUserInArrayOfWildLoomie insert user id in array CapturedBy from wild loomie
 func InsertUserInArrayOfWildLoomie(loomie interfaces.WildLoomie, user interfaces.User) error {
 	filter := bson.D{{Key: "_id", Value: loomie.Id}}
 	update := bson.D{{Key: "$push", Value: bson.D{
-		{Key: "users_already_captured_it", Value: user.Id},
+		{Key: "captured_by", Value: user.Id},
 	},
 	}}
 	_, err := WildLoomiesCollection.UpdateOne(context.TODO(), filter, update)
