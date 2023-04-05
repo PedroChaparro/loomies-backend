@@ -272,6 +272,81 @@ func TestAccountValidationBadRequest(t *testing.T) {
 	c.NoError(err)
 }
 
+// TestPasswordResetCodeSuccess Test the success case for /user/password/code endpoint
+func TestPasswordResetCodeSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Create a random user
+	randomUser := tests.GenerateRandomUser()
+	router := tests.SetupGinRouter()
+	tests.InsertUser(randomUser, router, HandleSignUp)
+
+	// Verify the user directly on the database
+	_, err := models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	c.NoError(err)
+
+	// Make the request and get the JSON response
+	router.POST("/user/password/code", HandleResetPasswordCodeRequest)
+	w, req := tests.SetupPostRequest("/user/password/code", map[string]string{"email": randomUser.Email})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	// Check the response
+	c.Equal(http.StatusOK, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal("New Code, to reset password, created and sended", response["message"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email)
+	c.NoError(err)
+}
+
+// TestPasswordResetCodeBadRequest Test the Bad Request cases for /user/password/code endpoint
+func TestPasswordResetCodeBadRequest(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	router := tests.SetupGinRouter()
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// -------------------------
+	// 1. Test without JSON payload
+	// -------------------------
+	router.POST("/user/password/code", HandleResetPasswordCodeRequest)
+	w, req := tests.SetupPostRequest("/user/password/code", nil)
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Bad request", response["message"])
+
+	// -------------------------
+	// 2. Test with empty email
+	// -------------------------
+	w, req = tests.SetupPostRequest("/user/password/code", map[string]string{"email": ""})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Email cannot be empty", response["message"])
+
+	// -------------------------
+	// 3. Test with non-existent email
+	// -------------------------
+	w, req = tests.SetupPostRequest("/user/password/code", map[string]string{"email": "645031e5-14da-45c8-abb7-714ded7d1ad9@gmail.com"})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusNotFound, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("This Email has not been registered", response["message"])
+}
+
 // TestGetLoomiesSuccess Test the success case for /user/loomies endpoint
 func TestGetLoomiesSuccess(t *testing.T) {
 	var response map[string]interface{}
