@@ -416,6 +416,47 @@ paths:
                 $ref: "#/components/schemas/FailResponse"
   # --- --- ---
   # Gyms routes
+  /gyms/{id}: 
+    get: 
+      tags: [Gyms]
+      description: Get details from the Gym id. 
+      security: 
+        - basicAuth: [Access-Token]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            example: "641e1562d928b0e05a639862"
+          required: true
+      responses: 
+        "200": 
+          description: The given id was valid and the details of the gym were retreived.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Details of the gym were successfully obtained"
+                  gym: 
+                    $ref: "#/components/schemas/ModalGym"
+        "400":
+          description: Bad request. Probably, an empty / invalid Mongo Id was provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There are no gyms with the given id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
   /gyms/near: 
     post: 
       tags: [ Gyms ]
@@ -452,7 +493,7 @@ paths:
                   nearGyms: 
                     type: array
                     items: 
-                      $ref: "#/components/schemas/PublicGym"
+                      $ref: ModalCaughtLoomie
         "401":
           description: The access token wasn't provided or isn't valid.
           content:
@@ -970,6 +1011,37 @@ components:
         generated_at: 
           type: number
           example: 1678241587
+    ModalCaughtLoomie: 
+      type: object
+      properties:
+        serial: 
+          type: number
+          example: 17
+        name: 
+          type: string
+          example: "4 Legged Mushroom"
+        level: 
+          type: number
+          example: 1
+    ModalGym: 
+      type: object
+      properties: 
+        _id: 
+          type: string
+          example: "640ddef4250023a581a475a7"
+        name: 
+          type: string
+          example: "Osinski Station"
+        owner:
+          type: string
+          example: "username"
+        protectors: 
+          type: array
+          items: 
+            $ref: "#/components/schemas/ModalCaughtLoomie"
+        was_reward_claimed: 
+          type: boolean
+          example: false
     Capture:
       type: object
       properties:

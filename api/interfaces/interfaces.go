@@ -65,6 +65,31 @@ type Gym struct {
 	RewardsClaimedBy      []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
 }
 
+// Struct to keep only the necessary data from the Caught Loomies collection
+type GymProtector struct {
+	Serial int    `json:"serial" bson:"serial"`
+	Name   string `json:"name" bson:"name"`
+	Level  int    `json:"level" bson:"level"`
+}
+
+// Auxiliar struct to parse the database response
+type PopulatedGymAux struct {
+	Id               primitive.ObjectID   `json:"_id" bson:"_id"`
+	Name             string               `json:"name"      bson:"name"`
+	Owner            []User               `json:"owner,omitempty"      bson:"owner,omitempty"`
+	Protectors       []CaughtLoomie       `json:"protectors"      bson:"protectors"`
+	RewardsClaimedBy []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
+}
+
+// Final struct to be returned to the client
+type PopulatedGym struct {
+	Id               primitive.ObjectID `json:"_id" bson:"_id"`
+	Name             string             `json:"name"      bson:"name"`
+	Owner            string             `json:"owner,omitempty"      bson:"owner,omitempty"`
+	Protectors       []GymProtector     `json:"protectors"      bson:"protectors"`
+	WasRewardClaimed bool               `json:"was_reward_claimed"      bson:"was_reward_claimed"`
+}
+
 type Item struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
@@ -207,4 +232,35 @@ type CaughtLoomie struct {
 	Defense    int                  `json:"defense"     bson:"defense"`
 	Level      int                  `json:"level"     bson:"level"`
 	Experience float64              `json:"experience"     bson:"experience"`
+}
+
+// ToGymProtector Converts a caught loomie to a gym protector keeping only the relevant fields
+func (caughtLoomie *CaughtLoomie) ToGymProtector() *GymProtector {
+	return &GymProtector{
+		Serial: caughtLoomie.Serial,
+		Name:   caughtLoomie.Name,
+		Level:  caughtLoomie.Level,
+	}
+}
+
+// ToPopulatedGym Converts the database response to a populated gym
+func (aux *PopulatedGymAux) ToPopulatedGym() *PopulatedGym {
+	// Remove unneded fields form the loomies
+	var loomies []GymProtector = []GymProtector{}
+	populatedGym := PopulatedGym{
+		Id:   aux.Id,
+		Name: aux.Name,
+	}
+
+	for _, loomie := range aux.Protectors {
+		loomies = append(loomies, *loomie.ToGymProtector())
+	}
+
+	populatedGym.Protectors = loomies
+
+	if len(aux.Owner) == 1 {
+		populatedGym.Owner = aux.Owner[0].Username
+	}
+
+	return &populatedGym
 }
