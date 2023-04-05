@@ -366,7 +366,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 	}
 
 	//Transform from string to primitive Object ID
-	mongoid, err := primitive.ObjectIDFromHex(loomie_req.LoomieBallId)
+	mongoid, err := primitive.ObjectIDFromHex(loomie_req.LoomballId)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The given Loomball id is not valid"})

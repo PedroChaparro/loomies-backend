@@ -28,10 +28,10 @@ type RegisterCombatReq struct {
 }
 
 type CatchLoomieForm struct {
-	LoomieId     string  `json:"loomie_id"`
-	Latitude     float64 `json:"latitude"`
-	Longitude    float64 `json:"longitude"`
-	LoomieBallId string  `json:"loomie_ball_id"`
+	LoomieId   string  `json:"loomie_id"`
+	Latitude   float64 `json:"latitude"`
+	Longitude  float64 `json:"longitude"`
+	LoomballId string  `json:"loomball_id"`
 }
 
 type FuseLoomiesReq struct {
