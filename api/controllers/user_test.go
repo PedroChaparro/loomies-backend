@@ -68,6 +68,7 @@ func TestSignupSuccessAndConflict(t *testing.T) {
 	// 3. Conflict request with the same username
 	// -------------------------
 	oldEmail := payload.Email
+	oldId := payload.Id
 	payload.Email = tests.FakerInstance.Internet().Email()
 	w, req = tests.SetupPayloadedRequest("/user/signup", "POST", payload)
 	router.ServeHTTP(w, req)
@@ -78,9 +79,9 @@ func TestSignupSuccessAndConflict(t *testing.T) {
 	c.Equal("Username already exists", response["message"])
 
 	// Delete users
-	err = tests.DeleteUser(oldEmail)
+	err = tests.DeleteUser(oldEmail, oldId)
 	c.NoError(err)
-	err = tests.DeleteUser(payload.Email)
+	err = tests.DeleteUser(payload.Email, payload.Id)
 	c.NoError(err)
 }
 
@@ -108,7 +109,7 @@ func TestAccountValidationCodeSuccess(t *testing.T) {
 	c.Equal("New Code created and sended", response["message"])
 
 	// Delete user
-	err := tests.DeleteUser(randomUser.Email)
+	err := tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
 
@@ -171,7 +172,7 @@ func TestAccountValidationCodeBadRequest(t *testing.T) {
 	c.Equal("This Email has been already verified", response["message"])
 
 	// Delete user
-	err := tests.DeleteUser(randomUser.Email)
+	err := tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
 
@@ -268,7 +269,7 @@ func TestAccountValidationBadRequest(t *testing.T) {
 	c.Equal("Code was incorrect or time has expired", response["message"])
 
 	// Remove the user
-	err = tests.DeleteUser(randomUser.Email)
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
 
@@ -300,7 +301,7 @@ func TestPasswordResetCodeSuccess(t *testing.T) {
 	c.Equal("New Code, to reset password, created and sended", response["message"])
 
 	// Remove the user
-	err = tests.DeleteUser(randomUser.Email)
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
 
@@ -410,7 +411,7 @@ func TestPasswordResetSuccess(t *testing.T) {
 	c.Equal("Wrong Email/Password", response["message"])
 
 	// Remove the user
-	err = tests.DeleteUser(randomUser.Email)
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
 
@@ -534,7 +535,7 @@ func TestPasswordResetBadRequest(t *testing.T) {
 	c.Equal("Password must have at least one special character", response["message"])
 
 	// Remove the user
-	err = tests.DeleteUser(randomUser.Email)
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
 
@@ -611,7 +612,7 @@ func TestGetLoomiesSuccess(t *testing.T) {
 	}
 
 	// Remove the user
-	err := tests.DeleteUser(randomUser.Email)
+	err := tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
 
@@ -703,6 +704,6 @@ func TestGetLoomieTeamSuccess(t *testing.T) {
 	}
 
 	// Remove the user
-	err := tests.DeleteUser(randomUser.Email)
+	err := tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }

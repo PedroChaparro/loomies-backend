@@ -76,7 +76,7 @@ func TestLoginForbidden(t *testing.T) {
 	c.Equal("User has not been verified", response["message"])
 
 	// Delete the user from the database
-	err := tests.DeleteUser(randomUser.Email)
+	err := tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
 
@@ -132,7 +132,7 @@ func TestLoginSuccess(t *testing.T) {
 	c.Equal(databaseUser.Id.Hex(), refreshTokenClaims["userid"])
 
 	// Delete the user from the database
-	err = tests.DeleteUser(randomUser.Email)
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
 
@@ -185,7 +185,7 @@ func TestRefreshSuccess(t *testing.T) {
 	c.Equal(databaseUser.Id.Hex(), accessTokenClaims["userid"])
 
 	// Remove the user from the database
-	err = tests.DeleteUser(databaseUser.Email)
+	err = tests.DeleteUser(databaseUser.Email, databaseUser.Id)
 	c.NoError(err)
 }
 
@@ -232,6 +232,6 @@ func TestWhoamiSuccess(t *testing.T) {
 	c.Equal(databaseUser.Username, whoamiResponseUser["username"])
 
 	// Remove the user from the database
-	err := tests.DeleteUser(databaseUser.Email)
+	err := tests.DeleteUser(databaseUser.Email, databaseUser.Id)
 	c.NoError(err)
 }

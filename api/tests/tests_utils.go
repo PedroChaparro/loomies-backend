@@ -7,15 +7,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
+	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jaswdr/faker"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-var usersCollection = configuration.ConnectToMongoCollection("users")
-var authenticationCodesCollection = configuration.ConnectToMongoCollection("authentication_codes")
 
 // ### Types / Structs
 type CustomHeader struct {
@@ -91,13 +89,22 @@ func InsertUser(user interfaces.User, router *gin.Engine, handler gin.HandlerFun
 }
 
 // DeleteUser Deletes a user from the database
-func DeleteUser(email string) error {
-	_, err := usersCollection.DeleteOne(context.Background(), bson.D{{Key: "email", Value: email}})
+func DeleteUser(email string, id primitive.ObjectID) error {
+	// Remove the user from the users collection
+	_, err := models.UserCollection.DeleteOne(context.Background(), bson.D{{Key: "email", Value: email}})
 
 	if err != nil {
 		return err
 	}
 
-	_, err = authenticationCodesCollection.DeleteMany(context.Background(), bson.D{{Key: "email", Value: email}})
+	// Remove the user references from the authentication codes collection
+	_, err = models.AuthenticationCodesCollection.DeleteMany(context.Background(), bson.D{{Key: "email", Value: email}})
+
+	if err != nil {
+		return err
+	}
+
+	// Remove the user references from the caught loomies collection
+	_, err = models.CaughtLoomiesCollection.UpdateMany(context.Background(), bson.D{{Key: "owner", Value: id}}, bson.D{{Key: "$set", Value: bson.D{{Key: "owner", Value: nil}}}})
 	return err
 }
