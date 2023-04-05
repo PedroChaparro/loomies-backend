@@ -7,7 +7,6 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
-	"github.com/PedroChaparro/loomies-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -79,7 +78,7 @@ func GetLoomiesFromZoneId(id primitive.ObjectID) ([]interfaces.WildLoomie, error
 // InsertWildLoomie inserts a wild loomie into the database if the zone doesn't have the maximum amount of loomies
 func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool) {
 	// Get the zone coordinates
-	coordX, coordY := utils.GetZoneCoordinatesFromGPS(interfaces.Coordinates{
+	coordX, coordY := GetZoneCoordinatesFromGPS(interfaces.Coordinates{
 		Latitude:  loomie.Latitude,
 		Longitude: loomie.Longitude,
 	})
@@ -123,7 +122,7 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	loomies := []interfaces.WildLoomie{}
 
 	// Get the zone coordinates
-	coordX, coordY := utils.GetZoneCoordinatesFromGPS(coordinates)
+	coordX, coordY := GetZoneCoordinatesFromGPS(coordinates)
 
 	// Get the zones that are near the current zone
 	var nearZonesCoordinates []string
@@ -194,4 +193,44 @@ func ValidateLoomieExists(loomie_id string) error {
 	).Decode(&loomie)
 
 	return err
+}
+
+// GetLoomieTypeDetails Returns the details of a loomie type
+func GetLoomieTypeDetailsByName(typeName string) (interfaces.PopulatedLoomieType, error) {
+	var loomieTypeAuxiliar interfaces.PopulatedLoomieTypeAuxiliar
+	var loomieType interfaces.PopulatedLoomieType
+
+	// Querty the database
+	lookupIntoTypes := bson.M{
+		"$lookup": bson.M{
+			"from":         "loomie_types",
+			"localField":   "strong_against",
+			"foreignField": "_id",
+			"as":           "strong_against",
+		},
+	}
+
+	cursor, err := LoomieTypesCollection.Aggregate(context.Background(), []bson.M{
+		{"$match": bson.M{"name": typeName}},
+		lookupIntoTypes,
+	})
+
+	if err != nil {
+		return interfaces.PopulatedLoomieType{}, err
+	}
+
+	// Parse the result
+	if cursor.Next(context.Background()) {
+		err = cursor.Decode(&loomieTypeAuxiliar)
+	}
+
+	// Convert auxiliar to the final type
+	loomieType.Id = loomieTypeAuxiliar.Id
+	loomieType.Name = loomieTypeAuxiliar.Name
+
+	for _, strongAgainst := range loomieTypeAuxiliar.StrongAgainst {
+		loomieType.StrongAgainst = append(loomieType.StrongAgainst, strongAgainst.Name)
+	}
+
+	return loomieType, err
 }
