@@ -8,18 +8,17 @@ import (
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // WsCombat stores the websocket connection to be able
 // to send messages to the client
 type WsCombat struct {
-	// We keep the gym id to easily remove it from the map
-	// when the connection is closed
+	// We keep the gym id to easily remove it from the map when the combat ends
 	GymID string
 	// The connecton to exchange messages with the client
 	Connection *websocket.Conn
-	// We keep track of the last message timestamp to finish
-	// the connection if the client is inactive for too long
+	// We keep track of the last message timestamp to finish the combat if the client is "akf"
 	LastMessageTimestamp int64
 	// Loomie teams in combat
 	GymLoomies    []interfaces.UserLoomiesRes
@@ -27,10 +26,12 @@ type WsCombat struct {
 	// Current loomie in combat
 	CurrentGymLoomie    *interfaces.UserLoomiesRes
 	CurrentPlayerLoomie *interfaces.UserLoomiesRes
-	// Dodges channel to communicate with the combat loop
+	// Defeated loomies in combat
+	DefeatedGymLoomies []primitive.ObjectID
+	FoughtGymLoomies   map[primitive.ObjectID][]primitive.ObjectID
+	// Channels to communicate between the goroutines
 	Dodges chan bool
-	// Close channel to communicate with the combat loop
-	Close chan bool
+	Close  chan bool
 }
 
 // WsMessage is the message that is sent to the client
@@ -105,8 +106,19 @@ func (combat *WsCombat) SendMessage(message WsMessage) {
 func (combat *WsCombat) Listen(hub *WsHub) {
 	// --- Close the connection when the function ends ---
 	defer func() {
+		// TODO: Update the loomies in the database
+		// Message to Silvia: Here you can add the logic to update the loomies
+		// in the database.
+		fmt.Println("Defeated gym loomies: ", len(combat.DefeatedGymLoomies))
+
+		for _, defeatedGymLoomie := range combat.DefeatedGymLoomies {
+			for _, userLoomie := range combat.FoughtGymLoomies[defeatedGymLoomie] {
+				fmt.Println("Gym loomie ", defeatedGymLoomie, " fought against ", userLoomie)
+			}
+		}
+
+		// Remove the combat from the hub, so the gym can be challenged again
 		hub.Unregister(combat.GymID)
-		// TODO: This should remove the combat from the database
 	}()
 
 	// --- Independent goroutine to check if the client is inactive ---
@@ -116,7 +128,7 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 		for {
 			select {
 			case <-ticker.C:
-				if time.Now().Unix()-combat.LastMessageTimestamp > 3600 {
+				if time.Now().Unix()-combat.LastMessageTimestamp > 30 {
 					combat.Connection.Close()
 					return
 				}

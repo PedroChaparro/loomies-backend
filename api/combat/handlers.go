@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ######################### Combat handlers #########################
@@ -158,6 +159,13 @@ func handleReceiveAttack(combat *WsCombat) {
 	gymLoomie := combat.CurrentGymLoomie
 	playerLoomie := combat.CurrentPlayerLoomie
 
+	// Check if the gym loomie was fought by the player loomie before
+	_, alreadyFought := combat.FoughtGymLoomies[gymLoomie.Id]
+	if !alreadyFought {
+		combat.FoughtGymLoomies[gymLoomie.Id] = make([]primitive.ObjectID, 0)
+		combat.FoughtGymLoomies[gymLoomie.Id] = append(combat.FoughtGymLoomies[gymLoomie.Id], playerLoomie.Id)
+	}
+
 	// Get the types
 	for _, value := range playerLoomie.Types {
 		// Check if the type was cached before
@@ -227,6 +235,8 @@ TYPES_LOOP:
 				"loomie_id": wenakenedLoomieId,
 			},
 		})
+
+		combat.DefeatedGymLoomies = append(combat.DefeatedGymLoomies, wenakenedLoomieId)
 
 		if len(combat.GymLoomies) == 0 {
 			combat.SendMessage(WsMessage{

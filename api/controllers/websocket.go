@@ -10,6 +10,7 @@ import (
 	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // The upgrader is used to upgrade the http connection to a websocket connection
@@ -144,6 +145,8 @@ func HandleCombatInit(c *gin.Context) {
 		GymLoomies:           gymLoomies,
 		CurrentGymLoomie:     &gymLoomies[0],
 		CurrentPlayerLoomie:  &userLoomies[0],
+		DefeatedGymLoomies:   make([]primitive.ObjectID, 0),
+		FoughtGymLoomies:     make(map[primitive.ObjectID][]primitive.ObjectID),
 		Dodges:               make(chan bool, 1),
 		Close:                make(chan bool, 1),
 	}
