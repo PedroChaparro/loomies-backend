@@ -208,7 +208,7 @@ func InsertInCaughtLoomies(caught_loomies interfaces.CaughtLoomie) (primitive.Ob
 	return id, err
 }
 
-func IsCaptureSuccessful(loomie interfaces.WildLoomie, ball interfaces.Loomball) bool {
+func WasSuccessfulCapture(loomie interfaces.WildLoomie, ball interfaces.Loomball) bool {
 	chance := 0
 	capture := utils.GetRandomInt(0, 100)
 	if loomie.Level >= int(ball.DecayUntil) {

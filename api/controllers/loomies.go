@@ -383,11 +383,11 @@ func HandleCaptureLoomie(c *gin.Context) {
 		return
 	}
 
-	isCapture := models.IsCaptureSuccessful(loomie, loomball[0])
+	was_captured := models.WasSuccessfulCapture(loomie, loomball[0])
 
-	fmt.Println(isCapture)
+	fmt.Println(was_captured)
 
-	if isCapture {
+	if was_captured {
 		caught_loomies := interfaces.CaughtLoomie{Owner: user.Id,
 			IsBusy:     false,
 			Serial:     loomie.Serial,
@@ -417,7 +417,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"error":   false,
-			"capture": isCapture,
+			"capture": was_captured,
 			"message": "Loomie caught",
 		})
 		return
@@ -425,7 +425,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"error":   false,
-		"capture": isCapture,
+		"capture": was_captured,
 		"message": "The Loomie was not caught. Try again!",
 	})
 }
