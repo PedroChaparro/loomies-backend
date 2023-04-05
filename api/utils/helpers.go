@@ -113,10 +113,12 @@ func FixeFloat(float float64, decimals int) float64 {
 func GetRandomLevel() int {
 	sample := rand.NormFloat64()*3 + 10
 	level := int(sample)
+
 	if level <= 0 {
 		level = 1
 	} else if level > 30 {
 		level = 30
 	}
+
 	return level
 }
