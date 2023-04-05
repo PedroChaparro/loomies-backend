@@ -24,6 +24,7 @@ ZoneSchema.index({ coordinates: "hashed" });
 const sharedRewardSchema = {
   type: [
     {
+      _id: false,
       reward_collection: {
         type: String,
         // Gym rewards can be items or loomballs
