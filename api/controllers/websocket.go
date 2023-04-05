@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/combat"
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/utils"
@@ -84,7 +83,7 @@ func HandleCombatInit(c *gin.Context) {
 	}
 
 	// Check the gym is not already in combat
-	hub := configuration.Globals.WsHub
+	hub := combat.GlobalWsHub
 	inCombat := hub.Includes(claims.GymID)
 
 	if inCombat {

@@ -1,7 +1,6 @@
 package configuration
 
 import (
-	"github.com/PedroChaparro/loomies-backend/combat"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -11,7 +10,6 @@ type TGlobals struct {
 	AccessTokenSecret           string
 	RefreshTokenSecret          string
 	WsTokenSecret               string
-	WsHub                       *combat.WsHub
 	WildLoomiesTTL              int
 	MinLoomiesGenerationTimeout int
 	MaxLoomiesGenerationTimeout int
@@ -22,4 +20,7 @@ type TGlobals struct {
 	// Global settings to calculate the experience required to level up
 	MinLoomieRequiredExperience float64
 	LoomieExperienceFactor      float64
+	// Global settings to be used on combats
+	MinCombatAttackTimeout int
+	MaxCombatAttackTimeout int
 }
