@@ -9,6 +9,7 @@ import (
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/middlewares"
+	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/tests"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/require"
@@ -16,7 +17,6 @@ import (
 )
 
 // ## Helper functions
-
 // loginWithRandomUser creates a random user, inserts it into the database, verifies it and tries to login with it
 func loginWithRandomUser() (interfaces.User, map[string]string) {
 	ctx := context.Background()
@@ -28,8 +28,8 @@ func loginWithRandomUser() (interfaces.User, map[string]string) {
 
 	// Verify the user and save the database document
 	var databaseUser interfaces.User
-	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
-	usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
+	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	models.UserCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
 
 	// Try to login with the random user
 	var response map[string]string
@@ -93,9 +93,9 @@ func TestLoginSuccess(t *testing.T) {
 	tests.InsertUser(randomUser, router, HandleSignUp)
 
 	// Verify the user and save the database document
-	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
 	var databaseUser interfaces.User
-	usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
+	models.UserCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
 
 	// Try to login with the random user
 	loginForm := map[string]string{

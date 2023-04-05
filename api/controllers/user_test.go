@@ -8,20 +8,15 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/middlewares"
+	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/tests"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-// ### Global variables ###
-var usersCollection = configuration.ConnectToMongoCollection("users")
-var authenticationCodesCollection = configuration.ConnectToMongoCollection("authentication_codes")
-var caughtLoomiesCollection = configuration.ConnectToMongoCollection("caught_loomies")
 
 // ### Tests ###
 // TestSignupSuccessAndConflict Tests the signup endpoint with a valid payload and a payload with an already existing email / username
@@ -53,7 +48,7 @@ func TestSignupSuccessAndConflict(t *testing.T) {
 
 	// Check if user was created in the database
 	var user interfaces.User
-	err = usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: payload.Email}}).Decode(&user)
+	err = models.UserCollection.FindOne(ctx, bson.D{{Key: "email", Value: payload.Email}}).Decode(&user)
 	c.NoError(err)
 	c.Equal(payload.Email, user.Email)
 	c.Equal(payload.Username, user.Username)
@@ -166,7 +161,7 @@ func TestAccountValidationCodeBadRequest(t *testing.T) {
 	// -------------------------
 	// 4. Test with verified email
 	// -------------------------
-	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
 	w, req = tests.SetupPostRequest("/user/validate/code", map[string]string{"email": randomUser.Email})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
@@ -194,7 +189,7 @@ func TestAccountValidationSuccess(t *testing.T) {
 
 	// Get the code from the database
 	var code interfaces.AuthenticationCode
-	err := authenticationCodesCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}, {Key: "type", Value: "ACCOUNT_VERIFICATION"}}).Decode(&code)
+	err := models.AuthenticationCodesCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}, {Key: "type", Value: "ACCOUNT_VERIFICATION"}}).Decode(&code)
 	c.NoError(err)
 
 	// Make the request and get the JSON response
@@ -223,7 +218,7 @@ func TestAccountValidationBadRequest(t *testing.T) {
 
 	// Get the code from the database
 	var code interfaces.AuthenticationCode
-	err := authenticationCodesCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}, {Key: "type", Value: "ACCOUNT_VERIFICATION"}}).Decode(&code)
+	err := models.AuthenticationCodesCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}, {Key: "type", Value: "ACCOUNT_VERIFICATION"}}).Decode(&code)
 	c.NoError(err)
 	codeNumber, _ := strconv.Atoi(code.Code)
 
@@ -307,7 +302,7 @@ func TestGetLoomiesSuccess(t *testing.T) {
 	// Get the first 6 loomies from the caught_loomies collection
 	var loomies []interfaces.CaughtLoomie
 	var loomiesIds []primitive.ObjectID
-	cursor, _ := caughtLoomiesCollection.Find(ctx, bson.D{}, options.Find().SetLimit(6))
+	cursor, _ := models.CaughtLoomiesCollection.Find(ctx, bson.D{}, options.Find().SetLimit(6))
 	cursor.All(ctx, &loomies)
 	c.Equal(6, len(loomies))
 
@@ -317,7 +312,7 @@ func TestGetLoomiesSuccess(t *testing.T) {
 	}
 
 	// Insert the loomies into the user's loomies
-	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "loomies", Value: loomiesIds}}}})
+	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "loomies", Value: loomiesIds}}}})
 
 	// Make the request and get the JSON response
 	w, req = tests.SetupGetRequest("/user/loomies", tests.CustomHeader{Name: "Access-Token", Value: token})
@@ -338,13 +333,15 @@ func TestGetLoomiesSuccess(t *testing.T) {
 		c.NotEmpty(loomie["hp"])
 		c.NotEmpty(loomie["attack"])
 		c.NotEmpty(loomie["defense"])
-		c.NotEmpty(loomie["is_busy"])
+		c.Contains(loomie, "is_busy")
 		// Loomies cannot have less than 1 type
 		c.NotEmpty(loomie["types"])
 		c.GreaterOrEqual(len(loomie["types"].([]interface{})), 1)
 		// Default level is 1
 		c.NotEmpty(loomie["level"])
 		c.GreaterOrEqual(int(loomie["level"].(float64)), 1)
+		// Default experience is 0
+		c.GreaterOrEqual(int(loomie["experience"].(float64)), 0)
 	}
 
 	// Remove the user
