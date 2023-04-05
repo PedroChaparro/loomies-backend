@@ -377,7 +377,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 	err = models.DecrementItemFromUserInventory(user.Id, mongoid, 1)
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Item not found"})
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "The given loomball was not found"})
 		return
 	}
 
