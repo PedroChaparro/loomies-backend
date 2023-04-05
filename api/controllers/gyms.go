@@ -121,6 +121,7 @@ func HandleClaimReward(c *gin.Context) {
 	for _, item := range items {
 		allRewards = append(allRewards, gin.H{
 			"id":       item.Id.Hex(),
+			"serial":   item.Serial,
 			"name":     item.Name,
 			"quantity": rewardsQuantity[item.Id.Hex()],
 		})
@@ -129,6 +130,7 @@ func HandleClaimReward(c *gin.Context) {
 	for _, loomball := range loomballs {
 		allRewards = append(allRewards, gin.H{
 			"id":       loomball.Id.Hex(),
+			"serial":   loomball.Serial,
 			"name":     loomball.Name,
 			"quantity": rewardsQuantity[loomball.Id.Hex()],
 		})
