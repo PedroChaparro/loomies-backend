@@ -437,10 +437,9 @@ func FuseLoomies(userId primitive.ObjectID, loomieToUpdate, loomieToDelete inter
 }
 
 func InsertInUserLoomie(user interfaces.User, loomie_id primitive.ObjectID) error {
-	user.Loomies = append(user.Loomies, loomie_id)
 	filter := bson.D{{Key: "_id", Value: user.Id}}
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "loomies", Value: user.Loomies},
+	update := bson.D{{Key: "$push", Value: bson.D{
+		{Key: "loomies", Value: loomie_id},
 	},
 	}}
 	_, err := UserCollection.UpdateOne(context.TODO(), filter, update)
@@ -451,6 +450,7 @@ func InsertInUserLoomie(user interfaces.User, loomie_id primitive.ObjectID) erro
 func RemoveItemsToUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID, quantity int) error {
 	var user interfaces.User
 	found := false
+	remove := false
 
 	err := UserCollection.FindOne(
 		context.TODO(),
@@ -467,25 +467,37 @@ func RemoveItemsToUserInventory(userId primitive.ObjectID, itemId primitive.Obje
 		if user.Items[i].ItemId == itemId {
 			user.Items[i].ItemQuantity = user.Items[i].ItemQuantity - quantity
 			if user.Items[i].ItemQuantity <= 0 {
-				user.Items = append(user.Items[:i], user.Items[i+1:]...)
+				//user.Items = append(user.Items[:i], user.Items[i+1:]...)
+
+				filter := bson.D{{Key: "_id", Value: user.Id}}
+				update := bson.D{{Key: "$pull", Value: bson.D{
+					{Key: "items", Value: bson.M{"item_id": user.Items[i].ItemId}},
+				},
+				}}
+				_, err = UserCollection.UpdateOne(context.TODO(), filter, update)
+
+				remove = true
 			}
+
+			if !remove {
+				filter := bson.D{{Key: "_id", Value: user.Id}, {Key: "items.item_id", Value: user.Items[i].ItemId}}
+				update := bson.D{{Key: "$set", Value: bson.D{
+					{Key: "items.$.item_quantity", Value: user.Items[i].ItemQuantity},
+				},
+				}}
+				_, err = UserCollection.UpdateOne(context.TODO(), filter, update)
+			}
+
+			if err != nil {
+				return err
+			}
+
 			found = true
 		}
 	}
 
 	if !found {
 		err = errors.New("Item not found")
-		return err
-	}
-
-	filter := bson.D{{Key: "_id", Value: user.Id}}
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "items", Value: user.Items},
-	},
-	}}
-	_, err = UserCollection.UpdateOne(context.TODO(), filter, update)
-
-	if err != nil {
 		return err
 	}
 

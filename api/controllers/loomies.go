@@ -365,7 +365,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 		return
 	}
 
-	err = models.RemoveItemsToUserInventory(user.Id, mongoid, 0)
+	err = models.RemoveItemsToUserInventory(user.Id, mongoid, 1)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Item not found"})
