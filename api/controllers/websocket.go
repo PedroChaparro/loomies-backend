@@ -123,6 +123,19 @@ func HandleCombatInit(c *gin.Context) {
 		return
 	}
 
+	// Update the loomies stats
+	for _, loomie := range userLoomies {
+		loomie.Hp = loomie.Hp * (1 + 1/8*loomie.Level)
+		loomie.Attack = loomie.Attack * (1 + 1/8*loomie.Level)
+		loomie.Defense = loomie.Defense * (1 + 1/8*loomie.Level)
+	}
+
+	for _, loomie := range gymLoomies {
+		loomie.Hp = loomie.Hp * (1 + 1/8*loomie.Level)
+		loomie.Attack = loomie.Attack * (1 + 1/8*loomie.Level)
+		loomie.Defense = loomie.Defense * (1 + 1/8*loomie.Level)
+	}
+
 	Combat := &combat.WsCombat{
 		GymID:                claims.GymID,
 		Connection:           conn,

@@ -39,14 +39,13 @@ func handleSendAttack(combat *WsCombat) {
 			}
 
 			// Cache the type details
-			// Create the map entry
-			GlobalWsHub.CachedStrongAgainst = make(map[string][]string)
+			GlobalWsHub.CachedStrongAgainst[value] = make([]string, 0)
 			GlobalWsHub.CachedStrongAgainst[value] = typeDetails.StrongAgainst
 		}
 	}
 
 	// Calculate the damage
-	actualGymLoomieDamage := gymLoomie.Attack * ((1 + 1/8) * gymLoomie.Level)
+	actualGymLoomieDamage := gymLoomie.Attack
 	accumulatedDamage := actualGymLoomieDamage
 
 TYPES_LOOP:
@@ -150,6 +149,115 @@ TYPES_LOOP:
 		Payload: map[string]interface{}{
 			"loomie_id": playerLoomie.Id,
 			"hp":        playerLoomie.Hp,
+		},
+	})
+}
+
+// handleReceiveAttack handles the "USER_ATTACK" message type to receive an attack from the player
+func handleReceiveAttack(combat *WsCombat) {
+	gymLoomie := combat.CurrentGymLoomie
+	playerLoomie := combat.CurrentPlayerLoomie
+
+	// Get the types
+	for _, value := range playerLoomie.Types {
+		// Check if the type was cached before
+		_, cached := GlobalWsHub.CachedStrongAgainst[value]
+
+		// If the type was not obtained before, get it from the database
+		if !cached {
+			typeDetails, err := models.GetLoomieTypeDetailsByName(value)
+
+			if err != nil {
+				combat.SendMessage(WsMessage{
+					Type:    "ERROR",
+					Message: "Error getting the loomie type details",
+				})
+				return
+			}
+
+			GlobalWsHub.CachedStrongAgainst[value] = make([]string, 0)
+			GlobalWsHub.CachedStrongAgainst[value] = typeDetails.StrongAgainst
+		}
+	}
+
+	// Calculate the damage
+	actualPlayerLoomieDamage := playerLoomie.Attack
+	accumulatedDamage := actualPlayerLoomieDamage
+
+TYPES_LOOP:
+	for _, playerLoomieType := range playerLoomie.Types {
+		for _, gymLoomieType := range gymLoomie.Types {
+			for _, strongAgainst := range GlobalWsHub.CachedStrongAgainst[playerLoomieType] {
+				if strongAgainst == gymLoomieType {
+					accumulatedDamage *= 2
+					break TYPES_LOOP
+				}
+			}
+		}
+	}
+
+	// Apply the user loomie defense
+	accumulatedDamage -= accumulatedDamage * (gymLoomie.Defense / 100)
+	accumulatedDamage = int(math.Max(float64(accumulatedDamage), float64(actualPlayerLoomieDamage)*0.1))
+
+	// Check if the gym loomie dodged the attack
+	gymLoomieDodgeProbability := 15
+	luckyNumber := getRandomInt(1, 100)
+
+	if luckyNumber <= gymLoomieDodgeProbability {
+		combat.SendMessage(WsMessage{
+			Type:    "USER_ATTACK_DODGED",
+			Message: fmt.Sprintf("Enemy loomie %s dodged the attack", gymLoomie.Name),
+		})
+
+		return
+	}
+
+	gymLoomie.Hp -= accumulatedDamage
+
+	// If the gym loomie was weakened, remove it from the gym loomies
+	if gymLoomie.Hp <= 0 {
+		wenakenedLoomieId := gymLoomie.Id
+		combat.GymLoomies = combat.GymLoomies[1:]
+
+		combat.SendMessage(WsMessage{
+			Type:    "GYM_LOOMIE_WEAKENED",
+			Message: fmt.Sprintf("Enemy loomie %s was weakened", gymLoomie.Name),
+			Payload: map[string]interface{}{
+				"loomie_id": wenakenedLoomieId,
+			},
+		})
+
+		if len(combat.GymLoomies) == 0 {
+			combat.SendMessage(WsMessage{
+				Type:    "USER_HAS_WON",
+				Message: "You have won the battle. Now you own this gym",
+			})
+
+			combat.Close <- true
+			return
+		}
+
+		// Update the current gym loomie
+		combat.CurrentGymLoomie = &combat.GymLoomies[0]
+
+		combat.SendMessage(WsMessage{
+			Type:    "UPDATE_GYM_LOOMIE",
+			Message: fmt.Sprintf("Enemy loomie %s is now the gym's active loomie", combat.CurrentGymLoomie.Name),
+			Payload: map[string]interface{}{
+				"loomie": combat.CurrentGymLoomie,
+			},
+		})
+
+		return
+	}
+
+	combat.SendMessage(WsMessage{
+		Type:    "UPDATE_GYM_LOOMIE_HP",
+		Message: fmt.Sprintf("Enemy loomie %s received %d damage", gymLoomie.Name, accumulatedDamage),
+		Payload: map[string]interface{}{
+			"loomie_id": gymLoomie.Id,
+			"hp":        gymLoomie.Hp,
 		},
 	})
 }

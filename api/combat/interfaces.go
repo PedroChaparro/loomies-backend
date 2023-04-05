@@ -3,7 +3,6 @@ package combat
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -90,6 +89,11 @@ func (hub *WsHub) Unregister(gym string) bool {
 	return true
 }
 
+// UpdatedLastReceivedMessageTimestamp updates the timestamp of the last message received from the client
+func (combat *WsCombat) UpdatedLastReceivedMessageTimestamp() {
+	combat.LastMessageTimestamp = time.Now().Unix()
+}
+
 // SendMessage sends a message to the client
 func (combat *WsCombat) SendMessage(message WsMessage) {
 	jsonMessage, _ := json.Marshal(message)
@@ -121,12 +125,9 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 	}()
 
 	// --- Independet goroutine to send attacks from the gym to the player ---
-	// Note: We cannot use the utils.GetRandomInt function because of the
-	// cyclic dependency
 	go func() {
-		random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		minTimeout, maxTimeout := configuration.GetCombatTimeouts()
-		randomSeconds := random.Intn(maxTimeout-minTimeout) + minTimeout
+		randomSeconds := getRandomInt(minTimeout, maxTimeout)
 		ticker := time.NewTicker(time.Duration(randomSeconds) * time.Second)
 
 		for {
@@ -142,7 +143,7 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 			// Reset the ticker and pick a new random interval
 			ticker.Stop()
-			randomSeconds := random.Intn(maxTimeout-minTimeout) + minTimeout
+			randomSeconds := getRandomInt(minTimeout, maxTimeout)
 			ticker = time.NewTicker(time.Duration(randomSeconds) * time.Second)
 		}
 	}()
@@ -167,6 +168,11 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 			if len(combat.Dodges) < 1 {
 				combat.Dodges <- true
 			}
+			combat.UpdatedLastReceivedMessageTimestamp()
+
+		case "USER_ATTACK":
+			handleReceiveAttack(combat)
+			combat.UpdatedLastReceivedMessageTimestamp()
 		}
 	}
 }

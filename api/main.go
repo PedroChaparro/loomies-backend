@@ -13,7 +13,8 @@ func main() {
 
 	// Setup websocket routes
 	hub := combat.WsHub{
-		Combats: make(map[string]*combat.WsCombat),
+		Combats:             make(map[string]*combat.WsCombat),
+		CachedStrongAgainst: make(map[string][]string),
 	}
 
 	combat.GlobalWsHub = &hub
