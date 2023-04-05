@@ -2,7 +2,6 @@ package combat
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -28,6 +27,8 @@ type WsCombat struct {
 	// Current loomie in combat
 	CurrentGymLoomie    *interfaces.UserLoomiesRes
 	CurrentPlayerLoomie *interfaces.UserLoomiesRes
+	// Dodges channel to communicate with the combat loop
+	Dodges chan bool
 }
 
 // WsMessage is the message that is sent to the client
@@ -129,12 +130,8 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 			// Wait for the ticker to send a message
 			select {
 			case <-ticker.C:
+				handleClearDodgeChannel(combat)
 				handleSendAttack(combat)
-
-				combat.SendMessage(WsMessage{
-					Type:    "GYM_ATTACK",
-					Message: fmt.Sprintf("Gym %s is attacking you!", combat.GymID),
-				})
 			}
 
 			// Reset the ticker and pick a new random interval
@@ -160,8 +157,12 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 		// Check the message type and send to the corresponding handler
 		switch wsMessage.Type {
-		case "greeting":
+		case "GREETING":
 			handleGreetingMessageType(combat)
+		case "USER_DODGE":
+			if len(combat.Dodges) < 1 {
+				combat.Dodges <- true
+			}
 		}
 	}
 }

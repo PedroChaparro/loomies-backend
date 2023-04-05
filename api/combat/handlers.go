@@ -3,6 +3,7 @@ package combat
 import (
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/PedroChaparro/loomies-backend/models"
 )
@@ -31,13 +32,13 @@ func handleSendAttack(combat *WsCombat) {
 	gymLoomie := combat.CurrentGymLoomie
 	playerLoomie := combat.CurrentPlayerLoomie
 
-	// For each type (Currently, there is only one or two type per loomie)
+	// For each type (Currently, there is only one or two types per loomie)
 	for _, value := range gymLoomie.Types {
 		// Check if the type was cached before
-		_, ok := GlobalWsHub.CachedStrongAgainst[value]
+		_, cached := GlobalWsHub.CachedStrongAgainst[value]
 
 		// If the type was not obtained before, get it from the database
-		if !ok {
+		if !cached {
 			typeDetails, err := models.GetLoomieTypeDetailsByName(value)
 
 			if err != nil {
@@ -55,44 +56,90 @@ func handleSendAttack(combat *WsCombat) {
 		}
 	}
 
-	// Calc the damage
+	// Calculate the damage
 	actualGymLoomieDamage := gymLoomie.Attack * ((1 + 1/8) * gymLoomie.Level)
 	accumulatedDamage := actualGymLoomieDamage
 
+TYPES_LOOP:
 	for _, gymLoomieType := range gymLoomie.Types {
 		for _, playerLoomieType := range playerLoomie.Types {
 			for _, strongAgainst := range GlobalWsHub.CachedStrongAgainst[gymLoomieType] {
 				if strongAgainst == playerLoomieType {
 					accumulatedDamage *= 2
-					goto CALC
+					break TYPES_LOOP
 				}
 			}
 		}
 	}
 
-CALC: // Label to break the loop
 	// Apply the user loomie defense
 	accumulatedDamage -= accumulatedDamage * (playerLoomie.Defense / 100)
 	accumulatedDamage = int(math.Max(float64(accumulatedDamage), float64(actualGymLoomieDamage)*0.1))
 
-	// Apply the damage to the player loomie
-	playerLoomie.Hp -= accumulatedDamage
-
-	// Send the attack message
+	// Send the attack "notification" to the client
 	combat.SendMessage(WsMessage{
-		Type:    "GYM_ATTACK",
-		Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, accumulatedDamage),
-		Payload: map[string]interface{}{
-			"damage": accumulatedDamage,
-			"loomie": playerLoomie,
-		},
+		Type:    "GYM_ATTACK_CANDIDATE",
+		Message: "Enemy loomie is about to attack",
 	})
 
-	// Check if the player loomie is dead
+	// Materialize the attack after 1 second
+	go func() {
+		time.Sleep(1 * time.Second)
+
+		if len(combat.Dodges) == 0 {
+			combat.Dodges <- false
+		}
+
+		return
+	}()
+
+	// Just wait for the first message (dodge or not)
+	var wasAttackDodged bool
+
+	for {
+		select {
+		case dodged := <-combat.Dodges:
+			wasAttackDodged = dodged
+		}
+
+		break
+	}
+
+	// Send the attack result to the client
+	if wasAttackDodged {
+		combat.SendMessage(WsMessage{
+			Type:    "GYM_ATTACK_DODGED",
+			Message: fmt.Sprintf("Your loomie %s dodged the attack", playerLoomie.Name),
+		})
+
+		return
+	}
+
+	playerLoomie.Hp -= accumulatedDamage
+
 	if playerLoomie.Hp <= 0 {
 		combat.SendMessage(WsMessage{
 			Type:    "USER_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Your loomie %s was weakened", playerLoomie.Name),
+			Payload: map[string]interface{}{
+				"loomie_id": playerLoomie.Id,
+			},
 		})
+	} else {
+		combat.SendMessage(WsMessage{
+			Type:    "UPDATE_USER_LOOMIE_HP",
+			Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, accumulatedDamage),
+			Payload: map[string]interface{}{
+				"loomie_id": playerLoomie.Id,
+				"hp":        playerLoomie.Hp,
+			},
+		})
+	}
+}
+
+// handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
+func handleClearDodgeChannel(combat *WsCombat) {
+	for len(combat.Dodges) > 0 {
+		<-combat.Dodges
 	}
 }

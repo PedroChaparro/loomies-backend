@@ -131,6 +131,7 @@ func HandleCombatInit(c *gin.Context) {
 		GymLoomies:           gymLoomies,
 		CurrentGymLoomie:     &gymLoomies[0],
 		CurrentPlayerLoomie:  &userLoomies[0],
+		Dodges:               make(chan bool, 1),
 	}
 
 	// Register the connection on the hub
