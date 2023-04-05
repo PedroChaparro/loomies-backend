@@ -220,7 +220,7 @@ paths:
                 $ref: "#/components/schemas/FailResponse"
     put: 
       tags: [ User ]
-      description: Updates t he loomie team of the given user. 
+      description: Updates the loomie team of the given user. 
       security: 
         - basicAuth: [Access-Token]
       requestBody: 
@@ -236,7 +236,7 @@ paths:
                     example: "6429dc69f1c17765c6a205fd"
       responses: 
         "200": 
-          description: There wasn't any error and the loomie tean was updated. 
+          description: There wasn't any error and the loomie team was updated. 
           content:
             application/json:
               schema:
