@@ -436,8 +436,8 @@ func FuseLoomies(userId primitive.ObjectID, loomieToUpdate, loomieToDelete inter
 	return nil
 }
 
-// InsertInUserLoomie update the loomies from user
-func InsertInUserLoomie(user interfaces.User, loomie_id primitive.ObjectID) error {
+// AddToUserLoomies Adds a loomie to the user's loomies
+func AddToUserLoomies(user interfaces.User, loomie_id primitive.ObjectID) error {
 	filter := bson.D{{Key: "_id", Value: user.Id}}
 	update := bson.D{{Key: "$push", Value: bson.D{
 		{Key: "loomies", Value: loomie_id},
@@ -448,8 +448,8 @@ func InsertInUserLoomie(user interfaces.User, loomie_id primitive.ObjectID) erro
 	return err
 }
 
-// RemoveItemsToUserInventory remove x number of user items and if it reaches 0 removes it from the list
-func RemoveItemsToUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID, quantity int) error {
+// DecrementItemFromUserInventory Decrements the quantity of an item from the user's inventory and removes it if the quantity is lower than or equal to 0
+func DecrementItemFromUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID, quantity int) error {
 	var user interfaces.User
 	found := false
 	remove := false

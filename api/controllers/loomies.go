@@ -374,7 +374,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 	}
 
 	//Remove the loomBall from inventory
-	err = models.RemoveItemsToUserInventory(user.Id, mongoid, 1)
+	err = models.DecrementItemFromUserInventory(user.Id, mongoid, 1)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Item not found"})
@@ -419,7 +419,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 		}
 
 		//Save the wild loomie on the user
-		err = models.InsertInUserLoomie(user, caught_loomies_id)
+		err = models.AddToUserLoomies(user, caught_loomies_id)
 
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
