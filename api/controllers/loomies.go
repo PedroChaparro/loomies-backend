@@ -342,7 +342,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 	})
 
 	if !isNear {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "User is not near the loomie"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User is not near the loomie"})
 		return
 	}
 
@@ -361,7 +361,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 	mongoid, err := primitive.ObjectIDFromHex(loomie_req.LoomieBallId)
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The given Loomball id is not valid"})
 		return
 	}
 
@@ -426,6 +426,6 @@ func HandleCaptureLoomie(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"error":   false,
 		"capture": isCapture,
-		"message": "Loomie not caught",
+		"message": "The Loomie was not caught. Try again!",
 	})
 }

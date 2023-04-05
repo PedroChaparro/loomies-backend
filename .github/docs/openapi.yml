@@ -701,7 +701,7 @@ paths:
                   value:
                     capture: false
                     error: false
-                    message: Loomie not caught
+                    message: The Loomie was not caught. Try again!
 
         "400":
           description: Bad request or the user isn't near the loomie coordinates.
