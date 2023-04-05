@@ -15,17 +15,6 @@ import (
 // packages (controllers package imports combat to use the types and
 // combat imports controllers to use the handlers)
 
-// handleGreetingMessageType is an example of how to handle a message type
-// NOTE: Please, remove this function in further pull request
-func handleGreetingMessageType(combat *WsCombat) {
-	// Do stuff... Here you can even use models functions to interact with the database
-	// Send a message to the client
-	combat.SendMessage(WsMessage{
-		Type:    "greeting",
-		Message: "Greeting message was received",
-	})
-}
-
 // handleSendAttack handles the "GYM_ATTACK" message type to send an attack to the player
 func handleSendAttack(combat *WsCombat) {
 	// Check if the types of the loomie were obtained before
@@ -117,24 +106,52 @@ TYPES_LOOP:
 
 	playerLoomie.Hp -= accumulatedDamage
 
+	// If the player loomie was weakened, remove it from the player loomies
 	if playerLoomie.Hp <= 0 {
+		weaknedLoomieId := playerLoomie.Id
+		combat.PlayerLoomies = combat.PlayerLoomies[1:]
+
 		combat.SendMessage(WsMessage{
 			Type:    "USER_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Your loomie %s was weakened", playerLoomie.Name),
 			Payload: map[string]interface{}{
-				"loomie_id": playerLoomie.Id,
+				"loomie_id": weaknedLoomieId,
 			},
 		})
-	} else {
+
+		if len(combat.PlayerLoomies) == 0 {
+			combat.SendMessage(WsMessage{
+				Type:    "USER_HAS_LOST",
+				Message: "You have lost the battle. Try fusioning your loomies or caught more loomies to improve your team",
+			})
+
+			// Send the message to close all the active loops
+			combat.Close <- true
+			return
+		}
+
+		// Update the current player loomie
+		combat.CurrentPlayerLoomie = &combat.PlayerLoomies[0]
+
 		combat.SendMessage(WsMessage{
-			Type:    "UPDATE_USER_LOOMIE_HP",
-			Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, accumulatedDamage),
+			Type:    "UPDATE_PLAYER_LOOMIE",
+			Message: fmt.Sprintf("Your loomie %s is now your active loomie", combat.CurrentPlayerLoomie.Name),
 			Payload: map[string]interface{}{
-				"loomie_id": playerLoomie.Id,
-				"hp":        playerLoomie.Hp,
+				"loomie": combat.CurrentPlayerLoomie,
 			},
 		})
+
+		return
 	}
+
+	combat.SendMessage(WsMessage{
+		Type:    "UPDATE_USER_LOOMIE_HP",
+		Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, accumulatedDamage),
+		Payload: map[string]interface{}{
+			"loomie_id": playerLoomie.Id,
+			"hp":        playerLoomie.Hp,
+		},
+	})
 }
 
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
