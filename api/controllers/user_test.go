@@ -568,7 +568,7 @@ func TestGetLoomiesSuccess(t *testing.T) {
 	// Get the first 6 loomies from the caught_loomies collection
 	var loomies []interfaces.CaughtLoomie
 	var loomiesIds []primitive.ObjectID
-	cursor, _ := models.CaughtLoomiesCollection.Find(ctx, bson.D{}, options.Find().SetLimit(6))
+	cursor, _ := models.CaughtLoomiesCollection.Find(ctx, bson.D{}, options.Find().SetLimit(6).SetSort(bson.D{{Key: "_id", Value: -1}}))
 	cursor.All(ctx, &loomies)
 	c.Equal(6, len(loomies))
 
@@ -607,6 +607,98 @@ func TestGetLoomiesSuccess(t *testing.T) {
 		c.NotEmpty(loomie["level"])
 		c.GreaterOrEqual(int(loomie["level"].(float64)), 1)
 		// Default experience is 0
+		c.GreaterOrEqual(int(loomie["experience"].(float64)), 0)
+	}
+
+	// Remove the user
+	err := tests.DeleteUser(randomUser.Email)
+	c.NoError(err)
+}
+
+// TestGetLoomieTeamSuccess Test the success case for /user/loomie-team endpoint
+func TestGetLoomieTeamSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Create a random user
+	router := tests.SetupGinRouter()
+	randomUser, loginResponse := loginWithRandomUser()
+	token := loginResponse["accessToken"]
+
+	// -------------------------
+	// 1. Test with no loomies in the team
+	// -------------------------
+	router.GET("/user/loomie-team", middlewares.MustProvideAccessToken(), HandleGetLoomieTeam)
+	w, req := tests.SetupGetRequest("/user/loomie-team", tests.CustomHeader{Name: "Access-Token", Value: token})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusOK, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal(0, len(response["team"].([]interface{})))
+
+	// -------------------------
+	// 2. Test with some loomies in the team
+	// -------------------------
+	// Get the first 6 loomies from the caught_loomies collection
+	var loomies []interfaces.CaughtLoomie
+	var loomiesIds []primitive.ObjectID
+
+	// Select the last 6 loomies
+	cursor, _ := models.CaughtLoomiesCollection.Find(ctx, bson.D{}, options.Find().SetLimit(6).SetSort(bson.D{{Key: "_id", Value: -1}}))
+	cursor.All(ctx, &loomies)
+	c.Equal(6, len(loomies))
+
+	// Get the ids of the loomies
+	for _, loomie := range loomies {
+		loomiesIds = append(loomiesIds, loomie.Id)
+	}
+
+	// Insert the loomies into the user's loomies
+	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "loomies", Value: loomiesIds}}}})
+	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "loomie_team", Value: loomiesIds}}}})
+
+	// Set the user as the loomies in the array owner
+	models.CaughtLoomiesCollection.UpdateMany(ctx, bson.D{
+		{Key: "_id", Value: bson.D{{Key: "$in", Value: loomiesIds}}},
+	}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "owner", Value: randomUser.Id}}},
+	})
+
+	// Set the user as the loomies in the array owner
+	models.CaughtLoomiesCollection.UpdateMany(ctx, bson.D{
+		{Key: "_id", Value: bson.D{{Key: "$in", Value: loomiesIds}}},
+	}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "owner", Value: randomUser.Id}}},
+	})
+
+	// Make the request and get the JSON response
+	w, req = tests.SetupGetRequest("/user/loomie-team", tests.CustomHeader{Name: "Access-Token", Value: token})
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	c.Equal(http.StatusOK, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal(6, len(response["team"].([]interface{})))
+
+	// Check the loomies fields
+	for _, loomie := range response["team"].([]interface{}) {
+		c.NotEmpty(loomie)
+		loomie := loomie.(map[string]interface{})
+		c.NotEmpty(loomie["_id"])
+		c.NotEmpty(loomie["serial"])
+		c.NotEmpty(loomie["name"])
+		c.NotEmpty(loomie["rarity"])
+		c.NotEmpty(loomie["hp"])
+		c.NotEmpty(loomie["attack"])
+		c.NotEmpty(loomie["defense"])
+		c.Contains(loomie, "is_busy")
+		c.NotEmpty(loomie["types"])
+		c.GreaterOrEqual(len(loomie["types"].([]interface{})), 1)
+		c.NotEmpty(loomie["level"])
+		c.GreaterOrEqual(int(loomie["level"].(float64)), 1)
 		c.GreaterOrEqual(int(loomie["experience"].(float64)), 0)
 	}
 
