@@ -56,18 +56,6 @@ func GetRandomCoordinatesNear(coordinates interfaces.Coordinates) interfaces.Coo
 	}
 }
 
-// GetZoneCoordinatesFromGPS returns the (x, y) coordinates of the zone that contains the given coordinates
-func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
-	// initial zones calculations
-	const initialLatitude = 6.9595
-	const initialLongitude = -73.1696
-	const sizeMinZone = 0.0035
-
-	coordX := math.Floor((coordinates.Longitude - initialLongitude) / sizeMinZone)
-	coordY := math.Floor((coordinates.Latitude - initialLatitude) / sizeMinZone)
-	return int(coordX), int(coordY)
-}
-
 // GetValidationCode returns a random 6 digit string
 func GetValidationCode() string {
 	numbers := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
