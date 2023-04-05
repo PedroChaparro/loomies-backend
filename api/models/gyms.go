@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
@@ -26,12 +27,65 @@ func RegisterClaimedReward(gym interfaces.Gym, userID primitive.ObjectID) error 
 }
 
 // HasUserClaimedReward returns if the user has already claimed the reward for the given gym
-func HasUserClaimedReward(gym interfaces.Gym, userID primitive.ObjectID) bool {
-	for _, userId := range gym.RewardsClaimedBy {
+func HasUserClaimedReward(claimed []primitive.ObjectID, userID primitive.ObjectID) bool {
+	for _, userId := range claimed {
 		if userId == userID {
 			return true
 		}
 	}
 
 	return false
+}
+
+// GetPopulatedGymFromId Returnd the details for the `/gym/:id` endpoint from the given gym id
+func GetPopulatedGymFromId(GymId, UserId primitive.ObjectID) (gym interfaces.PopulatedGym, err error) {
+	var auxiliarGymDoc interfaces.PopulatedGymAux
+	var GymDoc interfaces.PopulatedGym
+
+	// Populate the owner collection
+	lookupIntoUsers := bson.M{
+		"$lookup": bson.M{
+			"from":         "users",
+			"localField":   "owner",
+			"foreignField": "_id",
+			"as":           "owner",
+		},
+	}
+
+	// Populate the loomies collection
+	lookupIntoLoomies := bson.M{
+		"$lookup": bson.M{
+			"from":         "caught_loomies",
+			"localField":   "protectors",
+			"foreignField": "_id",
+			"as":           "protectors",
+		},
+	}
+
+	// Query the database
+	cursor, err := GymsCollection.Aggregate(context.Background(), []bson.M{
+		{"$match": bson.M{"_id": GymId}},
+		lookupIntoUsers,
+		lookupIntoLoomies,
+	})
+
+	if err != nil {
+		return interfaces.PopulatedGym{}, err
+	}
+
+	// Decode the result (There is only one gym)
+	if cursor.Next(context.Background()) {
+		err = cursor.Decode(&auxiliarGymDoc)
+
+		if err != nil {
+			return interfaces.PopulatedGym{}, err
+		}
+	} else {
+		return interfaces.PopulatedGym{}, fmt.Errorf("EMPTY_RESULTS")
+	}
+
+	// Parse the auxiliar gym into a populated gym
+	GymDoc = *auxiliarGymDoc.ToPopulatedGym()
+	GymDoc.WasRewardClaimed = HasUserClaimedReward(auxiliarGymDoc.RewardsClaimedBy, UserId)
+	return GymDoc, nil
 }
