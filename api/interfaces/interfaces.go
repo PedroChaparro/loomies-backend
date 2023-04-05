@@ -131,6 +131,18 @@ type LoomieType struct {
 	StrongAgainst []primitive.ObjectID `json:"strong_against"      bson:"strong_against"`
 }
 
+type PopulatedLoomieTypeAuxiliar struct {
+	Id            primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name          string             `json:"name"      bson:"name"`
+	StrongAgainst []LoomieType       `json:"strong_against"      bson:"strong_against"`
+}
+
+type PopulatedLoomieType struct {
+	Id            primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Name          string             `json:"name"      bson:"name"`
+	StrongAgainst []string           `json:"strong_against"      bson:"strong_against"`
+}
+
 // BaseLoomie is the "template" for a loomie
 type BaseLoomies struct {
 	Id          primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`

@@ -2,8 +2,11 @@ package combat
 
 import (
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	"time"
 
+	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/gorilla/websocket"
 )
@@ -25,6 +28,8 @@ type WsCombat struct {
 	// Current loomie in combat
 	CurrentGymLoomie    *interfaces.UserLoomiesRes
 	CurrentPlayerLoomie *interfaces.UserLoomiesRes
+	// Map to store the strong against types
+	CachedStrongAgainst map[string][]string
 }
 
 // WsMessage is the message that is sent to the client
@@ -43,6 +48,10 @@ type WsHub struct {
 	// be one client per gym
 	Combats map[string]*WsCombat
 }
+
+// GlobalWsHub is the global hub that stores all the clients
+// This is initialized in the main.go file
+var GlobalWsHub *WsHub
 
 type WsTokenClaims struct {
 	UserID    string  `json:"user_id"`
@@ -99,11 +108,39 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 		for {
 			select {
 			case <-ticker.C:
-				if time.Now().Unix()-combat.LastMessageTimestamp > 30 {
+				if time.Now().Unix()-combat.LastMessageTimestamp > 3600 {
 					combat.Connection.Close()
 					return
 				}
 			}
+		}
+	}()
+
+	// --- Independet goroutine to send attacks from the gym to the player ---
+	// Note: We cannot use the utils.GetRandomInt function because of the
+	// cyclic dependency
+	go func() {
+		random := rand.New(rand.NewSource(time.Now().UnixNano()))
+		minTimeout, maxTimeout := configuration.GetCombatTimeouts()
+		randomSeconds := random.Intn(maxTimeout-minTimeout) + minTimeout
+		ticker := time.NewTicker(time.Duration(randomSeconds) * time.Second)
+
+		for {
+			// Wait for the ticker to send a message
+			select {
+			case <-ticker.C:
+				handleSendAttack(combat)
+
+				combat.SendMessage(WsMessage{
+					Type:    "GYM_ATTACK",
+					Message: fmt.Sprintf("Gym %s is attacking you!", combat.GymID),
+				})
+			}
+
+			// Reset the ticker and pick a new random interval
+			ticker.Stop()
+			randomSeconds := random.Intn(maxTimeout-minTimeout) + minTimeout
+			ticker = time.NewTicker(time.Duration(randomSeconds) * time.Second)
 		}
 	}()
 
