@@ -18,8 +18,10 @@ type WsCombat struct {
 	GymID string
 	// The connecton to exchange messages with the client
 	Connection *websocket.Conn
-	// We keep track of the last message timestamp to finish the combat if the client is "akf"
+	// Keep track of the last message timestamp to finish the combat if the client is "akf"
 	LastMessageTimestamp int64
+	// Keep track of the last attack timestamp to avoid spamming
+	LastUserAttackTimestamp int64
 	// Loomie teams in combat
 	GymLoomies    []interfaces.UserLoomiesRes
 	PlayerLoomies []interfaces.UserLoomiesRes
@@ -93,6 +95,11 @@ func (hub *WsHub) Unregister(gym string) bool {
 // UpdatedLastReceivedMessageTimestamp updates the timestamp of the last message received from the client
 func (combat *WsCombat) UpdatedLastReceivedMessageTimestamp() {
 	combat.LastMessageTimestamp = time.Now().Unix()
+}
+
+// UpdatedLastUserAttackTimestamp updates the timestamp of the last attack sent by the client
+func (combat *WsCombat) UpdatedLastUserAttackTimestamp() {
+	combat.LastUserAttackTimestamp = time.Now().Unix()
 }
 
 // SendMessage sends a message to the client

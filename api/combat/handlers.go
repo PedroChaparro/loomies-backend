@@ -162,6 +162,12 @@ TYPES_LOOP:
 
 // handleReceiveAttack handles the "USER_ATTACK" message type to receive an attack from the player
 func handleReceiveAttack(combat *WsCombat) {
+	// Ignore spamming attacks
+	if !time.Now().After(time.Unix(combat.LastUserAttackTimestamp, 0).Add(1 * time.Second)) {
+		return
+	}
+
+	combat.LastUserAttackTimestamp = time.Now().Unix()
 	gymLoomie := combat.CurrentGymLoomie
 	playerLoomie := combat.CurrentPlayerLoomie
 
