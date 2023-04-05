@@ -436,6 +436,7 @@ func FuseLoomies(userId primitive.ObjectID, loomieToUpdate, loomieToDelete inter
 	return nil
 }
 
+// InsertInUserLoomie update the loomies from user
 func InsertInUserLoomie(user interfaces.User, loomie_id primitive.ObjectID) error {
 	filter := bson.D{{Key: "_id", Value: user.Id}}
 	update := bson.D{{Key: "$push", Value: bson.D{
@@ -447,11 +448,13 @@ func InsertInUserLoomie(user interfaces.User, loomie_id primitive.ObjectID) erro
 	return err
 }
 
+// RemoveItemsToUserInventory remove x number of user items and if it reaches 0 removes it from the list
 func RemoveItemsToUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID, quantity int) error {
 	var user interfaces.User
 	found := false
 	remove := false
 
+	//Check if user exists
 	err := UserCollection.FindOne(
 		context.TODO(),
 		bson.D{
@@ -466,8 +469,8 @@ func RemoveItemsToUserInventory(userId primitive.ObjectID, itemId primitive.Obje
 	for i := 0; i < len(user.Items); i++ {
 		if user.Items[i].ItemId == itemId {
 			user.Items[i].ItemQuantity = user.Items[i].ItemQuantity - quantity
+			//If there are no more items, remove it from the list.
 			if user.Items[i].ItemQuantity <= 0 {
-				//user.Items = append(user.Items[:i], user.Items[i+1:]...)
 
 				filter := bson.D{{Key: "_id", Value: user.Id}}
 				update := bson.D{{Key: "$pull", Value: bson.D{
@@ -479,6 +482,7 @@ func RemoveItemsToUserInventory(userId primitive.ObjectID, itemId primitive.Obje
 				remove = true
 			}
 
+			//Update the number of items in mongo
 			if !remove {
 				filter := bson.D{{Key: "_id", Value: user.Id}, {Key: "items.item_id", Value: user.Items[i].ItemId}}
 				update := bson.D{{Key: "$set", Value: bson.D{
@@ -496,6 +500,7 @@ func RemoveItemsToUserInventory(userId primitive.ObjectID, itemId primitive.Obje
 		}
 	}
 
+	//Error if item not found
 	if !found {
 		err = errors.New("Item not found")
 		return err

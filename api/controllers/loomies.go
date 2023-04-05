@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"net/http"
 	"strings"
@@ -308,7 +307,10 @@ func HandleFuseLoomies(c *gin.Context) {
 }
 
 func HandleCaptureLoomie(c *gin.Context) {
+
+	// Get the Loomies Id, Latitude, Longitude and LoomieBall Id from the request body
 	loomie_req := interfaces.CatchLoomieForm{}
+	// Get the User Id
 	userid, _ := c.Get("userid")
 
 	if err := c.BindJSON(&loomie_req); err != nil {
@@ -316,11 +318,13 @@ func HandleCaptureLoomie(c *gin.Context) {
 		return
 	}
 
+	//Check if fild is empty
 	if loomie_req.LoomieId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID was provided"})
 		return
 	}
 
+	//Check and get the wild loomie
 	loomie, err := models.GetWildLoomieById(loomie_req.LoomieId)
 
 	if err != nil {
@@ -333,6 +337,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 		}
 	}
 
+	//Check if the wild loomie is near
 	isNear := utils.IsNear(interfaces.Coordinates{
 		Latitude:  loomie.Latitude,
 		Longitude: loomie.Longitude,
@@ -346,6 +351,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 		return
 	}
 
+	//Check and get user
 	user, err := models.GetUserById(userid.(string))
 
 	if err != nil {
@@ -358,6 +364,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 		}
 	}
 
+	//Transform from string to primitive Object ID
 	mongoid, err := primitive.ObjectIDFromHex(loomie_req.LoomieBallId)
 
 	if err != nil {
@@ -365,6 +372,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 		return
 	}
 
+	//Remove the loomBall from inventory
 	err = models.RemoveItemsToUserInventory(user.Id, mongoid, 1)
 
 	if err != nil {
@@ -376,6 +384,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 
 	array_ball = append(array_ball, mongoid)
 
+	//Get loomBall
 	loomball, err := models.GetLoomballsFromIds(array_ball)
 
 	if err != nil {
@@ -383,9 +392,8 @@ func HandleCaptureLoomie(c *gin.Context) {
 		return
 	}
 
+	//Check if the loomie was caught
 	was_captured := models.WasSuccessfulCapture(loomie, loomball[0])
-
-	fmt.Println(was_captured)
 
 	if was_captured {
 		caught_loomies := interfaces.CaughtLoomie{Owner: user.Id,
@@ -401,6 +409,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 			Experience: loomie.Experience,
 		}
 
+		//Save the wild loomie in the caught roomie collection
 		caught_loomies_id, err := models.InsertInCaughtLoomies(caught_loomies)
 
 		if err != nil {
@@ -408,6 +417,7 @@ func HandleCaptureLoomie(c *gin.Context) {
 			return
 		}
 
+		//Save the wild loomie on the user
 		err = models.InsertInUserLoomie(user, caught_loomies_id)
 
 		if err != nil {

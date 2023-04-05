@@ -196,6 +196,7 @@ func GetWildLoomieById(loomie_id string) (interfaces.WildLoomie, error) {
 	return loomie, err
 }
 
+// InsertInCaughtLoomies insert in Caught Loomies Collection the wild loomie
 func InsertInCaughtLoomies(caught_loomies interfaces.CaughtLoomie) (primitive.ObjectID, error) {
 	insert_id, err := CaughtLoomiesCollection.InsertOne(context.TODO(), caught_loomies)
 
@@ -208,6 +209,7 @@ func InsertInCaughtLoomies(caught_loomies interfaces.CaughtLoomie) (primitive.Ob
 	return id, err
 }
 
+// WasSuccessfulCapture Check if the loomie was successful capture (Calculate the chance of success)
 func WasSuccessfulCapture(loomie interfaces.WildLoomie, ball interfaces.Loomball) bool {
 	chance := 0
 	capture := utils.GetRandomInt(0, 100)
