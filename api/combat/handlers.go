@@ -201,7 +201,7 @@ TYPES_LOOP:
 	accumulatedDamage = int(math.Max(float64(accumulatedDamage), float64(actualPlayerLoomieDamage)*0.1))
 
 	// Check if the gym loomie dodged the attack
-	gymLoomieDodgeProbability := 15
+	gymLoomieDodgeProbability := 10
 	luckyNumber := getRandomInt(1, 100)
 
 	if luckyNumber <= gymLoomieDodgeProbability {
