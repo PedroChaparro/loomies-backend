@@ -196,7 +196,7 @@ func GetWildLoomieById(loomie_id string) (interfaces.WildLoomie, error) {
 	return loomie, err
 }
 
-// InsertInCaughtLoomies insert in Caught Loomies Collection the wild loomie
+// InsertInCaughtLoomies Insert the loomie in the caught loomies collection
 func InsertInCaughtLoomies(caught_loomies interfaces.CaughtLoomie) (primitive.ObjectID, error) {
 	insert_id, err := CaughtLoomiesCollection.InsertOne(context.TODO(), caught_loomies)
 

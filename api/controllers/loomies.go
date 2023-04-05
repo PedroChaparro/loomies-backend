@@ -188,6 +188,7 @@ func HandleValidateLoomieExists(c *gin.Context) {
 	})
 }
 
+// HandleFuseLoomies Handle the request to fuse two loomies
 func HandleFuseLoomies(c *gin.Context) {
 	userId, _ := c.Get("userid")
 
@@ -306,8 +307,8 @@ func HandleFuseLoomies(c *gin.Context) {
 	})
 }
 
+// HandleCaptureLoomie Handle the request to capture a wild loomie with a loomball
 func HandleCaptureLoomie(c *gin.Context) {
-
 	// Get the Loomies Id, Latitude, Longitude and LoomieBall Id from the request body
 	loomie_req := interfaces.CatchLoomieForm{}
 	// Get the User Id
