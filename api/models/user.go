@@ -316,12 +316,13 @@ func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.GymRe
 }
 
 // GetLoomiesByUser Returns an array of loomies according with user
-func GetLoomiesByIds(loomiesArray []primitive.ObjectID) ([]interfaces.UserLoomiesRes, error) {
+func GetLoomiesByIds(loomiesArray []primitive.ObjectID, userId primitive.ObjectID) ([]interfaces.UserLoomiesRes, error) {
 	// Filter
 	filter := bson.M{
 		"_id": bson.M{
 			"$in": loomiesArray,
 		},
+		"owner": userId,
 	}
 
 	matchFilter := bson.M{"$match": filter}
@@ -434,6 +435,22 @@ func FuseLoomies(userId primitive.ObjectID, loomieToUpdate, loomieToDelete inter
 	}
 
 	return nil
+}
+
+// ReplaceLoomieTeam Replaces the loomie team of the user
+func ReplaceLoomieTeam(userId primitive.ObjectID, loomiesIds []primitive.ObjectID) error {
+	// Update the user document to add the item to the inventory
+	_, err := UserCollection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: userId}},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "loomie_team", Value: loomiesIds},
+			}},
+		},
+	)
+
+	return err
 }
 
 // AddToUserLoomies Adds a loomie to the user's loomies
