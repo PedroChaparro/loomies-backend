@@ -67,9 +67,10 @@ type Gym struct {
 
 // Struct to keep only the necessary data from the Caught Loomies collection
 type GymProtector struct {
-	Serial int    `json:"serial" bson:"serial"`
-	Name   string `json:"name" bson:"name"`
-	Level  int    `json:"level" bson:"level"`
+	Id     primitive.ObjectID `json:"_id" bson:"_id"`
+	Serial int                `json:"serial" bson:"serial"`
+	Name   string             `json:"name" bson:"name"`
+	Level  int                `json:"level" bson:"level"`
 }
 
 // Auxiliar struct to parse the database response
@@ -238,6 +239,7 @@ type CaughtLoomie struct {
 // ToGymProtector Converts a caught loomie to a gym protector keeping only the relevant fields
 func (caughtLoomie *CaughtLoomie) ToGymProtector() *GymProtector {
 	return &GymProtector{
+		Id:     caughtLoomie.Id,
 		Serial: caughtLoomie.Serial,
 		Name:   caughtLoomie.Name,
 		Level:  caughtLoomie.Level,
