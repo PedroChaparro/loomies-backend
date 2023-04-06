@@ -45,6 +45,7 @@ func handleSendAttack(combat *WsCombat) {
 	// Just wait for the first message (dodge or not)
 	var wasAttackDodged bool
 
+	// Listen for the dodge message
 	for {
 		select {
 		case dodged := <-combat.Dodges:
@@ -64,18 +65,21 @@ func handleSendAttack(combat *WsCombat) {
 		return
 	}
 
+	// Reduce the player loomie hp
 	playerLoomie.Hp -= calculatedAttack
 
-	// If the player loomie was weakened, remove it from the player loomies
+	// Check if the player loomie was weakened
 	if playerLoomie.Hp <= 0 {
 		weaknedLoomieId := playerLoomie.Id
 
+		// Remove the loomie from the player loomies (Local array)
 		if len(combat.PlayerLoomies) > 1 {
 			combat.PlayerLoomies = combat.PlayerLoomies[1:]
 		} else {
 			combat.PlayerLoomies = make([]interfaces.UserLoomiesRes, 0)
 		}
 
+		// Notify the user that the loomie was weakened
 		combat.SendMessage(WsMessage{
 			Type:    "USER_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Your loomie %s was weakened", playerLoomie.Name),
@@ -84,13 +88,13 @@ func handleSendAttack(combat *WsCombat) {
 			},
 		})
 
+		// Check if the player loose the battle
 		if len(combat.PlayerLoomies) == 0 {
 			combat.SendMessage(WsMessage{
 				Type:    "USER_HAS_LOST",
 				Message: "You have lost the battle. Try fusioning your loomies or caught more loomies to improve your team",
 			})
 
-			// Send the message to close all the active loops
 			combat.Close <- true
 			return
 		}
@@ -98,6 +102,7 @@ func handleSendAttack(combat *WsCombat) {
 		// Update the current player loomie
 		combat.CurrentPlayerLoomie = &combat.PlayerLoomies[0]
 
+		// Notify the user that the current player loomie was changed
 		combat.SendMessage(WsMessage{
 			Type:    "UPDATE_PLAYER_LOOMIE",
 			Message: fmt.Sprintf("Your loomie %s is now your active loomie", combat.CurrentPlayerLoomie.Name),
@@ -107,16 +112,17 @@ func handleSendAttack(combat *WsCombat) {
 		})
 
 		return
+	} else {
+		// Notify the user that the loomie hp was updated
+		combat.SendMessage(WsMessage{
+			Type:    "UPDATE_USER_LOOMIE_HP",
+			Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, calculatedAttack),
+			Payload: map[string]interface{}{
+				"loomie_id": playerLoomie.Id,
+				"hp":        playerLoomie.Hp,
+			},
+		})
 	}
-
-	combat.SendMessage(WsMessage{
-		Type:    "UPDATE_USER_LOOMIE_HP",
-		Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, calculatedAttack),
-		Payload: map[string]interface{}{
-			"loomie_id": playerLoomie.Id,
-			"hp":        playerLoomie.Hp,
-		},
-	})
 }
 
 // handleReceiveAttack handles the "USER_ATTACK" message type to receive an attack from the player
@@ -133,11 +139,27 @@ func handleReceiveAttack(combat *WsCombat) {
 
 	// Check if the gym loomie was fought by the player loomie before
 	_, alreadyFought := combat.FoughtGymLoomies[gymLoomie.Id]
+
 	if !alreadyFought {
 		combat.FoughtGymLoomies[gymLoomie.Id] = make([]primitive.ObjectID, 0)
 		combat.FoughtGymLoomies[gymLoomie.Id] = append(combat.FoughtGymLoomies[gymLoomie.Id], playerLoomie.Id)
+	} else {
+		// Check if the player loomie already fought the gym loomie
+		foughtByCurrentPlayerLoomie := false
+
+		for _, playerLoomieId := range combat.FoughtGymLoomies[gymLoomie.Id] {
+			if playerLoomieId == playerLoomie.Id {
+				foughtByCurrentPlayerLoomie = true
+				break
+			}
+		}
+
+		if !foughtByCurrentPlayerLoomie {
+			combat.FoughtGymLoomies[gymLoomie.Id] = append(combat.FoughtGymLoomies[gymLoomie.Id], playerLoomie.Id)
+		}
 	}
 
+	// Calculate the attack
 	calculatedAttack := calculateAttack(playerLoomie, gymLoomie)
 
 	// Check if the gym loomie dodged the attack
@@ -153,18 +175,21 @@ func handleReceiveAttack(combat *WsCombat) {
 		return
 	}
 
+	// Reduce the gym loomie hp
 	gymLoomie.Hp -= calculatedAttack
 
-	// If the gym loomie was weakened, remove it from the gym loomies
+	// Check if the gym loomie was weakened
 	if gymLoomie.Hp <= 0 {
 		wenakenedLoomieId := gymLoomie.Id
 
+		// Remove the loomie from the gym loomies (Local array)
 		if len(combat.GymLoomies) > 1 {
 			combat.GymLoomies = combat.GymLoomies[1:]
 		} else {
 			combat.GymLoomies = make([]interfaces.UserLoomiesRes, 0)
 		}
 
+		// Notify the user that the gym loomie was weakened
 		combat.SendMessage(WsMessage{
 			Type:    "GYM_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Enemy loomie %s was weakened", gymLoomie.Name),
@@ -173,6 +198,7 @@ func handleReceiveAttack(combat *WsCombat) {
 			},
 		})
 
+		// Check if the player won the battle
 		if len(combat.GymLoomies) == 0 {
 			combat.SendMessage(WsMessage{
 				Type:    "USER_HAS_WON",
@@ -186,6 +212,7 @@ func handleReceiveAttack(combat *WsCombat) {
 		// Update the current gym loomie
 		combat.CurrentGymLoomie = &combat.GymLoomies[0]
 
+		// Notify the user that the current gym loomie was changed
 		combat.SendMessage(WsMessage{
 			Type:    "UPDATE_GYM_LOOMIE",
 			Message: fmt.Sprintf("Enemy loomie %s is now the gym's active loomie", combat.CurrentGymLoomie.Name),
@@ -195,16 +222,17 @@ func handleReceiveAttack(combat *WsCombat) {
 		})
 
 		return
+	} else {
+		// Notify the user that the gym loomie hp was updated
+		combat.SendMessage(WsMessage{
+			Type:    "UPDATE_GYM_LOOMIE_HP",
+			Message: fmt.Sprintf("Enemy loomie %s received %d damage", gymLoomie.Name, calculatedAttack),
+			Payload: map[string]interface{}{
+				"loomie_id": gymLoomie.Id,
+				"hp":        gymLoomie.Hp,
+			},
+		})
 	}
-
-	combat.SendMessage(WsMessage{
-		Type:    "UPDATE_GYM_LOOMIE_HP",
-		Message: fmt.Sprintf("Enemy loomie %s received %d damage", gymLoomie.Name, calculatedAttack),
-		Payload: map[string]interface{}{
-			"loomie_id": gymLoomie.Id,
-			"hp":        gymLoomie.Hp,
-		},
-	})
 }
 
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
