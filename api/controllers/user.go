@@ -147,7 +147,7 @@ func HandleAccountValidation(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Email has been verified"})
 		return
 	} else {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Code was incorrect or time has expired"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "Code was incorrect or time has expired"})
 		return
 	}
 }
@@ -174,7 +174,7 @@ func HandleAccountValidationCodeRequest(c *gin.Context) {
 	}
 
 	if userDoc.IsVerified {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "This Email has been already verified"})
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": true, "message": "This Email has been already verified"})
 		return
 	}
 
@@ -307,7 +307,7 @@ func HandleResetPassword(c *gin.Context) {
 			return
 		}
 	} else {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password is too short"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password must be at least 8 characters long"})
 		return
 	}
 

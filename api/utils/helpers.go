@@ -26,7 +26,7 @@ next:
 				continue next
 			}
 		}
-		return fmt.Errorf("password must have at least one %s character", name)
+		return fmt.Errorf("Password must have at least one %s character", name)
 	}
 	return nil
 }
