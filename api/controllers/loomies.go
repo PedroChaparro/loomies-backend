@@ -126,7 +126,7 @@ func HandleNearLoomies(c *gin.Context) {
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 
-		if strings.Split(err.Error(), "_")[0] == "USER" {
+		if strings.Split(err.Error(), " ")[0] == "User" {
 			statusCode = http.StatusBadRequest
 		}
 
