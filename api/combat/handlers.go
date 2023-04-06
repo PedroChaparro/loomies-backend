@@ -221,6 +221,8 @@ func handleReceiveAttack(combat *WsCombat) {
 			},
 		})
 
+		// Add experience to the player loomies that fought the gym loomie
+		handleGymLoomieWeakened(combat, wenakenedLoomieId)
 		return
 	} else {
 		// Notify the user that the gym loomie hp was updated
@@ -233,6 +235,22 @@ func handleReceiveAttack(combat *WsCombat) {
 			},
 		})
 	}
+}
+
+// handleGymLoomieWeakened handles the "event" when a gym loomie is weakened by the player to add experience to the player loomies that fought the gym loomie
+func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.ObjectID) {
+	// TODO: Silvia, you should add the functionality to add experience to the player
+	// loomies locally and also in the database.
+
+	fmt.Println("Handling Gym Loomie Weakened Event for:", weakenedLoomieId)
+	foughtWith := combat.FoughtGymLoomies[weakenedLoomieId]
+
+	for _, playerLoomieId := range foughtWith {
+		// TODO: Add experience to the player loomie
+		fmt.Println("Adding experience to player loomie:", playerLoomieId)
+	}
+
+	fmt.Println("Weakened Event Handled")
 }
 
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
