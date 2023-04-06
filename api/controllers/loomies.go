@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 	"strings"
@@ -88,9 +89,12 @@ func generateLoomies(userId string, userCoordinates interfaces.Coordinates) erro
 			Latitude:  randomCoordinates.Latitude,
 			Longitude: randomCoordinates.Longitude,
 			// Randomly increase or decrease the stats
-			HP:      result.BaseHp + utils.GetRandomInt(-5, 5),
-			Attack:  result.BaseAttack + utils.GetRandomInt(-5, 5),
-			Defense: result.BaseDefense + utils.GetRandomInt(-5, 5),
+			HP:         result.BaseHp + utils.GetRandomInt(-5, 5),
+			Attack:     result.BaseAttack + utils.GetRandomInt(-5, 5),
+			Defense:    result.BaseDefense + utils.GetRandomInt(-5, 5),
+			Level:      utils.GetRandomLevel(),
+			Experience: 0,
+			CapturedBy: []primitive.ObjectID{},
 		}
 
 		// Insert the new loomie in the database
@@ -169,7 +173,7 @@ func HandleValidateLoomieExists(c *gin.Context) {
 		return
 	}
 
-	err := models.ValidateLoomieExists(loomie_id)
+	_, err := models.GetWildLoomieById(loomie_id)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
@@ -186,6 +190,7 @@ func HandleValidateLoomieExists(c *gin.Context) {
 	})
 }
 
+// HandleFuseLoomies Handle the request to fuse two loomies
 func HandleFuseLoomies(c *gin.Context) {
 	userId, _ := c.Get("userid")
 
@@ -227,7 +232,7 @@ func HandleFuseLoomies(c *gin.Context) {
 	}
 
 	// Check both loomies are of the same type
-	loomiesDocs, err := models.GetLoomiesByIds([]primitive.ObjectID{firstLoomieMongoId, secondLoomieMongoId})
+	loomiesDocs, err := models.GetLoomiesByIds([]primitive.ObjectID{firstLoomieMongoId, secondLoomieMongoId}, userMongoId)
 
 	if err != nil || len(loomiesDocs) != 2 {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Error getting the loomies. Please try again later."})
@@ -301,5 +306,157 @@ func HandleFuseLoomies(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"error":   false,
 		"message": "Loomies fused successfully",
+	})
+}
+
+// HandleCaptureLoomie Handle the request to capture a wild loomie with a loomball
+func HandleCaptureLoomie(c *gin.Context) {
+	// Get the Loomies Id, Latitude, Longitude and LoomieBall Id from the request body
+	loomie_req := interfaces.CatchLoomieForm{}
+	// Get the User Id
+	userid, _ := c.Get("userid")
+
+	if err := c.BindJSON(&loomie_req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
+		return
+	}
+
+	//Check if fild is empty
+	if loomie_req.LoomieId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID was provided"})
+		return
+	}
+
+	//Check and get the wild loomie
+	loomie, err := models.GetWildLoomieById(loomie_req.LoomieId)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "Loomie was not found"})
+			return
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+	}
+
+	//Check if the wild loomie is near
+	isNear := utils.IsNear(interfaces.Coordinates{
+		Latitude:  loomie.Latitude,
+		Longitude: loomie.Longitude,
+	}, interfaces.Coordinates{
+		Latitude:  loomie_req.Latitude,
+		Longitude: loomie_req.Longitude,
+	})
+
+	if !isNear {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User is not near the loomie"})
+		return
+	}
+
+	//Check and get user
+	user, err := models.GetUserById(userid.(string))
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "User was not found"})
+			return
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+	}
+
+	//Check if user id alrady exists in array UsersAlreadyCapturedIt from wild loomie
+	insertUserInWildLoomie := models.CheckIfUserInArrayOfWildLoomie(loomie, user)
+
+	fmt.Println(insertUserInWildLoomie)
+
+	if !insertUserInWildLoomie {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User already caught this loomie"})
+		return
+	}
+
+	//Transform from string to primitive Object ID
+	mongoid, err := primitive.ObjectIDFromHex(loomie_req.LoomballId)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The given Loomball id is not valid"})
+		return
+	}
+
+	//Remove the loomBall from inventory
+	err = models.DecrementItemFromUserInventory(user.Id, mongoid, 1)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "The given loomball was not found"})
+		return
+	}
+
+	array_ball := []primitive.ObjectID{}
+
+	array_ball = append(array_ball, mongoid)
+
+	//Get loomBall
+	loomball, err := models.GetLoomballsFromIds(array_ball)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+		return
+	}
+
+	//Check if the loomie was caught
+	was_captured := models.WasSuccessfulCapture(loomie, loomball[0])
+
+	if was_captured {
+		//Insert user id in array UsersAlreadyCapturedIt from wild loomie
+		err = models.InsertUserInArrayOfWildLoomie(loomie, user)
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User already caught this loomie"})
+			return
+		}
+
+		caught_loomies := interfaces.CaughtLoomie{Owner: user.Id,
+			IsBusy:     false,
+			Serial:     loomie.Serial,
+			Name:       loomie.Name,
+			Types:      loomie.Types,
+			Rarity:     loomie.Rarity,
+			HP:         loomie.HP,
+			Attack:     loomie.Attack,
+			Defense:    loomie.Defense,
+			Level:      loomie.Level,
+			Experience: loomie.Experience,
+		}
+
+		//Save the wild loomie in the caught roomie collection
+		caught_loomies_id, err := models.InsertInCaughtLoomies(caught_loomies)
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+
+		//Save the wild loomie on the user
+		err = models.AddToUserLoomies(user, caught_loomies_id)
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error"})
+			return
+		}
+
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"error":   false,
+			"capture": was_captured,
+			"message": "Loomie caught",
+		})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"error":   false,
+		"capture": was_captured,
+		"message": "The Loomie was not caught. Try again!",
 	})
 }

@@ -18,7 +18,6 @@ import (
 func HandleClaimReward(c *gin.Context) {
 	// Get user from request context
 	userId, _ := c.Get("userid")
-	userId = userId.(string)
 	userIdMongo, _ := primitive.ObjectIDFromHex(userId.(string))
 
 	// Parse request body
@@ -49,7 +48,7 @@ func HandleClaimReward(c *gin.Context) {
 	}
 
 	// 2. Validate the user has not claimed the reward yet
-	if models.HasUserClaimedReward(gym, userIdMongo) {
+	if models.HasUserClaimedReward(gym.RewardsClaimedBy, userIdMongo) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User has already claimed the reward"})
 		return
 	}
@@ -137,4 +136,51 @@ func HandleClaimReward(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Reward claimed successfully", "reward": allRewards})
+}
+
+// HandleGetGyms Handles the request to get a gym details by id
+func HandleGetGym(c *gin.Context) {
+	// Get the user id from the context
+	userId, _ := c.Get("userid")
+	userIdMongo, _ := primitive.ObjectIDFromHex(userId.(string))
+
+	// Get the gym id from the request
+	gymId := c.Param("id")
+
+	// Parse id into mongodb object id
+	gymIdMongo, err := primitive.ObjectIDFromHex(gymId)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Invalid gym id"})
+		return
+	}
+
+	// Get Gym from database
+	gym, err := models.GetPopulatedGymFromId(gymIdMongo, userIdMongo)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments || err.Error() == "EMPTY_RESULTS" {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "The gym was not found"})
+			return
+		}
+
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when getting gym, please try again later"})
+		return
+	}
+
+	// Create the response (This is needed to allow null values on the Owner field)
+	response := gin.H{
+		"_id":                gym.Id,
+		"name":               gym.Name,
+		"protectors":         gym.Protectors,
+		"was_reward_claimed": gym.WasRewardClaimed,
+	}
+
+	if gym.Owner == "" {
+		response["owner"] = nil
+	} else {
+		response["owner"] = gym.Owner
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Details of the gym were successfully obtained", "gym": response})
 }

@@ -65,6 +65,32 @@ type Gym struct {
 	RewardsClaimedBy      []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
 }
 
+// Struct to keep only the necessary data from the Caught Loomies collection
+type GymProtector struct {
+	Id     primitive.ObjectID `json:"_id" bson:"_id"`
+	Serial int                `json:"serial" bson:"serial"`
+	Name   string             `json:"name" bson:"name"`
+	Level  int                `json:"level" bson:"level"`
+}
+
+// Auxiliar struct to parse the database response
+type PopulatedGymAux struct {
+	Id               primitive.ObjectID   `json:"_id" bson:"_id"`
+	Name             string               `json:"name"      bson:"name"`
+	Owner            []User               `json:"owner,omitempty"      bson:"owner,omitempty"`
+	Protectors       []CaughtLoomie       `json:"protectors"      bson:"protectors"`
+	RewardsClaimedBy []primitive.ObjectID `json:"rewards_claimed_by"      bson:"rewards_claimed_by"`
+}
+
+// Final struct to be returned to the client
+type PopulatedGym struct {
+	Id               primitive.ObjectID `json:"_id" bson:"_id"`
+	Name             string             `json:"name"      bson:"name"`
+	Owner            string             `json:"owner,omitempty"      bson:"owner,omitempty"`
+	Protectors       []GymProtector     `json:"protectors"      bson:"protectors"`
+	WasRewardClaimed bool               `json:"was_reward_claimed"      bson:"was_reward_claimed"`
+}
+
 type Item struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
@@ -82,8 +108,8 @@ type Loomball struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
 	Serial                int                `json:"serial" bson:"serial"`
-	EffectiveUntil        int64              `json:"effective_until"      bson:"effective_until"`
-	DecayUntil            int64              `json:"decay_until"      bson:"decay_until"`
+	EffectiveUntil        int                `json:"effective_until"      bson:"effective_until"`
+	DecayUntil            int                `json:"decay_until"      bson:"decay_until"`
 	MinimumProbability    float64            `json:"minimum_probability"      bson:"minimum_probability"`
 	GymRewardChancePlayer float64            `json:"gym_reward_chance_player"      bson:"gym_reward_chance_player"`
 	GymRewardChanceOwner  float64            `json:"gym_reward_chance_owner"      bson:"gym_reward_chance_owner"`
@@ -181,6 +207,9 @@ type WildLoomie struct {
 	Latitude    float64              `json:"latitude"     bson:"latitude"`
 	Longitude   float64              `json:"longitude"     bson:"longitude"`
 	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
+	Level       int                  `json:"level"     bson:"level"`
+	Experience  float64              `json:"experience"     bson:"experience"`
+	CapturedBy  []primitive.ObjectID `json:"captured_by"     bson:"captured_by"`
 }
 
 type AuthenticationCode struct {
@@ -217,4 +246,36 @@ type CaughtLoomie struct {
 	Defense    int                  `json:"defense"     bson:"defense"`
 	Level      int                  `json:"level"     bson:"level"`
 	Experience float64              `json:"experience"     bson:"experience"`
+}
+
+// ToGymProtector Converts a caught loomie to a gym protector keeping only the relevant fields
+func (caughtLoomie *CaughtLoomie) ToGymProtector() *GymProtector {
+	return &GymProtector{
+		Id:     caughtLoomie.Id,
+		Serial: caughtLoomie.Serial,
+		Name:   caughtLoomie.Name,
+		Level:  caughtLoomie.Level,
+	}
+}
+
+// ToPopulatedGym Converts the database response to a populated gym
+func (aux *PopulatedGymAux) ToPopulatedGym() *PopulatedGym {
+	// Remove unneded fields form the loomies
+	var loomies []GymProtector = []GymProtector{}
+	populatedGym := PopulatedGym{
+		Id:   aux.Id,
+		Name: aux.Name,
+	}
+
+	for _, loomie := range aux.Protectors {
+		loomies = append(loomies, *loomie.ToGymProtector())
+	}
+
+	populatedGym.Protectors = loomies
+
+	if len(aux.Owner) == 1 {
+		populatedGym.Owner = aux.Owner[0].Username
+	}
+
+	return &populatedGym
 }

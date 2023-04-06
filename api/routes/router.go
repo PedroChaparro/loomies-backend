@@ -10,6 +10,7 @@ func SetupRoutes(engine *gin.Engine) {
 	// User
 	engine.GET("/user/loomies", middlewares.MustProvideAccessToken(), controllers.HandleGetLoomies)
 	engine.GET("/user/loomie-team", middlewares.MustProvideAccessToken(), controllers.HandleGetLoomieTeam)
+	engine.PUT("/user/loomie-team", middlewares.MustProvideAccessToken(), controllers.HandleUpdateLoomieTeam)
 	engine.POST("/user/password/code", controllers.HandleResetPasswordCodeRequest)
 	engine.PUT("/user/password", controllers.HandleResetPassword)
 	engine.POST("/user/signup", controllers.HandleSignUp)
@@ -24,11 +25,13 @@ func SetupRoutes(engine *gin.Engine) {
 	// Gyms
 	engine.POST("/gyms/near", middlewares.MustProvideAccessToken(), controllers.HandleNearGyms)
 	engine.POST("/gyms/claim-reward", middlewares.MustProvideAccessToken(), controllers.HandleClaimReward)
+	engine.GET("/gyms/:id", middlewares.MustProvideAccessToken(), controllers.HandleGetGym)
 
 	// Loomies
 	engine.POST("/loomies/near", middlewares.MustProvideAccessToken(), controllers.HandleNearLoomies)
 	engine.GET("/loomies/exists/:id", middlewares.MustProvideAccessToken(), controllers.HandleValidateLoomieExists)
 	engine.POST("/loomies/fuse", middlewares.MustProvideAccessToken(), controllers.HandleFuseLoomies)
+	engine.POST("/loomies/capture", middlewares.MustProvideAccessToken(), controllers.HandleCaptureLoomie)
 
 	// Items
 	engine.GET("/user/items", middlewares.MustProvideAccessToken(), controllers.HandleGetItems)

@@ -5,6 +5,7 @@ import (
 )
 
 type TGlobals struct {
+	Environment                 string
 	Loaded                      bool
 	MongoClient                 *mongo.Client
 	AccessTokenSecret           string

@@ -26,7 +26,7 @@ next:
 				continue next
 			}
 		}
-		return fmt.Errorf("password must have at least one %s character", name)
+		return fmt.Errorf("Password must have at least one %s character", name)
 	}
 	return nil
 }
@@ -95,4 +95,18 @@ func GetLevelFromExperience(experience float64) int {
 func FixeFloat(float float64, decimals int) float64 {
 	pow := math.Pow(10, float64(decimals))
 	return float64(math.Round(float*pow)) / pow
+}
+
+// GetRandomLevel returns a random level for a loomie
+func GetRandomLevel() int {
+	sample := rand.NormFloat64()*3 + 10
+	level := int(sample)
+
+	if level <= 0 {
+		level = 1
+	} else if level > 30 {
+		level = 30
+	}
+
+	return level
 }
