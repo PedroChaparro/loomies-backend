@@ -2,7 +2,6 @@ package combat
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -29,8 +28,7 @@ type WsCombat struct {
 	CurrentGymLoomie    *interfaces.UserLoomiesRes
 	CurrentPlayerLoomie *interfaces.UserLoomiesRes
 	// Defeated loomies in combat
-	DefeatedGymLoomies []primitive.ObjectID
-	FoughtGymLoomies   map[primitive.ObjectID][]primitive.ObjectID
+	FoughtGymLoomies map[primitive.ObjectID][]primitive.ObjectID
 	// Channels to communicate between the goroutines
 	Dodges chan bool
 	Close  chan bool
@@ -106,17 +104,6 @@ func (combat *WsCombat) SendMessage(message WsMessage) {
 func (combat *WsCombat) Listen(hub *WsHub) {
 	// --- Close the connection when the function ends ---
 	defer func() {
-		// TODO: Update the loomies in the database
-		// Message to Silvia: Here you can add the logic to update the loomies
-		// in the database.
-		fmt.Println("Defeated gym loomies: ", len(combat.DefeatedGymLoomies))
-
-		for _, defeatedGymLoomie := range combat.DefeatedGymLoomies {
-			for _, userLoomie := range combat.FoughtGymLoomies[defeatedGymLoomie] {
-				fmt.Println("Gym loomie ", defeatedGymLoomie, " fought against ", userLoomie)
-			}
-		}
-
 		// Remove the combat from the hub, so the gym can be challenged again
 		hub.Unregister(combat.GymID)
 	}()
