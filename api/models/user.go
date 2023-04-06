@@ -452,3 +452,76 @@ func ReplaceLoomieTeam(userId primitive.ObjectID, loomiesIds []primitive.ObjectI
 
 	return err
 }
+
+// AddToUserLoomies Adds a loomie to the user's loomies
+func AddToUserLoomies(user interfaces.User, loomie_id primitive.ObjectID) error {
+	filter := bson.D{{Key: "_id", Value: user.Id}}
+	update := bson.D{{Key: "$push", Value: bson.D{
+		{Key: "loomies", Value: loomie_id},
+	},
+	}}
+	_, err := UserCollection.UpdateOne(context.TODO(), filter, update)
+
+	return err
+}
+
+// DecrementItemFromUserInventory Decrements the quantity of an item from the user's inventory and removes it if the quantity is lower than or equal to 0
+func DecrementItemFromUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID, quantity int) error {
+	var user interfaces.User
+	found := false
+	remove := false
+
+	//Check if user exists
+	err := UserCollection.FindOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: userId},
+		},
+	).Decode(&user)
+
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(user.Items); i++ {
+		if user.Items[i].ItemId == itemId {
+			user.Items[i].ItemQuantity = user.Items[i].ItemQuantity - quantity
+			//If there are no more items, remove it from the list.
+			if user.Items[i].ItemQuantity <= 0 {
+
+				filter := bson.D{{Key: "_id", Value: user.Id}}
+				update := bson.D{{Key: "$pull", Value: bson.D{
+					{Key: "items", Value: bson.M{"item_id": user.Items[i].ItemId}},
+				},
+				}}
+				_, err = UserCollection.UpdateOne(context.TODO(), filter, update)
+
+				remove = true
+			}
+
+			//Update the number of items in mongo
+			if !remove {
+				filter := bson.D{{Key: "_id", Value: user.Id}, {Key: "items.item_id", Value: user.Items[i].ItemId}}
+				update := bson.D{{Key: "$set", Value: bson.D{
+					{Key: "items.$.item_quantity", Value: user.Items[i].ItemQuantity},
+				},
+				}}
+				_, err = UserCollection.UpdateOne(context.TODO(), filter, update)
+			}
+
+			if err != nil {
+				return err
+			}
+
+			found = true
+		}
+	}
+
+	//Error if item not found
+	if !found {
+		err = errors.New("Item not found")
+		return err
+	}
+
+	return nil
+}

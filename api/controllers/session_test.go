@@ -9,6 +9,7 @@ import (
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/middlewares"
+	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/tests"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/require"
@@ -16,7 +17,6 @@ import (
 )
 
 // ## Helper functions
-
 // loginWithRandomUser creates a random user, inserts it into the database, verifies it and tries to login with it
 func loginWithRandomUser() (interfaces.User, map[string]string) {
 	ctx := context.Background()
@@ -28,8 +28,8 @@ func loginWithRandomUser() (interfaces.User, map[string]string) {
 
 	// Verify the user and save the database document
 	var databaseUser interfaces.User
-	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
-	usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
+	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	models.UserCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
 
 	// Try to login with the random user
 	var response map[string]string
@@ -39,7 +39,7 @@ func loginWithRandomUser() (interfaces.User, map[string]string) {
 	}
 
 	router.POST("/session/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/session/login", loginForm)
+	w, req := tests.SetupPayloadedRequest("/session/login", "POST", loginForm)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -67,7 +67,7 @@ func TestLoginForbidden(t *testing.T) {
 	}
 
 	router.POST("/session/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/session/login", loginForm)
+	w, req := tests.SetupPayloadedRequest("/session/login", "POST", loginForm)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -76,7 +76,8 @@ func TestLoginForbidden(t *testing.T) {
 	c.Equal("User has not been verified", response["message"])
 
 	// Delete the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
+	err := tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
 }
 
 // TestSignupSuccess tests the signup endpoint with a verified user
@@ -92,9 +93,9 @@ func TestLoginSuccess(t *testing.T) {
 	tests.InsertUser(randomUser, router, HandleSignUp)
 
 	// Verify the user and save the database document
-	usersCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
+	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "isVerified", Value: true}}}})
 	var databaseUser interfaces.User
-	usersCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
+	models.UserCollection.FindOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}).Decode(&databaseUser)
 
 	// Try to login with the random user
 	loginForm := map[string]string{
@@ -103,7 +104,7 @@ func TestLoginSuccess(t *testing.T) {
 	}
 
 	router.POST("/session/login", HandleLogIn)
-	w, req := tests.SetupPostRequest("/session/login", loginForm)
+	w, req := tests.SetupPayloadedRequest("/session/login", "POST", loginForm)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &response)
 
@@ -131,7 +132,8 @@ func TestLoginSuccess(t *testing.T) {
 	c.Equal(databaseUser.Id.Hex(), refreshTokenClaims["userid"])
 
 	// Delete the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}})
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
 }
 
 // TestRefreshUnauthorized tests the refresh endpoint without a refresh token
@@ -142,7 +144,7 @@ func TestRefreshUnauthorized(t *testing.T) {
 	// Try to refresh without a refresh token
 	var refreshResponse map[string]string
 	router.POST("/session/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
-	w, req := tests.SetupPostRequest("/session/refresh", nil)
+	w, req := tests.SetupPayloadedRequest("/session/refresh", "POST", nil)
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &refreshResponse)
 
@@ -164,7 +166,7 @@ func TestRefreshSuccess(t *testing.T) {
 	// Get a new access token from the refresh token
 	var refreshResponse map[string]string
 	router.POST("/session/refresh", middlewares.MustProvideRefreshToken(), HandleRefresh)
-	w, req := tests.SetupPostRequest("/session/refresh", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"]})
+	w, req := tests.SetupPayloadedRequest("/session/refresh", "POST", nil, tests.CustomHeader{Name: "Refresh-Token", Value: loginResponse["refreshToken"]})
 	router.ServeHTTP(w, req)
 	json.Unmarshal(w.Body.Bytes(), &refreshResponse)
 
@@ -183,7 +185,8 @@ func TestRefreshSuccess(t *testing.T) {
 	c.Equal(databaseUser.Id.Hex(), accessTokenClaims["userid"])
 
 	// Remove the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: databaseUser.Email}})
+	err = tests.DeleteUser(databaseUser.Email, databaseUser.Id)
+	c.NoError(err)
 }
 
 // TestWhoamiUnauthorized tests the whoami endpoint without a valid access token
@@ -229,5 +232,6 @@ func TestWhoamiSuccess(t *testing.T) {
 	c.Equal(databaseUser.Username, whoamiResponseUser["username"])
 
 	// Remove the user from the database
-	usersCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: databaseUser.Email}})
+	err := tests.DeleteUser(databaseUser.Email, databaseUser.Id)
+	c.NoError(err)
 }

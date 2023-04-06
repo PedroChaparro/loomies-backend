@@ -19,8 +19,8 @@ var Globals = TGlobals{}
 func load() {
 	environment := os.Getenv("ENVIRONMENT")
 
-	// If the environment is production, do not load the .env file
-	if environment == "production" {
+	// If the environment is PRODUCTION, do not load the .env file
+	if environment == "PRODUCTION" {
 		return
 	}
 
@@ -30,7 +30,17 @@ func load() {
 		log.Fatal("Error loading .env file")
 	}
 
+	Globals.Environment = environment
 	Globals.Loaded = true
+}
+
+// GetRunningEnvironment returns the value of the ENVIRONMENT environment variable
+func GetRunningEnvironment() string {
+	if Globals.Loaded == false {
+		load()
+	}
+
+	return Globals.Environment
 }
 
 // GetEnvironmentVariable returns the value of the environment variable with the given name
