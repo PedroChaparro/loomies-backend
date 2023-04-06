@@ -219,7 +219,6 @@ func TestClaimGymRewardsSuccess(t *testing.T) {
 
 	for _, reward := range rewards {
 		reward := reward.(map[string]interface{})
-		t.Log(reward)
 		c.NotEmpty(reward["id"])
 		c.NotEmpty(reward["name"])
 		c.Positive(reward["quantity"])
@@ -233,6 +232,39 @@ func TestClaimGymRewardsSuccess(t *testing.T) {
 	for _, reward := range rewards {
 		c.Contains(userRewardsIds, reward.(map[string]interface{})["id"])
 	}
+
+	// Check if the rewards were added to the user
+	var user interfaces.User
+	err = models.UserCollection.FindOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	}).Decode(&user)
+	c.NoError(err)
+
+	// Check the rewards quantities
+	c.Equal(len(rewards), len(user.Items))
+
+	// For each gym reward
+	for _, gymReward := range rewards {
+		// Match the user reward
+		for _, userReward := range user.Items {
+			gymRewardObject := gymReward.(map[string]interface{})
+
+			// Check the quantities
+			if gymRewardObject["id"] == userReward.ItemId.Hex() {
+				c.Equal(int(gymRewardObject["quantity"].(float64)), userReward.ItemQuantity)
+			}
+
+			break
+		}
+	}
+
+	// Remove user items
+	_, err = models.UserCollection.UpdateByID(ctx, user.Id, bson.M{
+		"$set": bson.M{
+			"items": []interfaces.InventoryItem{},
+		},
+	})
+	c.NoError(err)
 
 	// -------------------------
 	// 2. Test with owner rewards
@@ -274,7 +306,6 @@ func TestClaimGymRewardsSuccess(t *testing.T) {
 
 	for _, reward := range rewards {
 		reward := reward.(map[string]interface{})
-		t.Log(reward)
 		c.NotEmpty(reward["id"])
 		c.NotEmpty(reward["name"])
 		c.Positive(reward["quantity"])
@@ -288,6 +319,34 @@ func TestClaimGymRewardsSuccess(t *testing.T) {
 	for _, reward := range rewards {
 		c.Contains(ownerRewardsIds, reward.(map[string]interface{})["id"])
 	}
+
+	// Check if the rewards were added to the user
+	err = models.UserCollection.FindOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	}).Decode(&user)
+	c.NoError(err)
+
+	c.Equal(len(rewards), len(user.Items))
+
+	for _, gymReward := range rewards {
+		for _, userReward := range user.Items {
+			gymRewardObject := gymReward.(map[string]interface{})
+
+			if gymRewardObject["id"] == userReward.ItemId.Hex() {
+				c.Equal(int(gymRewardObject["quantity"].(float64)), userReward.ItemQuantity)
+			}
+
+			break
+		}
+	}
+
+	// Remove user items
+	_, err = models.UserCollection.UpdateByID(ctx, user.Id, bson.M{
+		"$set": bson.M{
+			"items": []interfaces.InventoryItem{},
+		},
+	})
+	c.NoError(err)
 
 	// Delete the user
 	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
