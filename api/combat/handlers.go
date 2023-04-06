@@ -2,7 +2,6 @@ package combat
 
 import (
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
@@ -24,19 +23,7 @@ func handleSendAttack(combat *WsCombat) {
 	cacheTypeStrongAgainst(gymLoomie.Types, combat)
 
 	// Calculate the damage
-	actualGymLoomieDamage := gymLoomie.Attack
-	accumulatedDamage := actualGymLoomieDamage
-
-	for _, gymLoopieType := range gymLoomie.Types {
-		if isTypeStrongAgainst(gymLoopieType, playerLoomie.Types) {
-			accumulatedDamage *= 2
-			break
-		}
-	}
-
-	// Apply the user loomie defense
-	accumulatedDamage -= accumulatedDamage * (playerLoomie.Defense / 100)
-	accumulatedDamage = int(math.Max(float64(accumulatedDamage), float64(actualGymLoomieDamage)*0.1))
+	calculatedAttack := calculateAttack(gymLoomie, playerLoomie)
 
 	// Send the attack "notification" to the client
 	combat.SendMessage(WsMessage{
@@ -77,7 +64,7 @@ func handleSendAttack(combat *WsCombat) {
 		return
 	}
 
-	playerLoomie.Hp -= accumulatedDamage
+	playerLoomie.Hp -= calculatedAttack
 
 	// If the player loomie was weakened, remove it from the player loomies
 	if playerLoomie.Hp <= 0 {
@@ -124,7 +111,7 @@ func handleSendAttack(combat *WsCombat) {
 
 	combat.SendMessage(WsMessage{
 		Type:    "UPDATE_USER_LOOMIE_HP",
-		Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, accumulatedDamage),
+		Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, calculatedAttack),
 		Payload: map[string]interface{}{
 			"loomie_id": playerLoomie.Id,
 			"hp":        playerLoomie.Hp,
@@ -151,21 +138,7 @@ func handleReceiveAttack(combat *WsCombat) {
 		combat.FoughtGymLoomies[gymLoomie.Id] = append(combat.FoughtGymLoomies[gymLoomie.Id], playerLoomie.Id)
 	}
 
-	// Calculate the damage
-	actualPlayerLoomieDamage := playerLoomie.Attack
-	accumulatedDamage := actualPlayerLoomieDamage
-
-	// Check if the gym loomie is weak against the player loomie
-	for _, playerLoomieType := range playerLoomie.Types {
-		if isTypeStrongAgainst(playerLoomieType, gymLoomie.Types) {
-			accumulatedDamage *= 2
-			return
-		}
-	}
-
-	// Apply the user loomie defense
-	accumulatedDamage -= accumulatedDamage * (gymLoomie.Defense / 100)
-	accumulatedDamage = int(math.Max(float64(accumulatedDamage), float64(actualPlayerLoomieDamage)*0.1))
+	calculatedAttack := calculateAttack(playerLoomie, gymLoomie)
 
 	// Check if the gym loomie dodged the attack
 	gymLoomieDodgeProbability := 10
@@ -180,7 +153,7 @@ func handleReceiveAttack(combat *WsCombat) {
 		return
 	}
 
-	gymLoomie.Hp -= accumulatedDamage
+	gymLoomie.Hp -= calculatedAttack
 
 	// If the gym loomie was weakened, remove it from the gym loomies
 	if gymLoomie.Hp <= 0 {
@@ -226,7 +199,7 @@ func handleReceiveAttack(combat *WsCombat) {
 
 	combat.SendMessage(WsMessage{
 		Type:    "UPDATE_GYM_LOOMIE_HP",
-		Message: fmt.Sprintf("Enemy loomie %s received %d damage", gymLoomie.Name, accumulatedDamage),
+		Message: fmt.Sprintf("Enemy loomie %s received %d damage", gymLoomie.Name, calculatedAttack),
 		Payload: map[string]interface{}{
 			"loomie_id": gymLoomie.Id,
 			"hp":        gymLoomie.Hp,
