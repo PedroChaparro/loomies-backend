@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
-	"github.com/PedroChaparro/loomies-backend/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,29 +21,7 @@ func handleSendAttack(combat *WsCombat) {
 	// Check if the types of the loomie were obtained before
 	gymLoomie := combat.CurrentGymLoomie
 	playerLoomie := combat.CurrentPlayerLoomie
-
-	// For each type (Currently, there is only one or two types per loomie)
-	for _, value := range gymLoomie.Types {
-		// Check if the type was cached before
-		_, cached := GlobalWsHub.CachedStrongAgainst[value]
-
-		// If the type was not obtained before, get it from the database
-		if !cached {
-			typeDetails, err := models.GetLoomieTypeDetailsByName(value)
-
-			if err != nil {
-				combat.SendMessage(WsMessage{
-					Type:    "ERROR",
-					Message: "Error getting the loomie type details",
-				})
-				return
-			}
-
-			// Cache the type details
-			GlobalWsHub.CachedStrongAgainst[value] = make([]string, 0)
-			GlobalWsHub.CachedStrongAgainst[value] = typeDetails.StrongAgainst
-		}
-	}
+	cacheTypeStrongAgainst(gymLoomie.Types, combat)
 
 	// Calculate the damage
 	actualGymLoomieDamage := gymLoomie.Attack
@@ -165,34 +142,13 @@ func handleReceiveAttack(combat *WsCombat) {
 	combat.LastUserAttackTimestamp = time.Now().Unix()
 	gymLoomie := combat.CurrentGymLoomie
 	playerLoomie := combat.CurrentPlayerLoomie
+	cacheTypeStrongAgainst(playerLoomie.Types, combat)
 
 	// Check if the gym loomie was fought by the player loomie before
 	_, alreadyFought := combat.FoughtGymLoomies[gymLoomie.Id]
 	if !alreadyFought {
 		combat.FoughtGymLoomies[gymLoomie.Id] = make([]primitive.ObjectID, 0)
 		combat.FoughtGymLoomies[gymLoomie.Id] = append(combat.FoughtGymLoomies[gymLoomie.Id], playerLoomie.Id)
-	}
-
-	// Get the types
-	for _, value := range playerLoomie.Types {
-		// Check if the type was cached before
-		_, cached := GlobalWsHub.CachedStrongAgainst[value]
-
-		// If the type was not obtained before, get it from the database
-		if !cached {
-			typeDetails, err := models.GetLoomieTypeDetailsByName(value)
-
-			if err != nil {
-				combat.SendMessage(WsMessage{
-					Type:    "ERROR",
-					Message: "Error getting the loomie type details",
-				})
-				return
-			}
-
-			GlobalWsHub.CachedStrongAgainst[value] = make([]string, 0)
-			GlobalWsHub.CachedStrongAgainst[value] = typeDetails.StrongAgainst
-		}
 	}
 
 	// Calculate the damage

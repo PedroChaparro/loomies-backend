@@ -3,6 +3,8 @@ package combat
 import (
 	"math/rand"
 	"time"
+
+	"github.com/PedroChaparro/loomies-backend/models"
 )
 
 // getRandomInt returns a random integer between min and max (both included)
@@ -25,4 +27,30 @@ func isTypeStrongAgainst(atackingType string, defendingTypes []string) bool {
 	}
 
 	return false
+}
+
+// cacheTypeStrongAgainst caches the strong against types if they are not cached yet
+func cacheTypeStrongAgainst(loomieTypes []string, combat *WsCombat) {
+	// For each type
+	for _, value := range loomieTypes {
+		// Check if the type was cached before
+		_, cached := GlobalWsHub.CachedStrongAgainst[value]
+
+		// If the type was not obtained before, get it from the database and cache it
+		if !cached {
+			typeDetails, err := models.GetLoomieTypeDetailsByName(value)
+
+			if err != nil {
+				combat.SendMessage(WsMessage{
+					Type:    "ERROR",
+					Message: "Error getting the loomie type details",
+				})
+
+				return
+			}
+
+			GlobalWsHub.CachedStrongAgainst[value] = make([]string, 0)
+			GlobalWsHub.CachedStrongAgainst[value] = typeDetails.StrongAgainst
+		}
+	}
 }
