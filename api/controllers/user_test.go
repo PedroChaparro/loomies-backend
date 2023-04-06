@@ -581,6 +581,13 @@ func TestGetLoomiesSuccess(t *testing.T) {
 	// Insert the loomies into the user's loomies
 	models.UserCollection.UpdateOne(ctx, bson.D{{Key: "email", Value: randomUser.Email}}, bson.D{{Key: "$set", Value: bson.D{{Key: "loomies", Value: loomiesIds}}}})
 
+	// Set the user as the loomies in the array owner
+	models.CaughtLoomiesCollection.UpdateMany(ctx, bson.D{
+		{Key: "_id", Value: bson.D{{Key: "$in", Value: loomiesIds}}},
+	}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "owner", Value: randomUser.Id}}},
+	})
+
 	// Make the request and get the JSON response
 	w, req = tests.SetupGetRequest("/user/loomies", tests.CustomHeader{Name: "Access-Token", Value: token})
 	router.ServeHTTP(w, req)
