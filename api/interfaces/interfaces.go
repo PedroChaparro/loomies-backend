@@ -248,6 +248,13 @@ type CaughtLoomie struct {
 	Experience float64              `json:"experience"     bson:"experience"`
 }
 
+type WsTokenClaims struct {
+	UserID    string  `json:"user_id"`
+	GymID     string  `json:"gym_id"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
 // ToGymProtector Converts a caught loomie to a gym protector keeping only the relevant fields
 func (caughtLoomie *CaughtLoomie) ToGymProtector() *GymProtector {
 	return &GymProtector{

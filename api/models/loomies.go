@@ -7,6 +7,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

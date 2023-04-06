@@ -59,13 +59,6 @@ type WsHub struct {
 // This is initialized in the main.go file
 var GlobalWsHub *WsHub
 
-type WsTokenClaims struct {
-	UserID    string  `json:"user_id"`
-	GymID     string  `json:"gym_id"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-}
-
 // Includes checks if the hub already has a client for the gym
 func (hub *WsHub) Includes(gym string) bool {
 	_, ok := hub.Combats[gym]
