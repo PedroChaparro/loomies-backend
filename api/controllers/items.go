@@ -40,5 +40,5 @@ func HandleGetItems(c *gin.Context) {
 		loomballs = []interfaces.UserLoomballsRes{}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"error": false, "items": items, "loomballs": loomballs})
+	c.JSON(http.StatusOK, gin.H{"error": false, "message": "User items were successfully retreived", "items": items, "loomballs": loomballs})
 }
