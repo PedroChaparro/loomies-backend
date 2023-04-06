@@ -93,6 +93,7 @@ func HandleCombatInit(c *gin.Context) {
 	}
 
 	// Get the user and gym loomies
+	var userCombatLoomies, gymCombatLoomies []interfaces.CombatLoomie
 	user, _ := models.GetUserById(claims.UserID)
 	userLoomies, _ := models.GetLoomiesByIds(user.LoomieTeam, user.Id)
 	gymLoomies, _ := models.GetLoomiesByIds(gymDoc.Protectors, primitive.NilObjectID)
@@ -127,25 +128,21 @@ func HandleCombatInit(c *gin.Context) {
 
 	// Update the loomies stats
 	for _, loomie := range userLoomies {
-		loomie.Hp = loomie.Hp * (1 + 1/8*(loomie.Level-1))
-		loomie.Attack = loomie.Attack * (1 + 1/8*(loomie.Level-1))
-		loomie.Defense = loomie.Defense * (1 + 1/8*(loomie.Level-1))
+		userCombatLoomies = append(userCombatLoomies, *loomie.ToCombatLoomie())
 	}
 
 	for _, loomie := range gymLoomies {
-		loomie.Hp = loomie.Hp * (1 + 1/8*(loomie.Level-1))
-		loomie.Attack = loomie.Attack * (1 + 1/8*(loomie.Level-1))
-		loomie.Defense = loomie.Defense * (1 + 1/8*(loomie.Level-1))
+		gymCombatLoomies = append(gymCombatLoomies, *loomie.ToCombatLoomie())
 	}
 
 	Combat := &combat.WsCombat{
 		GymID:                claims.GymID,
 		Connection:           conn,
 		LastMessageTimestamp: time.Now().Unix(),
-		PlayerLoomies:        userLoomies,
-		GymLoomies:           gymLoomies,
-		CurrentGymLoomie:     &gymLoomies[0],
-		CurrentPlayerLoomie:  &userLoomies[0],
+		PlayerLoomies:        userCombatLoomies,
+		GymLoomies:           gymCombatLoomies,
+		CurrentGymLoomie:     &gymCombatLoomies[0],
+		CurrentPlayerLoomie:  &userCombatLoomies[0],
 		FoughtGymLoomies:     make(map[primitive.ObjectID][]primitive.ObjectID),
 		Dodges:               make(chan bool, 1),
 		Close:                make(chan bool, 1),

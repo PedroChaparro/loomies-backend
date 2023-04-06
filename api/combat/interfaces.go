@@ -22,11 +22,11 @@ type WsCombat struct {
 	// Keep track of the last attack timestamp to avoid spamming
 	LastUserAttackTimestamp int64
 	// Loomie teams in combat
-	GymLoomies    []interfaces.UserLoomiesRes
-	PlayerLoomies []interfaces.UserLoomiesRes
+	GymLoomies    []interfaces.CombatLoomie
+	PlayerLoomies []interfaces.CombatLoomie
 	// Current loomie in combat
-	CurrentGymLoomie    *interfaces.UserLoomiesRes
-	CurrentPlayerLoomie *interfaces.UserLoomiesRes
+	CurrentGymLoomie    *interfaces.CombatLoomie
+	CurrentPlayerLoomie *interfaces.CombatLoomie
 	// Defeated loomies in combat
 	FoughtGymLoomies map[primitive.ObjectID][]primitive.ObjectID
 	// Channels to communicate between the goroutines

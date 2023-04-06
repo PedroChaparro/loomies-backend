@@ -66,17 +66,17 @@ func handleSendAttack(combat *WsCombat) {
 	}
 
 	// Reduce the player loomie hp
-	playerLoomie.Hp -= calculatedAttack
+	playerLoomie.BoostedHp -= calculatedAttack
 
 	// Check if the player loomie was weakened
-	if playerLoomie.Hp <= 0 {
+	if playerLoomie.BoostedHp <= 0 {
 		weaknedLoomieId := playerLoomie.Id
 
 		// Remove the loomie from the player loomies (Local array)
 		if len(combat.PlayerLoomies) > 1 {
 			combat.PlayerLoomies = combat.PlayerLoomies[1:]
 		} else {
-			combat.PlayerLoomies = make([]interfaces.UserLoomiesRes, 0)
+			combat.PlayerLoomies = make([]interfaces.CombatLoomie, 0)
 		}
 
 		// Notify the user that the loomie was weakened
@@ -119,7 +119,7 @@ func handleSendAttack(combat *WsCombat) {
 			Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, calculatedAttack),
 			Payload: map[string]interface{}{
 				"loomie_id": playerLoomie.Id,
-				"hp":        playerLoomie.Hp,
+				"hp":        playerLoomie.BoostedHp,
 			},
 		})
 	}
@@ -176,17 +176,17 @@ func handleReceiveAttack(combat *WsCombat) {
 	}
 
 	// Reduce the gym loomie hp
-	gymLoomie.Hp -= calculatedAttack
+	gymLoomie.BoostedHp -= calculatedAttack
 
 	// Check if the gym loomie was weakened
-	if gymLoomie.Hp <= 0 {
+	if gymLoomie.BoostedHp <= 0 {
 		wenakenedLoomieId := gymLoomie.Id
 
 		// Remove the loomie from the gym loomies (Local array)
 		if len(combat.GymLoomies) > 1 {
 			combat.GymLoomies = combat.GymLoomies[1:]
 		} else {
-			combat.GymLoomies = make([]interfaces.UserLoomiesRes, 0)
+			combat.GymLoomies = make([]interfaces.CombatLoomie, 0)
 		}
 
 		// Notify the user that the gym loomie was weakened
@@ -231,7 +231,7 @@ func handleReceiveAttack(combat *WsCombat) {
 			Message: fmt.Sprintf("Enemy loomie %s received %d damage", gymLoomie.Name, calculatedAttack),
 			Payload: map[string]interface{}{
 				"loomie_id": gymLoomie.Id,
-				"hp":        gymLoomie.Hp,
+				"hp":        gymLoomie.BoostedHp,
 			},
 		})
 	}
