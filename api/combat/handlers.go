@@ -50,15 +50,10 @@ func handleSendAttack(combat *WsCombat) {
 	actualGymLoomieDamage := gymLoomie.Attack
 	accumulatedDamage := actualGymLoomieDamage
 
-TYPES_LOOP:
-	for _, gymLoomieType := range gymLoomie.Types {
-		for _, playerLoomieType := range playerLoomie.Types {
-			for _, strongAgainst := range GlobalWsHub.CachedStrongAgainst[gymLoomieType] {
-				if strongAgainst == playerLoomieType {
-					accumulatedDamage *= 2
-					break TYPES_LOOP
-				}
-			}
+	for _, gymLoopieType := range gymLoomie.Types {
+		if isTypeStrongAgainst(gymLoopieType, playerLoomie.Types) {
+			accumulatedDamage *= 2
+			break
 		}
 	}
 
@@ -204,15 +199,11 @@ func handleReceiveAttack(combat *WsCombat) {
 	actualPlayerLoomieDamage := playerLoomie.Attack
 	accumulatedDamage := actualPlayerLoomieDamage
 
-TYPES_LOOP:
+	// Check if the gym loomie is weak against the player loomie
 	for _, playerLoomieType := range playerLoomie.Types {
-		for _, gymLoomieType := range gymLoomie.Types {
-			for _, strongAgainst := range GlobalWsHub.CachedStrongAgainst[playerLoomieType] {
-				if strongAgainst == gymLoomieType {
-					accumulatedDamage *= 2
-					break TYPES_LOOP
-				}
-			}
+		if isTypeStrongAgainst(playerLoomieType, gymLoomie.Types) {
+			accumulatedDamage *= 2
+			return
 		}
 	}
 
@@ -252,8 +243,6 @@ TYPES_LOOP:
 				"loomie_id": wenakenedLoomieId,
 			},
 		})
-
-		combat.DefeatedGymLoomies = append(combat.DefeatedGymLoomies, wenakenedLoomieId)
 
 		if len(combat.GymLoomies) == 0 {
 			combat.SendMessage(WsMessage{

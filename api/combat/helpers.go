@@ -13,3 +13,16 @@ func getRandomInt(min int, max int) int {
 	r := rand.New(source)
 	return r.Intn(max-min) + min
 }
+
+// isTypeStrongAgainst returns true if the atacking type is strong against the defending type
+func isTypeStrongAgainst(atackingType string, defendingTypes []string) bool {
+	for _, strongAgainst := range GlobalWsHub.CachedStrongAgainst[atackingType] {
+		for _, defendingType := range defendingTypes {
+			if strongAgainst == defendingType {
+				return true
+			}
+		}
+	}
+
+	return false
+}
