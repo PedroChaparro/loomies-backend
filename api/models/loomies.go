@@ -179,19 +179,74 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	return loomies, nil
 }
 
-// ValidateLoomieExists Check if the loomie exists by the id
-func ValidateLoomieExists(loomie_id string) error {
+// GetWildLoomieById Returns the wild loomie with the given id
+func GetWildLoomieById(loomie_id string) (interfaces.WildLoomie, error) {
 	id, err := primitive.ObjectIDFromHex(loomie_id)
 	var loomie interfaces.WildLoomie
 
 	if err != nil {
-		return err
+		return loomie, err
 	}
 
 	err = WildLoomiesCollection.FindOne(
 		context.TODO(),
 		bson.D{{Key: "_id", Value: id}},
 	).Decode(&loomie)
+
+	return loomie, err
+}
+
+// InsertInCaughtLoomies Insert the loomie in the caught loomies collection
+func InsertInCaughtLoomies(caught_loomie interfaces.CaughtLoomie) (primitive.ObjectID, error) {
+	result, err := CaughtLoomiesCollection.InsertOne(context.TODO(), caught_loomie)
+
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	id, _ := result.InsertedID.(primitive.ObjectID)
+
+	return id, err
+}
+
+// WasSuccessfulCapture Check if the loomie was successful capture (Calculate the chance of success)
+func WasSuccessfulCapture(loomie interfaces.WildLoomie, ball interfaces.Loomball) bool {
+	chance := 0
+	capture := utils.GetRandomInt(0, 100)
+
+	if loomie.Level >= ball.DecayUntil {
+		chance = int(ball.MinimumProbability * 100)
+	} else if loomie.Level <= int(ball.EffectiveUntil) {
+		chance = 100
+	} else {
+		chance = -((100-int(ball.MinimumProbability*100))/(ball.DecayUntil-ball.EffectiveUntil))*(loomie.Level-ball.EffectiveUntil) + 100
+	}
+
+	if capture <= chance {
+		return true
+	}
+	return false
+}
+
+// CheckIfUserInArrayOfWildLoomie check if user id alrady exists in array CapturedBy from wild loomie
+func CheckIfUserInArrayOfWildLoomie(loomie interfaces.WildLoomie, user interfaces.User) bool {
+	for _, element := range loomie.CapturedBy {
+		if element == user.Id {
+			return false
+		}
+	}
+
+	return true
+}
+
+// InsertUserInArrayOfWildLoomie insert user id in array CapturedBy from wild loomie
+func InsertUserInArrayOfWildLoomie(loomie interfaces.WildLoomie, user interfaces.User) error {
+	filter := bson.D{{Key: "_id", Value: loomie.Id}}
+	update := bson.D{{Key: "$push", Value: bson.D{
+		{Key: "captured_by", Value: user.Id},
+	},
+	}}
+	_, err := WildLoomiesCollection.UpdateOne(context.TODO(), filter, update)
 
 	return err
 }

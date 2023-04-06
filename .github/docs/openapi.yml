@@ -696,6 +696,72 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
+  /loomies/capture: 
+    post: 
+      tags: [ Loomies ]
+      description: User caught a Loomie
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                loomie_id: 
+                  type: string
+                  example: 641e1562d928b0e05a639864
+                loomball_id: 
+                  type: string
+                  example: 6429de53ddab67490ae12307
+                latitude: 
+                  type: number
+                  example:  7.1167
+                longitude: 
+                  type: number
+                  example: -73.1140
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error.
+          content: 
+            application/json: 
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Capture'
+                  - $ref: '#/components/schemas/NotCapture'
+              examples:
+                car:
+                  summary: Capture
+                  value:
+                    capture: true
+                    error: false
+                    message: Loomie caught
+                bike:
+                  summary: Not Capture
+                  value:
+                    capture: false
+                    error: false
+                    message: The Loomie was not caught. Try again!
+
+        "400":
+          description: Bad request or the user isn't near the loomie coordinates.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: Loomie or LoomBall was not found or user was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
   # --- --- ---
   # Web socket routes
   /combat/register:
@@ -976,3 +1042,21 @@ components:
         was_reward_claimed: 
           type: boolean
           example: false
+    Capture:
+      type: object
+      properties:
+        capture:
+          type: boolean
+        error:
+          type: boolean
+        message:
+          type: string
+    NotCapture:
+      type: object
+      properties:
+        capture:
+          type: boolean
+        error:
+          type: boolean
+        message:
+          type: string

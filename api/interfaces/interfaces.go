@@ -107,8 +107,8 @@ type Loomball struct {
 	Id                    primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Name                  string             `json:"name"      bson:"name"`
 	Serial                int                `json:"serial" bson:"serial"`
-	EffectiveUntil        int64              `json:"effective_until"      bson:"effective_until"`
-	DecayUntil            int64              `json:"decay_until"      bson:"decay_until"`
+	EffectiveUntil        int                `json:"effective_until"      bson:"effective_until"`
+	DecayUntil            int                `json:"decay_until"      bson:"decay_until"`
 	MinimumProbability    float64            `json:"minimum_probability"      bson:"minimum_probability"`
 	GymRewardChancePlayer float64            `json:"gym_reward_chance_player"      bson:"gym_reward_chance_player"`
 	GymRewardChanceOwner  float64            `json:"gym_reward_chance_owner"      bson:"gym_reward_chance_owner"`
@@ -194,6 +194,9 @@ type WildLoomie struct {
 	Latitude    float64              `json:"latitude"     bson:"latitude"`
 	Longitude   float64              `json:"longitude"     bson:"longitude"`
 	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
+	Level       int                  `json:"level"     bson:"level"`
+	Experience  float64              `json:"experience"     bson:"experience"`
+	CapturedBy  []primitive.ObjectID `json:"captured_by"     bson:"captured_by"`
 }
 
 type AuthenticationCode struct {
