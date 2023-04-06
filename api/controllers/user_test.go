@@ -203,6 +203,10 @@ func TestAccountValidationSuccess(t *testing.T) {
 	c.Equal(http.StatusOK, w.Code)
 	c.Equal(false, response["error"])
 	c.Equal("Email has been verified", response["message"])
+
+	// Delete user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
 }
 
 // TestAccountValidationBadRequest Test the Bad Request cases for /user/validate endpoint

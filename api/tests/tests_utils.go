@@ -90,15 +90,38 @@ func InsertUser(user interfaces.User, router *gin.Engine, handler gin.HandlerFun
 
 // DeleteUser Deletes a user from the database
 func DeleteUser(email string, id primitive.ObjectID) error {
+	// -------------------------
 	// Remove the user from the users collection
+	// -------------------------
 	_, err := models.UserCollection.DeleteOne(context.Background(), bson.D{{Key: "email", Value: email}})
 
 	if err != nil {
 		return err
 	}
 
+	// -------------------------
 	// Remove the user references from the authentication codes collection
+	// -------------------------
+
 	_, err = models.AuthenticationCodesCollection.DeleteMany(context.Background(), bson.D{{Key: "email", Value: email}})
+
+	if err != nil {
+		return err
+	}
+
+	// -------------------------
+	// Remove the user references from the gyms collection
+	// -------------------------
+
+	// Remove it from the owner field
+	_, err = models.GymsCollection.UpdateMany(context.Background(), bson.D{{Key: "owner", Value: id}}, bson.D{{Key: "$set", Value: bson.D{{Key: "owner", Value: nil}}}})
+
+	if err != nil {
+		return err
+	}
+
+	// Pull it from the rewards_claimed_by array
+	_, err = models.GymsCollection.UpdateMany(context.Background(), bson.M{}, bson.D{{Key: "$pull", Value: bson.D{{Key: "rewards_claimed_by", Value: id}}}})
 
 	if err != nil {
 		return err

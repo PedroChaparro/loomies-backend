@@ -24,6 +24,11 @@ func HandleClaimReward(c *gin.Context) {
 	payload := interfaces.ClaimGymRewardReq{}
 
 	if err := c.BindJSON(&payload); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Invalid request body"})
+		return
+	}
+
+	if payload.GymID == "" || payload.Latitude == 0 || payload.Longitude == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Gym id, latitude and longitude are required"})
 		return
 	}
@@ -40,16 +45,17 @@ func HandleClaimReward(c *gin.Context) {
 		}
 
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when getting gym, please try again later"})
+		return
 	}
 
 	if math.Abs(gym.Latitude-payload.Latitude) > zoneRadius || math.Abs(gym.Longitude-payload.Longitude) > zoneRadius {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User is not near the gym"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You are too far from the gym"})
 		return
 	}
 
 	// 2. Validate the user has not claimed the reward yet
 	if models.HasUserClaimedReward(gym.RewardsClaimedBy, userIdMongo) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User has already claimed the reward"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You already claimed the rewards for this gym"})
 		return
 	}
 
