@@ -143,7 +143,7 @@ func HandleCombatInit(c *gin.Context) {
 		GymLoomies:           gymCombatLoomies,
 		CurrentGymLoomie:     &gymCombatLoomies[0],
 		CurrentPlayerLoomie:  &userCombatLoomies[0],
-		FoughtGymLoomies:     make(map[primitive.ObjectID][]primitive.ObjectID),
+		FoughtGymLoomies:     make(map[primitive.ObjectID][]*interfaces.CombatLoomie),
 		Dodges:               make(chan bool, 1),
 		Close:                make(chan bool, 1),
 	}

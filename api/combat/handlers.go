@@ -141,21 +141,21 @@ func handleReceiveAttack(combat *WsCombat) {
 	_, alreadyFought := combat.FoughtGymLoomies[gymLoomie.Id]
 
 	if !alreadyFought {
-		combat.FoughtGymLoomies[gymLoomie.Id] = make([]primitive.ObjectID, 0)
-		combat.FoughtGymLoomies[gymLoomie.Id] = append(combat.FoughtGymLoomies[gymLoomie.Id], playerLoomie.Id)
+		combat.FoughtGymLoomies[gymLoomie.Id] = make([]*interfaces.CombatLoomie, 0)
+		combat.FoughtGymLoomies[gymLoomie.Id] = append(combat.FoughtGymLoomies[gymLoomie.Id], playerLoomie)
 	} else {
 		// Check if the player loomie already fought the gym loomie
 		foughtByCurrentPlayerLoomie := false
 
-		for _, playerLoomieId := range combat.FoughtGymLoomies[gymLoomie.Id] {
-			if playerLoomieId == playerLoomie.Id {
+		for _, previousPlayerLoomie := range combat.FoughtGymLoomies[gymLoomie.Id] {
+			if previousPlayerLoomie.Id == playerLoomie.Id {
 				foughtByCurrentPlayerLoomie = true
 				break
 			}
 		}
 
 		if !foughtByCurrentPlayerLoomie {
-			combat.FoughtGymLoomies[gymLoomie.Id] = append(combat.FoughtGymLoomies[gymLoomie.Id], playerLoomie.Id)
+			combat.FoughtGymLoomies[gymLoomie.Id] = append(combat.FoughtGymLoomies[gymLoomie.Id], playerLoomie)
 		}
 	}
 

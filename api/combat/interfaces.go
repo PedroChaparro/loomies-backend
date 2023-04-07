@@ -28,7 +28,7 @@ type WsCombat struct {
 	CurrentGymLoomie    *interfaces.CombatLoomie
 	CurrentPlayerLoomie *interfaces.CombatLoomie
 	// Defeated loomies in combat
-	FoughtGymLoomies map[primitive.ObjectID][]primitive.ObjectID
+	FoughtGymLoomies map[primitive.ObjectID][]*interfaces.CombatLoomie
 	// Channels to communicate between the goroutines
 	Dodges chan bool
 	Close  chan bool
