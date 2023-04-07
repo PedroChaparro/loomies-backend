@@ -312,6 +312,18 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 		return
 	}
 
+	// Decrement the item from the user inventory
+	err = models.DecrementItemFromUserInventory(combat.PlayerID, itemMongoId, 1)
+
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] There was an error using the item. Please try again later",
+		})
+
+		return
+	}
+
 	// Apply the item
 	err = applyItem(&item, combat.CurrentPlayerLoomie)
 
@@ -324,8 +336,6 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 		return
 	}
 
-	// TODO: Remove the item from the user inventory
-
 	// Send the message to the user
 	combat.SendMessage(WsMessage{
 		Type:    "UPDATE_PLAYER_LOOMIE",
@@ -334,9 +344,6 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 			"loomie": combat.CurrentPlayerLoomie,
 		},
 	})
-
-	// TODO: Check if the item exists in the user inventory
-	fmt.Println("Using item:", itemId)
 }
 
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
