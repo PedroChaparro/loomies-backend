@@ -117,8 +117,9 @@ func (loomie *CombatLoomie) ApplyVitamins() {
 func (loomie *CombatLoomie) ApplyUnknownBevarage() {
 	// Keep the previous boosts
 	experienceFactor := 1.0 + ((1.0 / 8.0) * (float64(loomie.Level) - 1.0))
-	previousInitialBoostedHp := int(math.Floor(float64(loomie.BaseHp) * experienceFactor))
-	previousHpBoosts := loomie.BoostedHp - previousInitialBoostedHp
+
+	previousInitialMaxHp := int(math.Floor(float64(loomie.BaseHp) * experienceFactor))
+	previousMaxHpBoosts := loomie.MaxHp - previousInitialMaxHp
 
 	previousInitialBoostedAttack := int(math.Floor(float64(loomie.BaseAttack) * experienceFactor))
 	previousAttackBoosts := loomie.BoostedAttack - previousInitialBoostedAttack
@@ -129,7 +130,12 @@ func (loomie *CombatLoomie) ApplyUnknownBevarage() {
 	// Increment the level and update the stats
 	loomie.Level++
 	experienceFactor = 1.0 + ((1.0 / 8.0) * (float64(loomie.Level) - 1.0))
-	loomie.BoostedHp = int(math.Floor(float64(loomie.BaseHp)*experienceFactor)) + previousHpBoosts
+	loomie.MaxHp = int(math.Floor(float64(loomie.BaseHp)*experienceFactor)) + previousMaxHpBoosts
 	loomie.BoostedAttack = int(math.Floor(float64(loomie.BaseAttack)*experienceFactor)) + previousAttackBoosts
 	loomie.BoostedDefense = int(math.Floor(float64(loomie.BaseDefense)*experienceFactor)) + previousDefenseBoosts
+
+	// In the case of the loomie boosted hp, we just increment the new level boost (+1/8 of the base hp)
+	possibleHpIncrement := int(math.Floor(float64(loomie.BaseHp)) * (1.0 / 8.0))
+	possibleBoostedHp := float64(loomie.BoostedHp) + float64(possibleHpIncrement)
+	loomie.BoostedHp = int(math.Min(possibleBoostedHp, float64(loomie.MaxHp)))
 }
