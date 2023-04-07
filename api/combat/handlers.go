@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
+	"github.com/PedroChaparro/loomies-backend/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -251,6 +252,91 @@ func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.Object
 	}
 
 	fmt.Println("Weakened Event Handled")
+}
+
+// handleUseItem handles the use of an item by the player
+func handleUseItem(combat *WsCombat, message WsMessage) {
+	// Get the item id from the messge payload
+	payload := message.Payload
+	itemId := fmt.Sprint(payload["item_id"])
+
+	// Check the item is not null
+	if itemId == "" {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Item id is required",
+		})
+
+		return
+	}
+
+	// Check if the item is a valid mongo id
+	itemMongoId, err := primitive.ObjectIDFromHex(itemId)
+
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Item id is not valid",
+		})
+
+		return
+	}
+
+	// Check the item exists in the user inventory
+	item, err := models.GetItemFromUserInventory(combat.PlayerID, itemMongoId)
+
+	if err != nil {
+		if err.Error() == "USER_DOES_NOT_OWN_ITEM" {
+			combat.SendMessage(WsMessage{
+				Type:    "ERROR",
+				Message: "[BAD REQUEST] You don't own this item",
+			})
+
+			return
+		}
+
+		if err.Error() == "ITEM_DOES_NOT_EXIST" {
+			combat.SendMessage(WsMessage{
+				Type:    "ERROR",
+				Message: "[BAD REQUEST] Item does not exist or is not a combat item",
+			})
+
+			return
+		}
+
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] Error getting the item from the user inventory",
+		})
+
+		return
+	}
+
+	// Apply the item
+	err = applyItem(&item, combat.CurrentPlayerLoomie)
+
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] The item is not supported",
+		})
+
+		return
+	}
+
+	// TODO: Remove the item from the user inventory
+
+	// Send the message to the user
+	combat.SendMessage(WsMessage{
+		Type:    "UPDATE_PLAYER_LOOMIE",
+		Message: fmt.Sprintf("Loomie: %s received the item: %s", combat.CurrentPlayerLoomie.Name, item.Name),
+		Payload: map[string]interface{}{
+			"loomie": combat.CurrentPlayerLoomie,
+		},
+	})
+
+	// TODO: Check if the item exists in the user inventory
+	fmt.Println("Using item:", itemId)
 }
 
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks

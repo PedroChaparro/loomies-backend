@@ -42,7 +42,7 @@ type WsMessage struct {
 	Type    string `json:"type"`
 	Message string `json:"message"`
 	// The payload field allows to send any kind of data in JSON format
-	Payload interface{} `json:"payload,omitempty"`
+	Payload map[string]interface{} `json:"payload,omitempty"`
 }
 
 // WsHub is the hub that stores all the clients
@@ -120,7 +120,7 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				if time.Now().Unix()-combat.LastMessageTimestamp > 30 {
+				if time.Now().Unix()-combat.LastMessageTimestamp > 3600 {
 					combat.Connection.Close()
 					return
 				}
@@ -175,6 +175,10 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 		case "USER_ATTACK":
 			handleReceiveAttack(combat)
+			combat.UpdatedLastReceivedMessageTimestamp()
+
+		case "USER_USE_ITEM":
+			handleUseItem(combat, wsMessage)
 			combat.UpdatedLastReceivedMessageTimestamp()
 		}
 	}

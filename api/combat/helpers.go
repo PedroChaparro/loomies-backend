@@ -1,6 +1,7 @@
 package combat
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -45,7 +46,7 @@ func cacheTypeStrongAgainst(loomieTypes []string, combat *WsCombat) {
 			if err != nil {
 				combat.SendMessage(WsMessage{
 					Type:    "ERROR",
-					Message: "Error getting the loomie type details",
+					Message: "[INTERNAL SERVER ERROR] Error getting the loomie type details",
 				})
 
 				return
@@ -75,4 +76,35 @@ func calculateAttack(atackingLoomie, defendingLoomie *interfaces.CombatLoomie) i
 	finalAttack -= finalAttack * (defendingLoomie.BoostedDefense / 100)
 	finalAttack = int(math.Max(float64(finalAttack), minAttack))
 	return finalAttack
+}
+
+// applyItem Applies the item to the loomie by its serial
+func applyItem(item *interfaces.PopulatedInventoryItem, loomie *interfaces.CombatLoomie) error {
+	switch item.Serial {
+	// Painkiller
+	case 1:
+		loomie.ApplyPainKillers()
+	// Small aid kit
+	case 2:
+		loomie.ApplySmallAidKit()
+	// Big aid kit
+	case 3:
+		loomie.ApplyBigAidKit()
+		// Defibrillator
+	case 4:
+		loomie.ApplyDefibrillator()
+		// Steroids injection
+	case 5:
+		loomie.ApplySteroidsInjection()
+		// Vitamins
+	case 6:
+		loomie.ApplyVitamins()
+		// Unknown bevarage
+	case 7:
+		loomie.ApplyUnknownBevarage()
+	default:
+		return fmt.Errorf("NON_SUPPORTED_ITEM")
+	}
+
+	return nil
 }
