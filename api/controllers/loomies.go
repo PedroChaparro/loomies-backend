@@ -441,16 +441,16 @@ func HandleCaptureLoomie(c *gin.Context) {
 		}
 
 		c.IndentedJSON(http.StatusOK, gin.H{
-			"error":   false,
-			"capture": was_captured,
-			"message": "Loomie caught",
+			"error":        false,
+			"was_captured": was_captured,
+			"message":      "The loomie was captured",
 		})
 		return
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{
-		"error":   false,
-		"capture": was_captured,
-		"message": "The Loomie was not caught. Try again!",
+		"error":        false,
+		"was_captured": was_captured,
+		"message":      "The Loomie was not caught. Try again!",
 	})
 }

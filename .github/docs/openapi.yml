@@ -1080,7 +1080,7 @@ components:
     Capture:
       type: object
       properties:
-        capture:
+        was_captured:
           type: boolean
         error:
           type: boolean
@@ -1089,7 +1089,7 @@ components:
     NotCapture:
       type: object
       properties:
-        capture:
+        was_captured:
           type: boolean
         error:
           type: boolean
