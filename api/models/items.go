@@ -33,8 +33,7 @@ func GetItemFromUserInventory(userId primitive.ObjectID, itemId primitive.Object
 
 	// Get the user from the items collection
 	res = ItemsCollection.FindOne(context.TODO(), bson.M{
-		"_id":            itemId,
-		"is_combat_item": true,
+		"_id": itemId,
 	})
 
 	if res.Err() == mongo.ErrNoDocuments {
