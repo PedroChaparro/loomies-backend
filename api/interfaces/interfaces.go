@@ -123,6 +123,13 @@ type InventoryItem struct {
 	ItemQuantity   int                `json:"item_quantity" bson:"item_quantity"`
 }
 
+type PopulatedInventoryItem struct {
+	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Name     string             `json:"name" bson:"name"`
+	Serial   int                `json:"serial" bson:"serial"`
+	Quantity int                `json:"quantity" bson:"quantity"`
+}
+
 type User struct {
 	Id                              primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Username                        string               `json:"username"      bson:"username"`
