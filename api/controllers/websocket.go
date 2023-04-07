@@ -136,6 +136,7 @@ func HandleCombatInit(c *gin.Context) {
 	}
 
 	Combat := &combat.WsCombat{
+		PlayerID:             user.Id,
 		GymID:                claims.GymID,
 		Connection:           conn,
 		LastMessageTimestamp: time.Now().Unix(),

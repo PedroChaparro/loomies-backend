@@ -13,6 +13,7 @@ import (
 // WsCombat stores the websocket connection to be able
 // to send messages to the client
 type WsCombat struct {
+	PlayerID primitive.ObjectID
 	// We keep the gym id to easily remove it from the map when the combat ends
 	GymID string
 	// The connecton to exchange messages with the client
