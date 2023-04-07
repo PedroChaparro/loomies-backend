@@ -114,6 +114,11 @@ func applyItem(item *interfaces.PopulatedInventoryItem, loomie *interfaces.Comba
 		// Unknown bevarage
 	case 7:
 		loomie.ApplyUnknownBevarage()
+		err := models.IncrementLoomieLevel(loomie.Id, 1)
+
+		if err != nil {
+			return fmt.Errorf("SERVER_ERROR")
+		}
 	default:
 		return fmt.Errorf("NON_SUPPORTED_ITEM")
 	}

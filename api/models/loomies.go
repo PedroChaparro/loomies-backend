@@ -290,3 +290,14 @@ func GetLoomieTypeDetailsByName(typeName string) (interfaces.PopulatedLoomieType
 
 	return loomieType, err
 }
+
+// IncrementLoomieLevel Increment the level of a loomie by the given amount
+func IncrementLoomieLevel(loomieId primitive.ObjectID, incrementBy int) error {
+	result := CaughtLoomiesCollection.FindOneAndUpdate(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: loomieId}},
+		bson.D{{Key: "$inc", Value: bson.D{{Key: "level", Value: incrementBy}}}},
+	)
+
+	return result.Err()
+}

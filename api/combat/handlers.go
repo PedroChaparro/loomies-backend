@@ -326,6 +326,15 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 			return
 		}
 
+		if err.Error() == "SERVER_ERROR" {
+			combat.SendMessage(WsMessage{
+				Type:    "ERROR",
+				Message: "[INTERNAL SERVER ERROR] There was an error using the item. Please try again later",
+			})
+
+			return
+		}
+
 		// If the item is not supported, send a message to the user
 		combat.SendMessage(WsMessage{
 			Type:    "ERROR",
