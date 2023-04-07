@@ -245,9 +245,9 @@ func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.Object
 	fmt.Println("Handling Gym Loomie Weakened Event for:", weakenedLoomieId)
 	foughtWith := combat.FoughtGymLoomies[weakenedLoomieId]
 
-	for _, playerLoomieId := range foughtWith {
+	for _, playerLoomiePointer := range foughtWith {
 		// TODO: Add experience to the player loomie
-		fmt.Println("Adding experience to player loomie:", playerLoomieId)
+		fmt.Println("Adding experience to player loomie:", playerLoomiePointer)
 	}
 
 	fmt.Println("Weakened Event Handled")
