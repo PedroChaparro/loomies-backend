@@ -148,3 +148,77 @@ func TestGetNearLoomiesSuccess(t *testing.T) {
 	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
+
+// TestLoomieExistenceValidationSuccess Test the `/loomies/exists/:id` endpoint
+func TestLoomieExistenceValidationSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Get a valid loomie from the database
+	var loomie interfaces.WildLoomie
+	err := models.WildLoomiesCollection.FindOne(ctx, bson.M{}).Decode(&loomie)
+	c.NoError(err)
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.GET("/loomies/exists/:id", middlewares.MustProvideAccessToken(), HandleValidateLoomieExists)
+
+	// Make the request
+	w, req := tests.SetupGetRequest("/loomies/exists/"+loomie.Id.Hex(), tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	// Check the fields
+	c.Equal(200, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal("Loomie exists", response["message"])
+	c.Equal(loomie.Id.Hex(), response["loomie_id"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
+}
+
+// TestLoomieExistenceNonSuccess Test the `/loomies/exists/:id` with Not Found and Bad Request responses
+func TestLoomieExistenceNonSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.GET("/loomies/exists/:id", middlewares.MustProvideAccessToken(), HandleValidateLoomieExists)
+
+	// -------------------------
+	// 1. Test with a non existing ID
+	// -------------------------
+	w, req := tests.SetupGetRequest("/loomies/exists/5c9f5c9f5c9f5c9f5c9f5c9f", tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	// Check the fields
+	c.Equal(404, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Loomie doesn't exists", response["message"])
+
+	// Remove the user
+	err := tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
+}
