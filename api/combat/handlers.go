@@ -312,6 +312,29 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 		return
 	}
 
+	// Apply the item
+	err = applyItem(&item, combat.CurrentPlayerLoomie)
+
+	if err != nil {
+		// If the loomie does not need healing, send a message to the user
+		if err.Error() == "HEALING_NOT_NEEDED" {
+			combat.SendMessage(WsMessage{
+				Type:    "ERROR",
+				Message: "[BAD REQUEST] The loomie is not damaged",
+			})
+
+			return
+		}
+
+		// If the item is not supported, send a message to the user
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] The item is not supported",
+		})
+
+		return
+	}
+
 	// Decrement the item from the user inventory
 	err = models.DecrementItemFromUserInventory(combat.PlayerID, itemMongoId, 1)
 
@@ -319,18 +342,6 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 		combat.SendMessage(WsMessage{
 			Type:    "ERROR",
 			Message: "[INTERNAL SERVER ERROR] There was an error using the item. Please try again later",
-		})
-
-		return
-	}
-
-	// Apply the item
-	err = applyItem(&item, combat.CurrentPlayerLoomie)
-
-	if err != nil {
-		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[BAD REQUEST] The item is not supported",
 		})
 
 		return

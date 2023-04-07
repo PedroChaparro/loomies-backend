@@ -120,7 +120,7 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				if time.Now().Unix()-combat.LastMessageTimestamp > 3600 {
+				if time.Now().Unix()-combat.LastMessageTimestamp > 30 {
 					combat.Connection.Close()
 					return
 				}

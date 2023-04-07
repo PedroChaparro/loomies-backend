@@ -83,16 +83,28 @@ func applyItem(item *interfaces.PopulatedInventoryItem, loomie *interfaces.Comba
 	switch item.Serial {
 	// Painkiller
 	case 1:
-		loomie.ApplyPainKillers()
+		wasApplied := loomie.ApplyPainKillers()
+		if !wasApplied {
+			return fmt.Errorf("HEALING_NOT_NEEDED")
+		}
 	// Small aid kit
 	case 2:
-		loomie.ApplySmallAidKit()
+		wasApplied := loomie.ApplySmallAidKit()
+		if !wasApplied {
+			return fmt.Errorf("HEALING_NOT_NEEDED")
+		}
 	// Big aid kit
 	case 3:
-		loomie.ApplyBigAidKit()
+		wasApplied := loomie.ApplyBigAidKit()
+		if !wasApplied {
+			return fmt.Errorf("HEALING_NOT_NEEDED")
+		}
 		// Defibrillator
 	case 4:
-		loomie.ApplyDefibrillator()
+		wasApplied := loomie.ApplyDefibrillator()
+		if !wasApplied {
+			return fmt.Errorf("HEALING_NOT_NEEDED")
+		}
 		// Steroids injection
 	case 5:
 		loomie.ApplySteroidsInjection()
