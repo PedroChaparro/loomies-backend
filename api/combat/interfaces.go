@@ -22,6 +22,9 @@ type WsCombat struct {
 	LastMessageTimestamp int64
 	// Keep track of the last attack timestamp to avoid spamming
 	LastUserAttackTimestamp int64
+	// Keep track of the alive user and gym loomies
+	AlivePlayerLoomies int
+	AliveGymLoomies    int
 	// Loomie teams in combat
 	GymLoomies    []interfaces.CombatLoomie
 	PlayerLoomies []interfaces.CombatLoomie

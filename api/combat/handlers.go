@@ -73,12 +73,8 @@ func handleSendAttack(combat *WsCombat) {
 	if playerLoomie.BoostedHp <= 0 {
 		weaknedLoomieId := playerLoomie.Id
 
-		// Remove the loomie from the player loomies (Local array)
-		if len(combat.PlayerLoomies) > 1 {
-			combat.PlayerLoomies = combat.PlayerLoomies[1:]
-		} else {
-			combat.PlayerLoomies = make([]interfaces.CombatLoomie, 0)
-		}
+		// Reduce the alive player loomies count
+		combat.AlivePlayerLoomies--
 
 		// Notify the user that the loomie was weakened
 		combat.SendMessage(WsMessage{
@@ -90,7 +86,7 @@ func handleSendAttack(combat *WsCombat) {
 		})
 
 		// Check if the player loose the battle
-		if len(combat.PlayerLoomies) == 0 {
+		if combat.AlivePlayerLoomies == 0 {
 			combat.SendMessage(WsMessage{
 				Type:    "USER_HAS_LOST",
 				Message: "You have lost the battle. Try fusioning your loomies or caught more loomies to improve your team",
@@ -100,8 +96,18 @@ func handleSendAttack(combat *WsCombat) {
 			return
 		}
 
+		// Find the next alive player loomie
+		newPlayerLoomie := &interfaces.CombatLoomie{}
+
+		for _, playerLoomie := range combat.PlayerLoomies {
+			if playerLoomie.BoostedHp > 0 {
+				newPlayerLoomie = &playerLoomie
+				break
+			}
+		}
+
 		// Update the current player loomie
-		combat.CurrentPlayerLoomie = &combat.PlayerLoomies[0]
+		combat.CurrentPlayerLoomie = newPlayerLoomie
 
 		// Notify the user that the current player loomie was changed
 		combat.SendMessage(WsMessage{
@@ -181,26 +187,21 @@ func handleReceiveAttack(combat *WsCombat) {
 
 	// Check if the gym loomie was weakened
 	if gymLoomie.BoostedHp <= 0 {
-		wenakenedLoomieId := gymLoomie.Id
-
-		// Remove the loomie from the gym loomies (Local array)
-		if len(combat.GymLoomies) > 1 {
-			combat.GymLoomies = combat.GymLoomies[1:]
-		} else {
-			combat.GymLoomies = make([]interfaces.CombatLoomie, 0)
-		}
+		// Reduce the alive gym loomies count
+		weakenedLoomie := gymLoomie
+		combat.AliveGymLoomies--
 
 		// Notify the user that the gym loomie was weakened
 		combat.SendMessage(WsMessage{
 			Type:    "GYM_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Enemy loomie %s was weakened", gymLoomie.Name),
 			Payload: map[string]interface{}{
-				"loomie_id": wenakenedLoomieId,
+				"loomie_id": weakenedLoomie.Id,
 			},
 		})
 
 		// Check if the player won the battle
-		if len(combat.GymLoomies) == 0 {
+		if combat.AliveGymLoomies == 0 {
 			combat.SendMessage(WsMessage{
 				Type:    "USER_HAS_WON",
 				Message: "You have won the battle. Now you own this gym",
@@ -210,8 +211,18 @@ func handleReceiveAttack(combat *WsCombat) {
 			return
 		}
 
+		// Find the next alive gym loomie
+		newGymLoomie := &interfaces.CombatLoomie{}
+
+		for _, gymLoomie := range combat.GymLoomies {
+			if gymLoomie.BoostedHp > 0 {
+				newGymLoomie = &gymLoomie
+				break
+			}
+		}
+
 		// Update the current gym loomie
-		combat.CurrentGymLoomie = &combat.GymLoomies[0]
+		combat.CurrentGymLoomie = newGymLoomie
 
 		// Notify the user that the current gym loomie was changed
 		combat.SendMessage(WsMessage{
@@ -223,7 +234,7 @@ func handleReceiveAttack(combat *WsCombat) {
 		})
 
 		// Add experience to the player loomies that fought the gym loomie
-		handleGymLoomieWeakened(combat, wenakenedLoomieId)
+		handleGymLoomieWeakened(combat, weakenedLoomie)
 		return
 	} else {
 		// Notify the user that the gym loomie hp was updated
@@ -239,12 +250,12 @@ func handleReceiveAttack(combat *WsCombat) {
 }
 
 // handleGymLoomieWeakened handles the "event" when a gym loomie is weakened by the player to add experience to the player loomies that fought the gym loomie
-func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.ObjectID) {
+func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomie *interfaces.CombatLoomie) {
 	// TODO: Silvia, you should add the functionality to add experience to the player
 	// loomies locally and also in the database.
 
-	fmt.Println("Handling Gym Loomie Weakened Event for:", weakenedLoomieId)
-	foughtWith := combat.FoughtGymLoomies[weakenedLoomieId]
+	fmt.Println("Handling Gym Loomie Weakened Event for:", weakenedLoomie.Name)
+	foughtWith := combat.FoughtGymLoomies[weakenedLoomie.Id]
 
 	for _, playerLoomiePointer := range foughtWith {
 		// TODO: Add experience to the player loomie
