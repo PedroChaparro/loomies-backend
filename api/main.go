@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/PedroChaparro/loomies-backend/combat"
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/routes"
 	"github.com/gin-gonic/gin"
 )
@@ -14,10 +13,11 @@ func main() {
 
 	// Setup websocket routes
 	hub := combat.WsHub{
-		Combats: make(map[string]*combat.WsCombat),
+		Combats:             make(map[string]*combat.WsCombat),
+		CachedStrongAgainst: make(map[string][]string),
 	}
 
-	configuration.Globals.WsHub = &hub
+	combat.GlobalWsHub = &hub
 	routes.SetupWebSocketRoutes(engine)
 
 	// Start the server

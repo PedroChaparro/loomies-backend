@@ -4,27 +4,34 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // WsCombat stores the websocket connection to be able
 // to send messages to the client
 type WsCombat struct {
-	// We keep the gym id to easily remove it from the map
-	// when the connection is closed
+	// We keep the gym id to easily remove it from the map when the combat ends
 	GymID string
 	// The connecton to exchange messages with the client
 	Connection *websocket.Conn
-	// We keep track of the last message timestamp to finish
-	// the connection if the client is inactive for too long
+	// Keep track of the last message timestamp to finish the combat if the client is "akf"
 	LastMessageTimestamp int64
+	// Keep track of the last attack timestamp to avoid spamming
+	LastUserAttackTimestamp int64
 	// Loomie teams in combat
-	GymLoomies    []interfaces.UserLoomiesRes
-	PlayerLoomies []interfaces.UserLoomiesRes
+	GymLoomies    []interfaces.CombatLoomie
+	PlayerLoomies []interfaces.CombatLoomie
 	// Current loomie in combat
-	CurrentGymLoomie    *interfaces.UserLoomiesRes
-	CurrentPlayerLoomie *interfaces.UserLoomiesRes
+	CurrentGymLoomie    *interfaces.CombatLoomie
+	CurrentPlayerLoomie *interfaces.CombatLoomie
+	// Defeated loomies in combat
+	FoughtGymLoomies map[primitive.ObjectID][]*interfaces.CombatLoomie
+	// Channels to communicate between the goroutines
+	Dodges chan bool
+	Close  chan bool
 }
 
 // WsMessage is the message that is sent to the client
@@ -42,14 +49,13 @@ type WsHub struct {
 	// The key of the map is the Gym id, so, there can only
 	// be one client per gym
 	Combats map[string]*WsCombat
+	// Map to store the strong against types
+	CachedStrongAgainst map[string][]string
 }
 
-type WsTokenClaims struct {
-	UserID    string  `json:"user_id"`
-	GymID     string  `json:"gym_id"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-}
+// GlobalWsHub is the global hub that stores all the clients
+// This is initialized in the main.go file
+var GlobalWsHub *WsHub
 
 // Includes checks if the hub already has a client for the gym
 func (hub *WsHub) Includes(gym string) bool {
@@ -77,6 +83,16 @@ func (hub *WsHub) Unregister(gym string) bool {
 	return true
 }
 
+// UpdatedLastReceivedMessageTimestamp updates the timestamp of the last message received from the client
+func (combat *WsCombat) UpdatedLastReceivedMessageTimestamp() {
+	combat.LastMessageTimestamp = time.Now().Unix()
+}
+
+// UpdatedLastUserAttackTimestamp updates the timestamp of the last attack sent by the client
+func (combat *WsCombat) UpdatedLastUserAttackTimestamp() {
+	combat.LastUserAttackTimestamp = time.Now().Unix()
+}
+
 // SendMessage sends a message to the client
 func (combat *WsCombat) SendMessage(message WsMessage) {
 	jsonMessage, _ := json.Marshal(message)
@@ -88,8 +104,8 @@ func (combat *WsCombat) SendMessage(message WsMessage) {
 func (combat *WsCombat) Listen(hub *WsHub) {
 	// --- Close the connection when the function ends ---
 	defer func() {
+		// Remove the combat from the hub, so the gym can be challenged again
 		hub.Unregister(combat.GymID)
-		// TODO: This should remove the combat from the database
 	}()
 
 	// --- Independent goroutine to check if the client is inactive ---
@@ -98,12 +114,39 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 		for {
 			select {
+			case <-combat.Close:
+				combat.Connection.Close()
+				ticker.Stop()
+				return
 			case <-ticker.C:
 				if time.Now().Unix()-combat.LastMessageTimestamp > 30 {
 					combat.Connection.Close()
 					return
 				}
 			}
+		}
+	}()
+
+	// --- Independet goroutine to send attacks from the gym to the player ---
+	go func() {
+		minTimeout, maxTimeout := configuration.GetCombatTimeouts()
+		randomSeconds := getRandomInt(minTimeout, maxTimeout)
+		ticker := time.NewTicker(time.Duration(randomSeconds) * time.Second)
+
+		for {
+			// Wait for the ticker to send a message
+			select {
+			case <-combat.Close:
+				return
+			case <-ticker.C:
+				handleClearDodgeChannel(combat)
+				handleSendAttack(combat)
+			}
+
+			// Reset the ticker and pick a new random interval
+			ticker.Stop()
+			randomSeconds := getRandomInt(minTimeout, maxTimeout)
+			ticker = time.NewTicker(time.Duration(randomSeconds) * time.Second)
 		}
 	}()
 
@@ -123,8 +166,15 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 		// Check the message type and send to the corresponding handler
 		switch wsMessage.Type {
-		case "greeting":
-			handleGreetingMessageType(combat)
+		case "USER_DODGE":
+			if len(combat.Dodges) < 1 {
+				combat.Dodges <- true
+			}
+			combat.UpdatedLastReceivedMessageTimestamp()
+
+		case "USER_ATTACK":
+			handleReceiveAttack(combat)
+			combat.UpdatedLastReceivedMessageTimestamp()
 		}
 	}
 }

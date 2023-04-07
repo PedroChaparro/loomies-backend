@@ -3,15 +3,27 @@ package models
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
-	"github.com/PedroChaparro/loomies-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// GetZoneCoordinatesFromGPS returns the (x, y) coordinates of the zone that contains the given coordinates
+func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
+	// initial zones calculations
+	const initialLatitude = 6.9595
+	const initialLongitude = -73.1696
+	const sizeMinZone = 0.0035
+
+	coordX := math.Floor((coordinates.Longitude - initialLongitude) / sizeMinZone)
+	coordY := math.Floor((coordinates.Latitude - initialLatitude) / sizeMinZone)
+	return int(coordX), int(coordY)
+}
+
 // GetNearGyms Returns an array of gyms near the current coordinates
 func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfaces.NearGymsRes, e error) {
-	coordX, coordY := utils.GetZoneCoordinatesFromGPS(interfaces.Coordinates{
+	coordX, coordY := GetZoneCoordinatesFromGPS(interfaces.Coordinates{
 		Latitude:  currentLatitude,
 		Longitude: currentLongitude,
 	})
