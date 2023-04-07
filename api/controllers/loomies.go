@@ -167,12 +167,6 @@ func HandleNearLoomies(c *gin.Context) {
 // HandleValidateLoomieExists Handle the request to validate if a loomie exists
 func HandleValidateLoomieExists(c *gin.Context) {
 	loomie_id := c.Param("id")
-
-	if loomie_id == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID was provided"})
-		return
-	}
-
 	_, err := models.GetWildLoomieById(loomie_id)
 
 	if err != nil {
