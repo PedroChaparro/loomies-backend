@@ -318,11 +318,22 @@ func AddItemsToUserInventory(userId primitive.ObjectID, items []interfaces.GymRe
 // GetLoomiesByUser Returns an array of loomies according with user
 func GetLoomiesByIds(loomiesArray []primitive.ObjectID, userId primitive.ObjectID) ([]interfaces.UserLoomiesRes, error) {
 	// Filter
-	filter := bson.M{
-		"_id": bson.M{
-			"$in": loomiesArray,
-		},
-		"owner": userId,
+	var filter bson.M
+
+	// Allow nil owner (At the beginning, the gym loomies doesn't have an owner)
+	if userId == primitive.NilObjectID {
+		filter = bson.M{
+			"_id": bson.M{
+				"$in": loomiesArray,
+			},
+		}
+	} else {
+		filter = bson.M{
+			"_id": bson.M{
+				"$in": loomiesArray,
+			},
+			"owner": userId,
+		}
 	}
 
 	matchFilter := bson.M{"$match": filter}

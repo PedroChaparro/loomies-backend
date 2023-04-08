@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/combat"
-	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // The upgrader is used to upgrade the http connection to a websocket connection
@@ -84,7 +84,7 @@ func HandleCombatInit(c *gin.Context) {
 	}
 
 	// Check the gym is not already in combat
-	hub := configuration.Globals.WsHub
+	hub := combat.GlobalWsHub
 	inCombat := hub.Includes(claims.GymID)
 
 	if inCombat {
@@ -93,12 +93,14 @@ func HandleCombatInit(c *gin.Context) {
 	}
 
 	// Get the user and gym loomies
+	var userCombatLoomies, gymCombatLoomies []interfaces.CombatLoomie
 	user, _ := models.GetUserById(claims.UserID)
 	userLoomies, _ := models.GetLoomiesByIds(user.LoomieTeam, user.Id)
-	gymLoomies, _ := models.GetLoomiesByIds(gymDoc.Protectors, gymDoc.Owner)
+	gymLoomies, _ := models.GetLoomiesByIds(gymDoc.Protectors, primitive.NilObjectID)
 
 	// Uncomment this to see the user and gym loomies
 	// NOTE: This can be removed in further pull requests
+
 	/*
 		fmt.Println("User loomies:")
 		for _, loomie := range userLoomies {
@@ -124,14 +126,26 @@ func HandleCombatInit(c *gin.Context) {
 		return
 	}
 
+	// Update the loomies stats
+	for _, loomie := range userLoomies {
+		userCombatLoomies = append(userCombatLoomies, *loomie.ToCombatLoomie())
+	}
+
+	for _, loomie := range gymLoomies {
+		gymCombatLoomies = append(gymCombatLoomies, *loomie.ToCombatLoomie())
+	}
+
 	Combat := &combat.WsCombat{
 		GymID:                claims.GymID,
 		Connection:           conn,
 		LastMessageTimestamp: time.Now().Unix(),
-		PlayerLoomies:        userLoomies,
-		GymLoomies:           gymLoomies,
-		CurrentGymLoomie:     &gymLoomies[0],
-		CurrentPlayerLoomie:  &userLoomies[0],
+		PlayerLoomies:        userCombatLoomies,
+		GymLoomies:           gymCombatLoomies,
+		CurrentGymLoomie:     &gymCombatLoomies[0],
+		CurrentPlayerLoomie:  &userCombatLoomies[0],
+		FoughtGymLoomies:     make(map[primitive.ObjectID][]*interfaces.CombatLoomie),
+		Dodges:               make(chan bool, 1),
+		Close:                make(chan bool, 1),
 	}
 
 	// Register the connection on the hub
