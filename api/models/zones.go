@@ -45,7 +45,7 @@ func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfa
 	lookupIntoGyms := bson.M{
 		"$lookup": bson.M{
 			"from":         "gyms",
-			"localField":   "gym",
+			"localField":   "gyms",
 			"foreignField": "_id",
 			"as":           "gyms",
 		},
@@ -60,15 +60,13 @@ func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfa
 		var surroundZones interfaces.ZoneWithGyms
 		cursor.Decode(&surroundZones)
 
-		// some zones don't have gyms
-		if len(surroundZones.Gyms) != 0 {
+		for _, gym := range surroundZones.Gyms {
 			// Parse the gym to NearGymsRes (to remove unnecessary fields)
-			nearGymStruct := surroundZones.Gyms[0].ToNearGymsRes()
+			nearGymStruct := gym.ToNearGymsRes()
 			gyms = append(gyms, *nearGymStruct)
 		}
 	}
 
-	fmt.Println(err)
 	return gyms, err
 }
 

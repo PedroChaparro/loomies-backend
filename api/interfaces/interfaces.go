@@ -31,7 +31,6 @@ type ZoneWithGyms struct {
 	BottomFrontier float64              `json:"bottomFrontier" bson:"bottomFrontier"`
 	Number         int                  `json:"number" bson:"number"`
 	Coordinates    string               `json:"coordinates" bson:"coordinates"`
-	Gym            primitive.ObjectID   `json:"gym" bson:"gym"`
 	Gyms           []Gym                `json:"gyms" bson:"gyms"`
 	Loomies        []primitive.ObjectID `json:"loomies" bson:"loomies"`
 }
