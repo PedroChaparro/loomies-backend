@@ -12,6 +12,7 @@ import {
 } from "./models/mongoose.js";
 import {
   createRandomLoomieTeam,
+  getZoneCoordinatesFromGPS,
   readJsonFromDataFolder,
 } from "./utils/utils.js";
 
@@ -28,6 +29,20 @@ const items = readJsonFromDataFolder("items");
 const loomieTypes = readJsonFromDataFolder("loomies_types");
 const loomieRarities = readJsonFromDataFolder("loomies_rarities");
 const loomballs = readJsonFromDataFolder("loomballs");
+const staticPlaces = readJsonFromDataFolder("static_places");
+
+// Get the zone coordinates for the upb gyms
+let upbGyms = staticPlaces.map((place) => {
+  const coordinates = getZoneCoordinatesFromGPS(
+    place.latitude,
+    place.longitude
+  );
+
+  return {
+    ...place,
+    coordinates: `${coordinates.x},${coordinates.y}`,
+  };
+});
 
 // Global variables
 const globalLoomiesTypesIds = [];
@@ -181,7 +196,7 @@ const coordinates = { x: 0, y: 0 };
 let currentLongitude;
 
 console.log("Expected zones: ", zones.length);
-console.log("Expected gyms: ", gyms.length);
+console.log("Expected gyms: ", gyms.length + upbGyms.length);
 
 for await (const zone of zones) {
   let GymMongoId;
@@ -225,6 +240,39 @@ for await (const zone of zones) {
   const { leftFrontier, rightFrontier, topFrontier, bottomFrontier, number } =
     zone;
 
+  const zoneGyms = GymMongoId ? [GymMongoId] : [];
+
+  // Check if there is a upb gym that belongs to this zone
+  for await (const upbGym of upbGyms) {
+    if (upbGym.coordinates === `${coordinates.x},${coordinates.y}`) {
+      console.log(
+        "Inserting upb gym in zone of coordinates: ",
+        `${coordinates.x},${coordinates.y}`
+      );
+
+      // Insert the gym in the database
+      const { name, latitude, longitude } = upbGym;
+      const protectors = await createRandomLoomieTeam(globalCommonLoomies);
+
+      const newGym = new GymModel({
+        name,
+        latitude,
+        longitude,
+        owner: null,
+        protectors,
+        current_rewards: [],
+        rewards_claimed_by: [],
+      });
+
+      const { _id } = await newGym.save();
+      zoneGyms.push(_id);
+
+      // Remove the gym from the upbGyms array
+      const index = upbGyms.findIndex((gym) => gym.name === upbGym.name);
+      upbGyms = upbGyms.filter((_, i) => i !== index);
+    }
+  }
+
   const newZone = new ZoneModel({
     leftFrontier,
     rightFrontier,
@@ -232,7 +280,7 @@ for await (const zone of zones) {
     bottomFrontier,
     number,
     coordinates: `${coordinates.x},${coordinates.y}`,
-    gyms: GymMongoId ? [GymMongoId] : [],
+    gyms: zoneGyms,
     loomies: [], // Empty loomies array
   });
 

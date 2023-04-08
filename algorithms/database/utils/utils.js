@@ -55,3 +55,19 @@ export async function createRandomLoomieTeam(commonLoomies) {
   const insertedIds = inserted.map((loomie) => loomie._id);
   return insertedIds;
 }
+
+/**
+ *
+ * @param {number} latitude The latitude of the gym
+ * @param {number} longitude The longitude of the gym
+ * @returns The local coordinates of the zone where the gym is located
+ */
+export function getZoneCoordinatesFromGPS(latitude, longitude) {
+  const initialLatitude = 6.9595;
+  const initialLongitude = -73.1696;
+  const zoneSize = 0.0035;
+
+  const x = Math.floor((latitude - initialLatitude) / zoneSize);
+  const y = Math.floor((longitude - initialLongitude) / zoneSize);
+  return { x, y };
+}
