@@ -12,6 +12,7 @@ tags:
   - name: Gyms
   - name: Loomies
   - name: Websocket
+  - name: Items
   
 paths:
   # --- --- --
@@ -731,72 +732,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
-  /loomies/capture: 
-    post: 
-      tags: [ Loomies ]
-      description: User caught a Loomie
-      security: 
-        - basicAuth: [Access-Token]
-      requestBody: 
-        content: 
-          application/json: 
-            schema: 
-              type: object
-              properties:
-                loomie_id: 
-                  type: string
-                  example: 641e1562d928b0e05a639864
-                loomball_id: 
-                  type: string
-                  example: 6429de53ddab67490ae12307
-                latitude: 
-                  type: number
-                  example:  7.1167
-                longitude: 
-                  type: number
-                  example: -73.1140
-        required: true
-      responses: 
-        "200": 
-          description: There wasn't any error.
-          content: 
-            application/json: 
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Capture'
-                  - $ref: '#/components/schemas/NotCapture'
-              examples:
-                car:
-                  summary: Capture
-                  value:
-                    capture: true
-                    error: false
-                    message: Loomie caught
-                bike:
-                  summary: Not Capture
-                  value:
-                    capture: false
-                    error: false
-                    message: The Loomie was not caught. Try again!
-
-        "400":
-          description: Bad request or the user isn't near the loomie coordinates.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailResponse"
-        "401":
-          description: The access token wasn't provided or isn't valid.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailResponse"
-        "404":
-          description: Loomie or LoomBall was not found or user was not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailResponse"
   # --- --- ---
   # Web socket routes
   /combat/register:
@@ -872,6 +807,63 @@ paths:
                 $ref: "#/components/schemas/FailResponse"
         "409":
           description: The gym is already in combat.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  /items/use: 
+    post: 
+      tags: [ Items ]
+      description: Use a item to increase level of a Loomie.
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                item_id: 
+                  type: string
+                  example: 640ddeed250023a581a3f7e5
+                loomie_id: 
+                  type: string
+                  example: 642f28c241385da3eaf8cb1f
+        required: true
+      responses: 
+        "200": 
+          description: All the fields were ok and the level of Loomie was increased succesfully
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "Level increased succesfully"
+        "400":
+          description: Bad request. The reason can be found on the response['message'] field.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any item in the database to decrease quantity.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "500":
+          description: Internal / unexpected server side error. 
           content:
             application/json:
               schema:
@@ -1077,21 +1069,3 @@ components:
         was_reward_claimed: 
           type: boolean
           example: false
-    Capture:
-      type: object
-      properties:
-        capture:
-          type: boolean
-        error:
-          type: boolean
-        message:
-          type: string
-    NotCapture:
-      type: object
-      properties:
-        capture:
-          type: boolean
-        error:
-          type: boolean
-        message:
-          type: string
