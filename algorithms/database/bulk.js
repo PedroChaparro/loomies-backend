@@ -261,10 +261,13 @@ for await (const zone of zones) {
       // Insert the gym in the database
       const { name, latitude, longitude } = upbGym;
 
-      const protectors = await createHardcoreLoomieTeam(
-        globalRareLoomies,
-        globalNormalLoomies
-      );
+      const protectors =
+        upbGym.name === "UPB Edificio K"
+          ? await createHardcoreLoomieTeam(
+              globalRareLoomies,
+              globalNormalLoomies
+            )
+          : await createRandomLoomieTeam(globalCommonLoomies);
 
       const newGym = new GymModel({
         name,
