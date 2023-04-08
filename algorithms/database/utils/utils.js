@@ -67,7 +67,7 @@ export function getZoneCoordinatesFromGPS(latitude, longitude) {
   const initialLongitude = -73.1696;
   const zoneSize = 0.0035;
 
-  const x = Math.floor((latitude - initialLatitude) / zoneSize);
-  const y = Math.floor((longitude - initialLongitude) / zoneSize);
+  const x = Math.floor((longitude - initialLongitude) / zoneSize);
+  const y = Math.floor((latitude - initialLatitude) / zoneSize);
   return { x, y };
 }
