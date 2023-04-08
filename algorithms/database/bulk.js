@@ -232,7 +232,7 @@ for await (const zone of zones) {
     bottomFrontier,
     number,
     coordinates: `${coordinates.x},${coordinates.y}`,
-    gym: GymMongoId ? GymMongoId : null,
+    gyms: GymMongoId ? [GymMongoId] : [],
     loomies: [], // Empty loomies array
   });
 
