@@ -1,16 +1,18 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+
 import {
   ZoneModel,
   GymModel,
   LoomieTypeModel,
   LoomieRarityModel,
   BaseLoomieModel,
-  CaughtLoomieModel,
   ItemModel,
   LoomBallModel,
 } from "./models/mongoose.js";
+
 import {
+  createHardcoreLoomieTeam,
   createRandomLoomieTeam,
   getZoneCoordinatesFromGPS,
   readJsonFromDataFolder,
@@ -48,6 +50,8 @@ let upbGyms = staticPlaces.map((place) => {
 const globalLoomiesTypesIds = [];
 const globalLoomiesRaritiesIds = [];
 const globalCommonLoomies = [];
+const globalRareLoomies = [];
+const globalNormalLoomies = [];
 
 // --- Loomies data ---
 // It's necessary to insert the loomies data beforte the zones and gyms
@@ -184,7 +188,11 @@ for await (const loomie of loomies) {
   });
 
   const inserted = await newLoomie.save();
+
+  // Save the loomie to create the default loomie team for each gym
   if (rarity === "Common") globalCommonLoomies.push(inserted._doc);
+  else if (rarity === "Normal") globalNormalLoomies.push(inserted._doc);
+  else if (rarity === "Rare") globalRareLoomies.push(inserted._doc);
 }
 
 // Get the inserted loomies to create the default loomie team for each gym
@@ -252,7 +260,11 @@ for await (const zone of zones) {
 
       // Insert the gym in the database
       const { name, latitude, longitude } = upbGym;
-      const protectors = await createRandomLoomieTeam(globalCommonLoomies);
+
+      const protectors = await createHardcoreLoomieTeam(
+        globalRareLoomies,
+        globalNormalLoomies
+      );
 
       const newGym = new GymModel({
         name,
