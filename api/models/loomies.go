@@ -250,3 +250,27 @@ func InsertUserInArrayOfWildLoomie(loomie interfaces.WildLoomie, user interfaces
 
 	return err
 }
+
+func UpdateLevelOfLoomie(userId primitive.ObjectID, loomieId primitive.ObjectID) (bool, error) {
+
+	// Check if and user is owner from a caught_loomie
+	filter := bson.M{
+		"_id":   loomieId,
+		"owner": userId,
+	}
+	update := bson.M{
+		"$inc": bson.M{
+			"level": 1,
+		},
+	}
+
+	// Update the increment
+	result := CaughtLoomiesCollection.FindOneAndUpdate(context.Background(), filter, update)
+
+	// Check errors
+	if result.Err() != nil {
+		return true, result.Err()
+	}
+
+	return false, nil
+}

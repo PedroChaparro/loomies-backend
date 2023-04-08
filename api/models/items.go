@@ -2,10 +2,12 @@ package models
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.UserItemsRes, []interfaces.UserLoomballsRes, error) {
@@ -93,4 +95,52 @@ func GetItemsFromIds(ids []primitive.ObjectID) ([]interfaces.Item, error) {
 	}
 
 	return itemsE, nil
+}
+
+// GetItemFromUserInventory Returns the item from the user inventory
+func GetItemFromUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID) (interfaces.PopulatedInventoryItem, error) {
+	// First we get the user who owns the item
+	var user interfaces.User
+	var item interfaces.PopulatedInventoryItem
+
+	res := UserCollection.FindOne(context.TODO(), bson.M{
+		"_id":           userId,
+		"items.item_id": itemId,
+	})
+
+	if res.Err() == mongo.ErrNoDocuments {
+		return interfaces.PopulatedInventoryItem{}, fmt.Errorf("USER_DOES_NOT_OWN_ITEM")
+	}
+
+	err := res.Decode(&user)
+
+	if err != nil {
+		return interfaces.PopulatedInventoryItem{}, err
+	}
+
+	// Get the user from the items collection
+	res = ItemsCollection.FindOne(context.TODO(), bson.M{
+		"_id": itemId,
+	})
+
+	if res.Err() == mongo.ErrNoDocuments {
+		return interfaces.PopulatedInventoryItem{}, fmt.Errorf("ITEM_DOES_NOT_EXIST")
+	}
+
+	err = res.Decode(&item)
+
+	fmt.Println(item)
+
+	if err != nil {
+		return interfaces.PopulatedInventoryItem{}, err
+	}
+
+	// Complete the quantity field in the item
+	for _, element := range user.Items {
+		if element.ItemId == itemId {
+			item.Quantity = element.ItemQuantity
+		}
+	}
+
+	return item, nil
 }
