@@ -193,6 +193,25 @@ func GetLoomiesExperienceParameters() (float64, float64) {
 	return Globals.MinLoomieRequiredExperience, Globals.LoomieExperienceFactor
 }
 
+// GetCombatTimeouts returns the values of the GAME_COMBAT_MINIMUM_ATTACK_TIMEOUT and GAME_COMBAT_MAXIMUM_ATTACK_TIMEOUT environment variables and update the global variables if they are empty
+func GetCombatTimeouts() (int, int) {
+	if Globals.MinCombatAttackTimeout == 0 || Globals.MaxCombatAttackTimeout == 0 {
+		// Get values (as strings) from the environment
+		minCombatAttackTimeoutString := GetEnvironmentVariable("GAME_COMBAT_MINIMUM_ATTACK_TIMEOUT")
+		maxCombatAttackTimeoutString := GetEnvironmentVariable("GAME_COMBAT_MAXIMUM_ATTACK_TIMEOUT")
+
+		// Convert the strings to integers
+		minCombatAttackTimeout, _ := strconv.Atoi(minCombatAttackTimeoutString)
+		maxCombatAttackTimeout, _ := strconv.Atoi(maxCombatAttackTimeoutString)
+
+		// Set the values in the globals
+		Globals.MinCombatAttackTimeout = minCombatAttackTimeout
+		Globals.MaxCombatAttackTimeout = maxCombatAttackTimeout
+	}
+
+	return Globals.MinCombatAttackTimeout, Globals.MaxCombatAttackTimeout
+}
+
 // getMongoClient returns a MongoDB client
 func getMongoClient() *mongo.Client {
 	// Create the connection if it does not exist
