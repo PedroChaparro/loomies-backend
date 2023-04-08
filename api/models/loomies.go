@@ -251,7 +251,6 @@ func InsertUserInArrayOfWildLoomie(loomie interfaces.WildLoomie, user interfaces
 	return err
 }
 
-
 func UpdateLevelOfLoomie(userId primitive.ObjectID, loomieId primitive.ObjectID) (bool, error) {
 
 	// Check if and user is owner from a caught_loomie
