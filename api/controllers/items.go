@@ -46,7 +46,6 @@ func HandleGetItems(c *gin.Context) {
 
 // HandleUseItem Handle the request to use and item from the inventory
 func HandleUseItem(c *gin.Context) {
-
 	var req interfaces.UseNotCombatItemReq
 
 	if err := c.BindJSON(&req); err != nil {
@@ -68,18 +67,36 @@ func HandleUseItem(c *gin.Context) {
 	user, _ := primitive.ObjectIDFromHex(userid.(string))
 
 	loomieId, _ := primitive.ObjectIDFromHex(req.LoomieId)
-	itemId, _ := primitive.ObjectIDFromHex(req.ItemId)
-
-	var item interfaces.PopulatedInventoryItem
-	item, err := models.GetItemFromUserInventory(user, itemId)
+	itemId, err := primitive.ObjectIDFromHex(req.ItemId)
 
 	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The given item id is not valid"})
+		return
+	}
+
+	var item interfaces.PopulatedInventoryItem
+	item, err = models.GetItemFromUserInventory(user, itemId, true)
+
+	if err != nil {
+		if err.Error() == "USER_DOES_NOT_OWN_ITEM" {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You don't own the given item"})
+			return
+		}
+
+		if err.Error() == "ITEM_NOT_FOUND" {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "The given item was not found or is a combat item"})
+			return
+		}
+
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error getting item from user"})
 		return
 	}
 
+	// -------------------------
+	// This is a temporary solution but works becase right now we only support one item
+	// that can be used without being in combat
 	if !(item.Serial == 7) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "This item can't be used to increase level"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The given item can only be used in combat"})
 		return
 	}
 
@@ -91,7 +108,7 @@ func HandleUseItem(c *gin.Context) {
 	err = models.DecrementItemFromUserInventory(user, itemId, 1)
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "The given item was not found"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error decrementing item from user"})
 		return
 	}
 
@@ -102,5 +119,5 @@ func HandleUseItem(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"error": false, "message": "Level increased succesfully"})
+	c.JSON(http.StatusOK, gin.H{"error": false, "message": "Item was successfully used"})
 }
