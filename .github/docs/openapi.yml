@@ -733,6 +733,65 @@ paths:
               schema:
                 $ref: "#/components/schemas/FailResponse"
   # --- --- ---
+  # Items routes
+  /items/use: 
+    post: 
+      tags: [ Items ]
+      description: Uses an item from the user's inventory. Currently, the only item that can be used is the "Unknown Beverage" which increases the level of the Loomie by 1.
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                item_id: 
+                  type: string
+                  example: 640ddeed250023a581a3f7e5
+                loomie_id: 
+                  type: string
+                  example: 642f28c241385da3eaf8cb1f
+        required: true
+      responses: 
+        "200": 
+          description: All the fields were ok and the item was used succesfully.
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties: 
+                  error:
+                    type: boolean
+                    example: false
+                  message: 
+                    type: string
+                    example: "Level increased succesfully"
+        "400":
+          description: Bad request. The reason can be found on the response['message'] field.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: There isn't any item in the database to decrease quantity.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "500":
+          description: Internal / unexpected server side error. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+  # --- --- ---
   # Web socket routes
   /combat/register:
     post: 
@@ -807,63 +866,6 @@ paths:
                 $ref: "#/components/schemas/FailResponse"
         "409":
           description: The gym is already in combat.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailResponse"
-  /items/use: 
-    post: 
-      tags: [ Items ]
-      description: Use a item to increase level of a Loomie.
-      security: 
-        - basicAuth: [Access-Token]
-      requestBody: 
-        content: 
-          application/json: 
-            schema: 
-              type: object
-              properties:
-                item_id: 
-                  type: string
-                  example: 640ddeed250023a581a3f7e5
-                loomie_id: 
-                  type: string
-                  example: 642f28c241385da3eaf8cb1f
-        required: true
-      responses: 
-        "200": 
-          description: All the fields were ok and the level of Loomie was increased succesfully
-          content: 
-            application/json: 
-              schema: 
-                type: object
-                properties: 
-                  error:
-                    type: boolean
-                    example: false
-                  message: 
-                    type: string
-                    example: "Level increased succesfully"
-        "400":
-          description: Bad request. The reason can be found on the response['message'] field.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailResponse"
-        "401":
-          description: The access token wasn't provided or isn't valid.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailResponse"
-        "404":
-          description: There isn't any item in the database to decrease quantity.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailResponse"
-        "500":
-          description: Internal / unexpected server side error. 
           content:
             application/json:
               schema:
