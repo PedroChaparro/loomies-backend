@@ -98,7 +98,7 @@ func GetItemsFromIds(ids []primitive.ObjectID) ([]interfaces.Item, error) {
 }
 
 // GetItemFromUserInventory Returns the item from the user inventory
-func GetItemFromUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID) (interfaces.PopulatedInventoryItem, error) {
+func GetItemFromUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID, ignoreCombatItems bool) (interfaces.PopulatedInventoryItem, error) {
 	// First we get the user who owns the item
 	var user interfaces.User
 	var item interfaces.PopulatedInventoryItem
@@ -113,24 +113,27 @@ func GetItemFromUserInventory(userId primitive.ObjectID, itemId primitive.Object
 	}
 
 	err := res.Decode(&user)
-
 	if err != nil {
 		return interfaces.PopulatedInventoryItem{}, err
 	}
 
-	// Get the user from the items collection
-	res = ItemsCollection.FindOne(context.TODO(), bson.M{
-		"_id": itemId,
-	})
+	// Get item user from the items collection
+	if ignoreCombatItems {
+		res = ItemsCollection.FindOne(context.TODO(), bson.M{
+			"_id":            itemId,
+			"is_combat_item": false,
+		})
+	} else {
+		res = ItemsCollection.FindOne(context.TODO(), bson.M{
+			"_id": itemId,
+		})
+	}
 
 	if res.Err() == mongo.ErrNoDocuments {
-		return interfaces.PopulatedInventoryItem{}, fmt.Errorf("ITEM_DOES_NOT_EXIST")
+		return interfaces.PopulatedInventoryItem{}, fmt.Errorf("ITEM_NOT_FOUND")
 	}
 
 	err = res.Decode(&item)
-
-	fmt.Println(item)
-
 	if err != nil {
 		return interfaces.PopulatedInventoryItem{}, err
 	}
