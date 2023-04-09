@@ -112,7 +112,7 @@ func HandleUseItem(c *gin.Context) {
 		return
 	}
 
-	_, err = models.UpdateLevelOfLoomie(user, loomieId)
+	_, err = models.IncrementLoomieLevel(user, loomieId, 1)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error updating level of Loomie"})
