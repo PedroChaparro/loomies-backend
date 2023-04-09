@@ -55,3 +55,46 @@ export async function createRandomLoomieTeam(commonLoomies) {
   const insertedIds = inserted.map((loomie) => loomie._id);
   return insertedIds;
 }
+
+export async function createHardcoreLoomieTeam(rareLoomies, normalLoomies) {
+  const possibleLoomies = [...rareLoomies, ...normalLoomies];
+
+  // Take the first 6 loomies
+  let team = possibleLoomies.slice(0, 6);
+
+  // Replace the base stats names
+  team = team.map((baseLoomie) => {
+    return {
+      serial: baseLoomie.serial,
+      name: baseLoomie.name,
+      types: baseLoomie.types,
+      rarity: baseLoomie.rarity,
+      level: getRandomInt(40, 50),
+      hp: baseLoomie.base_hp + getRandomInt(0, 5),
+      attack: baseLoomie.base_attack + getRandomInt(0, 5),
+      defense: baseLoomie.base_defense + getRandomInt(0, 5),
+      owner: null,
+      is_busy: true,
+    };
+  });
+
+  const inserted = await CaughtLoomieModel.insertMany(team);
+  const insertedIds = inserted.map((loomie) => loomie._id);
+  return insertedIds;
+}
+
+/**
+ *
+ * @param {number} latitude The latitude of the gym
+ * @param {number} longitude The longitude of the gym
+ * @returns The local coordinates of the zone where the gym is located
+ */
+export function getZoneCoordinatesFromGPS(latitude, longitude) {
+  const initialLatitude = 6.9595;
+  const initialLongitude = -73.1696;
+  const zoneSize = 0.0035;
+
+  const x = Math.floor((longitude - initialLongitude) / zoneSize);
+  const y = Math.floor((latitude - initialLatitude) / zoneSize);
+  return { x, y };
+}
