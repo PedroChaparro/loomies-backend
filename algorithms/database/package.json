@@ -9,7 +9,8 @@
     "test": "vitest",
     "clear_loomies:outdated": "node cronjobs/remove_outdated_loomies/remove.js --outdated",
     "clear_loomies:all": "node cronjobs/remove_outdated_loomies/remove.js --all",
-    "update:rewards": "node cronjobs/update_gyms_rewards/update.js"
+    "update:rewards": "node cronjobs/update_gyms_rewards/update.js",
+    "give:loomies": "node debug/giveLoomies.js"
   },
   "keywords": [],
   "author": "",
