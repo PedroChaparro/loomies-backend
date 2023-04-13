@@ -1,5 +1,9 @@
 import fs from "fs";
-import { CaughtLoomieModel, LoomieRarityModel } from "../models/mongoose.js";
+import {
+  CaughtLoomieModel,
+  LoomieRarityModel,
+  UserModel,
+} from "../models/mongoose.js";
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -81,6 +85,48 @@ export async function createHardcoreLoomieTeam(rareLoomies, normalLoomies) {
   const inserted = await CaughtLoomieModel.insertMany(team);
   const insertedIds = inserted.map((loomie) => loomie._id);
   return insertedIds;
+}
+
+/**
+ * Instantiates all existing Loomies and adds them to a player
+ * @param {*} possibleLoomies Array of Loomies
+ * @param {string} owner Mongo object id of owner player
+ */
+export async function giveAllLoomies(possibleLoomies, ownerId) {
+  try {
+    // Replace the base stats names
+    const newLoomies = possibleLoomies.map((baseLoomie) => {
+      return {
+        serial: baseLoomie.serial,
+        name: baseLoomie.name,
+        types: baseLoomie.types,
+        rarity: baseLoomie.rarity,
+        level: getRandomInt(1, 30),
+        hp: baseLoomie.base_hp + getRandomInt(0, 5),
+        attack: baseLoomie.base_attack + getRandomInt(0, 5),
+        defense: baseLoomie.base_defense + getRandomInt(0, 5),
+        owner: ownerId,
+        is_busy: false,
+      };
+    });
+
+    const inserted = await CaughtLoomieModel.insertMany(newLoomies);
+    const insertedIds = inserted.map((loomie) => loomie._id);
+
+    // add to ids to owner
+
+    await UserModel.findOneAndUpdate(
+      { _id: ownerId },
+      {
+        $push: {
+          loomies: insertedIds,
+        },
+      }
+    );
+  } catch (e) {
+    console.log("Here goes the error");
+    console.error(e);
+  }
 }
 
 /**
