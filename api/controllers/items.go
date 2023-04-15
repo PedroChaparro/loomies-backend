@@ -75,6 +75,7 @@ func HandleUseItem(c *gin.Context) {
 	}
 
 	var item interfaces.PopulatedInventoryItem
+
 	item, err = models.GetItemFromUserInventory(user, itemId, true)
 
 	if err != nil {
@@ -115,6 +116,8 @@ func HandleUseItem(c *gin.Context) {
 	_, err = models.IncrementLoomieLevel(user, loomieId, 1)
 
 	if err != nil {
+		// Item quantity is restored to the user
+		models.IncrementItemFromUserInventory(user, itemId, 1)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal server error updating level of Loomie"})
 		return
 	}
