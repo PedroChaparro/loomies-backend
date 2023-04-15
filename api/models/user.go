@@ -547,7 +547,7 @@ func IncrementItemFromUserInventory(userId primitive.ObjectID, itemId primitive.
 			Value: bson.D{
 				{
 					Key:   "items.$.item_quantity",
-					Value: 1,
+					Value: quantity,
 				},
 			},
 		},
