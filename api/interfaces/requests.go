@@ -1,5 +1,7 @@
 package interfaces
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type SignUpForm struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
@@ -41,4 +43,16 @@ type FuseLoomiesReq struct {
 
 type UpdateLoomieTeamReq struct {
 	LoomieTeam []string `json:"loomie_team"`
+}
+
+type UseNotCombatItemReq struct {
+	ItemId   string `json:"item_id"`
+	LoomieId string `json:"loomie_id"`
+}
+
+type PopulatedInventoryItem struct {
+	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Name     string             `json:"name" bson:"name"`
+	Serial   int                `json:"serial" bson:"serial"`
+	Quantity int                `json:"quantity" bson:"quantity"`
 }
