@@ -127,20 +127,8 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	candidateLoomies := []interfaces.WildLoomie{}
 	loomies := []interfaces.WildLoomie{}
 
-	// Get the zone coordinates
-	coordX, coordY := utils.GetZoneCoordinatesFromGPS(coordinates)
-
 	// Get the zones that are near the current zone
-	var nearZonesCoordinates []string
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY+1)) // Box Top Left
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY+1))   // Box Top - North
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY+1)) // Box Top Right
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY))   // Box Left
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY))     // current zone box
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY))   // Box Right
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY-1)) // Box Bottom Left
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY-1))   // Box Bottom - South
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY-1)) // Box Bottom Right
+	nearZonesCoordinates := utils.GetNearZonesCoordinates(coordinates)
 
 	// Filter
 	zonesFilter := bson.M{"coordinates": bson.M{"$in": nearZonesCoordinates}}
