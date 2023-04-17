@@ -8,7 +8,7 @@
     "gym_reward_chance_player": 0.75,
     "gym_reward_chance_owner": 0.05,
     "min_reward_quantity": 1,
-    "max_reward_quantity": 3
+    "max_reward_quantity": 4
   },
   {
     "name": "LoomBall Tier 2",
@@ -19,7 +19,7 @@
     "gym_reward_chance_player": 0.25,
     "gym_reward_chance_owner": 0.65,
     "min_reward_quantity": 1,
-    "max_reward_quantity": 2
+    "max_reward_quantity": 3
   },
   {
     "name": "LoomBall Experimental",
