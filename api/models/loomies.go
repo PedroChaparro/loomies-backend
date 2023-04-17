@@ -56,6 +56,11 @@ func GetBaseLoomies() ([]interfaces.BaseLoomiesWithPopulatedRarity, error) {
 	return baseLoomies, err
 }
 
+// RemoveNearExpiredLoomies remove the expired loomies that are near the user
+func RemoveNearExpiredLoomies(coordinates interfaces.Coordinates) error {
+	return nil
+}
+
 // GetLoomiesFromZoneId returns the loomies that are in a zone
 func GetLoomiesFromZoneId(id primitive.ObjectID) ([]interfaces.WildLoomie, error) {
 	loomies := []interfaces.WildLoomie{}
@@ -79,7 +84,7 @@ func GetLoomiesFromZoneId(id primitive.ObjectID) ([]interfaces.WildLoomie, error
 // InsertWildLoomie inserts a wild loomie into the database if the zone doesn't have the maximum amount of loomies
 func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool) {
 	// Get the zone coordinates
-	coordX, coordY := GetZoneCoordinatesFromGPS(interfaces.Coordinates{
+	coordX, coordY := utils.GetZoneCoordinatesFromGPS(interfaces.Coordinates{
 		Latitude:  loomie.Latitude,
 		Longitude: loomie.Longitude,
 	})
@@ -123,7 +128,7 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	loomies := []interfaces.WildLoomie{}
 
 	// Get the zone coordinates
-	coordX, coordY := GetZoneCoordinatesFromGPS(coordinates)
+	coordX, coordY := utils.GetZoneCoordinatesFromGPS(coordinates)
 
 	// Get the zones that are near the current zone
 	var nearZonesCoordinates []string
@@ -168,11 +173,28 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	currentTime := time.Now()
 
 	// Keep only the loomies that are not expired
+	expiredLoomies := []primitive.ObjectID{}
+
 	for _, loomie := range candidateLoomies {
 		loomieDeadline := time.Unix(loomie.GeneratedAt, 0).Add(time.Minute * time.Duration(loomieTTL))
 
 		if currentTime.Before(loomieDeadline) {
+			// If the loomie is not expired, add it to the list
 			loomies = append(loomies, loomie)
+		} else {
+			// If the loomie is expired, add it to the list of expired loomies to remove it
+			expiredLoomies = append(expiredLoomies, loomie.Id)
+		}
+	}
+
+	// Remove the expired loomies
+	if len(expiredLoomies) > 0 {
+		fmt.Println("Removing", len(expiredLoomies), "expired loomies")
+		_, err = WildLoomiesCollection.DeleteMany(context.Background(), bson.M{"_id": bson.M{"$in": expiredLoomies}})
+
+		// Print the error but return the near loomies to the user
+		if err != nil {
+			fmt.Println("Error while deleting expired loomies", err)
 		}
 	}
 
