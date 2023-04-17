@@ -99,7 +99,7 @@ func FixeFloat(float float64, decimals int) float64 {
 
 // GetRandomLevel returns a random level for a loomie
 func GetRandomLevel() int {
-	sample := rand.NormFloat64()*3 + 10
+	sample := rand.NormFloat64()*4 + 15
 	level := int(sample)
 
 	if level <= 0 {
