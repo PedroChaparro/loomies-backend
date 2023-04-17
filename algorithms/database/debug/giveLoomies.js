@@ -17,6 +17,12 @@ if (!ownerId) {
   process.exit();
 }
 
+// Check if the owner id is valid
+if (!mongoose.Types.ObjectId.isValid(ownerId)) {
+  console.log("OwnerId is not valid");
+  process.exit();
+}
+
 // check owner exists
 try {
   const owner = await UserModel.findById(ownerId);
