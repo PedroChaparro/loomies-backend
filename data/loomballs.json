@@ -1,0 +1,35 @@
+[
+  {
+    "name": "LoomBall",
+    "serial": 8,
+    "effective_until": 0,
+    "decay_until": 30,
+    "minimum_probability": 0.1,
+    "gym_reward_chance_player": 0.75,
+    "gym_reward_chance_owner": 0.05,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 4
+  },
+  {
+    "name": "LoomBall Tier 2",
+    "serial": 9,
+    "effective_until": 15,
+    "decay_until": 50,
+    "minimum_probability": 0.2,
+    "gym_reward_chance_player": 0.25,
+    "gym_reward_chance_owner": 0.65,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 3
+  },
+  {
+    "name": "LoomBall Experimental",
+    "serial": 10,
+    "effective_until": 0,
+    "decay_until": 0,
+    "minimum_probability": 1,
+    "gym_reward_chance_player": 0.05,
+    "gym_reward_chance_owner": 0.5,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 1
+  }
+]

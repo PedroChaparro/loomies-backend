@@ -1,0 +1,79 @@
+[
+  {
+    "name": "Pain Killers",
+    "serial": 1,
+    "description": "Pain Killers are essential for any Loomie trainer. Use them in combat to instantly heal 50 health points, preventing your loomies from being weakened by the enemy Loomies.",
+    "target": "Loomie",
+    "is_combat_item": true,
+    "gym_reward_chance_player": 0.5,
+    "gym_reward_chance_owner": 0.05,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 3
+  },
+  {
+    "name": "Small Aid Kit",
+    "serial": 2,
+    "description": "The Small Aid Kit is a vital tool for Loomie trainers in a pinch. Use it in combat to instantly heal 100 health points. Make sure to keep one on hand at all times.",
+    "target": "Loomie",
+    "is_combat_item": true,
+    "gym_reward_chance_player": 0.35,
+    "gym_reward_chance_owner": 0.1,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 2
+  },
+  {
+    "name": "Big Aid Kit",
+    "serial": 3,
+    "description": "The Big Aid Kit is a must-have for all the Loomie trainers. Use it in combat to completely heal your Loomies' health instantly and keep them healthy during battle. Don't take any chances without one in your inventory!",
+    "target": "Loomie",
+    "is_combat_item": true,
+    "gym_reward_chance_player": 0.1,
+    "gym_reward_chance_owner": 0.35,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 1
+  },
+  {
+    "name": "Defibrillator",
+    "serial": 4,
+    "description": "Bring your Loomies back from the brink of defeat with the Defibrillator. Revive a weakened Loomie with half its health, allowing it to continue battling.",
+    "target": "Loomie",
+    "is_combat_item": true,
+    "gym_reward_chance_player": 0.15,
+    "gym_reward_chance_owner": 0.45,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 1
+  },
+  {
+    "name": "Steroids Injection",
+    "serial": 5,
+    "description": "Give your Loomie an edge in battle with the Steroids Injection. Boost its attack power by 20%, allowing it to stroke with greater force and win battles easily.",
+    "target": "Loomie",
+    "is_combat_item": true,
+    "gym_reward_chance_player": 0.2,
+    "gym_reward_chance_owner": 0.35,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 2
+  },
+  {
+    "name": "Vitamins",
+    "serial": 6,
+    "description": "Maximize your Loomie's potential with Vitamins. Increase its maximum health points by 20%, ensuring it can endure longer battles and emerge victorious",
+    "target": "Loomie",
+    "is_combat_item": true,
+    "gym_reward_chance_player": 0.3,
+    "gym_reward_chance_owner": 0.2,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 2
+  },
+  {
+    "name": "Unknown Bevarage",
+    "serial": 7,
+    "description": "Unlock your Loomie's potential with the mysterious Unknown Beverage. Increases your Loomie's level by 1, granting a boost to all its stats. Use it wisely to gain the upper hand in battles.",
+    "target": "Loomie",
+    "is_combat_item": false,
+    "gym_reward_chance_player": 0.1,
+    "gym_reward_chance_owner": 0.5,
+    "min_reward_quantity": 1,
+    "max_reward_quantity": 1
+  }
+]

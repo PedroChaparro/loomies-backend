@@ -1,0 +1,62 @@
+[
+  {
+    "name": "UPB Edificio A",
+    "latitude": 7.03825,
+    "longitude": -73.07138
+  },
+  {
+    "name": "UPB Edificio B",
+    "latitude": 7.03809,
+    "longitude": -73.07168
+  },
+  {
+    "name": "UPB Edificio C",
+    "latitude": 7.03797,
+    "longitude": -73.07144
+  },
+  {
+    "name": "UPB Edificio D",
+    "latitude": 7.03798,
+    "longitude": -73.07106
+  },
+  {
+    "name": "UPB Edificio E",
+    "latitude": 7.03795,
+    "longitude": -73.07059
+  },
+  {
+    "name": "UPB Edificio F",
+    "latitude": 7.03775,
+    "longitude": -73.07073
+  },
+  {
+    "name": "UPB Edificio G",
+    "latitude": 7.03757,
+    "longitude": -73.07089
+  },
+  {
+    "name": "UPB Edificio H",
+    "latitude": 7.03777,
+    "longitude": -73.07028
+  },
+  {
+    "name": "UPB Edificio I",
+    "latitude": 7.03818,
+    "longitude": -73.06964
+  },
+  {
+    "name": "UPB Edificio J",
+    "latitude": 7.0377,
+    "longitude": -73.07157
+  },
+  {
+    "name": "UPB Edificio K",
+    "latitude": 7.03871,
+    "longitude": -73.06986
+  },
+  {
+    "name": "UPB Edificio L",
+    "latitude": 7.03807,
+    "longitude": -73.06913
+  }
+]

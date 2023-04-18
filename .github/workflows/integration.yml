@@ -42,6 +42,24 @@ jobs:
           echo "MONGO_DATABASE = loomies" >> .env
           echo "REFRESH_TOKEN_SECRET = dummy_refresh_secret" >> .env
           echo "ACCESS_TOKEN_SECRET = dummy_access_secret" >> .env
+          echo "WS_TOKEN_SECRET" = dummy_ws_secret >> .env
+          echo "GAME_ZONE_RADIUS" = 0.0035 >> .env
+          echo "GAME_MIN_LOOMIES_GENERATION_TIMEOUT" = 5 >> .env
+          echo "GAME_MAX_LOOMIES_GENERATION_TIMEOUT" = 12 >> .env
+          echo "GAME_MIN_LOOMIES_GENERATION_AMOUNT" = 2 >> .env
+          echo "GAME_MAX_LOOMIES_GENERATION_AMOUNT" = 12 >> .env
+          echo "GAME_LOOMIES_GENERATION_RADIUS" = 0.00175 >> .env
+          echo "GAME_MAX_LOOMIES_PER_ZONE" = 12 >> .env
+          echo "EMAIL_MAIL" = ${{ secrets.EMAIL_MAIL }} >> .env
+          echo "EMAIL_PASSWORD" = ${{ secrets.EMAIL_PASSWORD }} >> .env
+
+      - name: 💾 Insert data
+        run: |
+          cd algorithms/database
+          echo "MONGO_URI = mongodb://root:development@127.0.0.1:27017" >> .env
+          npm install
+          npm run bulk 
+          npm run update:rewards
 
       - name: 🧪 Run tests
         run: |

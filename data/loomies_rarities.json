@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Common",
+    "spawn_chance": 0.45
+  },
+  {
+    "name": "Normal",
+    "spawn_chance": 0.35
+  },
+  {
+    "name": "Rare",
+    "spawn_chance": 0.2
+  }
+]
