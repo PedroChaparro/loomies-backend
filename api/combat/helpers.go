@@ -8,6 +8,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // getRandomInt returns a random integer between min and max (both included)
@@ -79,7 +80,7 @@ func calculateAttack(atackingLoomie, defendingLoomie *interfaces.CombatLoomie) i
 }
 
 // applyItem Applies the item to the loomie by its serial
-func applyItem(item *interfaces.PopulatedInventoryItem, loomie *interfaces.CombatLoomie) error {
+func applyItem(userId primitive.ObjectID, item *interfaces.PopulatedInventoryItem, loomie *interfaces.CombatLoomie) error {
 	switch item.Serial {
 	// Painkiller
 	case 1:
@@ -114,7 +115,7 @@ func applyItem(item *interfaces.PopulatedInventoryItem, loomie *interfaces.Comba
 		// Unknown bevarage
 	case 7:
 		loomie.ApplyUnknownBevarage()
-		err := models.IncrementLoomieLevel(loomie.Id, 1)
+		err := models.IncrementLoomieLevel(userId, loomie.Id, 1)
 
 		if err != nil {
 			return fmt.Errorf("SERVER_ERROR")

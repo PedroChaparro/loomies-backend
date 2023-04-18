@@ -294,7 +294,7 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 	}
 
 	// Check the item exists in the user inventory
-	item, err := models.GetItemFromUserInventory(combat.PlayerID, itemMongoId)
+	item, err := models.GetItemFromUserInventory(combat.PlayerID, itemMongoId, false)
 
 	if err != nil {
 		if err.Error() == "USER_DOES_NOT_OWN_ITEM" {
@@ -324,7 +324,7 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 	}
 
 	// Apply the item
-	err = applyItem(&item, combat.CurrentPlayerLoomie)
+	err = applyItem(combat.PlayerID, &item, combat.CurrentPlayerLoomie)
 
 	if err != nil {
 		// If the loomie does not need healing, send a message to the user
