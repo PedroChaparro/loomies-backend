@@ -21,9 +21,17 @@ import (
 // generateLoomies "private" function to generate loomies for the user
 func generateLoomies(userId string, userCoordinates interfaces.Coordinates) error {
 	errors := map[string]error{
-		"USER_NOT_FOUND":            errors.New("User was not found"),
-		"SERVER_BASE_LOOMIES_ERROR": errors.New("Error getting the base loomies. Please try again later."),
-		"SERVER_UPDATE_TIMES_ERROR": errors.New("Error updating the user times. Please try again later."),
+		"USER_NOT_FOUND":                errors.New("User was not found"),
+		"SERVER_BASE_LOOMIES_ERROR":     errors.New("Error getting the base loomies. Please try again later."),
+		"SERVER_UPDATE_TIMES_ERROR":     errors.New("Error updating the user times. Please try again later."),
+		"SERVER_OUTDATED_LOOMIES_ERROR": errors.New("Error removing the outdated loomies. Please try again later."),
+	}
+
+	// Remove the expired loomies before generating new ones
+	err := models.RemoveNearExpiredLoomies(userCoordinates)
+
+	if err != nil {
+		return errors["SERVER_OUTDATED_LOOMIES_ERROR"]
 	}
 
 	// 1. Get the user doc from the database to validate the generation times
