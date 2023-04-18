@@ -251,6 +251,30 @@ func InsertUserInArrayOfWildLoomie(loomie interfaces.WildLoomie, user interfaces
 	return err
 }
 
+// IncrementLoomieLevel increment the level of the loomie by the given amount
+func IncrementLoomieLevel(userId primitive.ObjectID, loomieId primitive.ObjectID, amount uint) (bool, error) {
+	// Check if and user is owner from a caught_loomie
+	filter := bson.M{
+		"_id":   loomieId,
+		"owner": userId,
+	}
+	update := bson.M{
+		"$inc": bson.M{
+			"level": amount,
+		},
+	}
+
+	// Update the increment
+	result := CaughtLoomiesCollection.FindOneAndUpdate(context.Background(), filter, update)
+
+	// Check errors
+	if result.Err() != nil {
+		return true, result.Err()
+	}
+
+	return false, nil
+}
+
 // GetLoomieTypeDetails Returns the details of a loomie type
 func GetLoomieTypeDetailsByName(typeName string) (interfaces.PopulatedLoomieType, error) {
 	var loomieTypeAuxiliar interfaces.PopulatedLoomieTypeAuxiliar

@@ -536,3 +536,27 @@ func DecrementItemFromUserInventory(userId primitive.ObjectID, itemId primitive.
 
 	return nil
 }
+
+// IncrementItemFromUserInventory Increment the quantity of an item from the user's inventory
+func IncrementItemFromUserInventory(userId primitive.ObjectID, itemId primitive.ObjectID, quantity int) error {
+	//Update the number of items in mongo
+	filter := bson.D{{Key: "_id", Value: userId}, {Key: "items.item_id", Value: itemId}}
+	update := bson.D{
+		{
+			Key: "$inc",
+			Value: bson.D{
+				{
+					Key:   "items.$.item_quantity",
+					Value: quantity,
+				},
+			},
+		},
+	}
+	_, err := UserCollection.UpdateOne(context.TODO(), filter, update)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

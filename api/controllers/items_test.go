@@ -136,7 +136,7 @@ func TestGetUserItemsSuccess(t *testing.T) {
 		c.NotEmpty(itemObject["description"])
 		c.NotEmpty(itemObject["target"])
 		c.Contains([]string{"Loomie"}, itemObject["target"])
-		c.NotEmpty(itemObject["is_combat_item"])
+		c.Contains([]bool{true, false}, itemObject["is_combat_item"])
 		c.NotEmpty(itemObject["quantity"])
 		c.Positive(itemObject["quantity"])
 	}

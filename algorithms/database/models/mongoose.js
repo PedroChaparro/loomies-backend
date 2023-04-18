@@ -210,6 +210,40 @@ const LoomBallsSchema = new Schema(
   { versionKey: false }
 );
 
+// user items
+const userItemSchema = {
+  type: [
+    {
+      _id: false,
+      item_collection: {
+        type: String,
+        enum: ["items", "loom_balls"],
+      },
+      item_id: {
+        type: Schema.Types.ObjectId,
+        // Dynamically reference the correct collection
+        refPath: "items._id",
+      },
+      item_quantity: Number,
+    },
+  ],
+};
+
+const UserSchema = new Schema(
+  {
+    username: String,
+    email: String,
+    password: String,
+    items: userItemSchema,
+    loomies: [{ type: Schema.Types.ObjectId, ref: "caught_loomies" }],
+    loomie_team: [{ type: Schema.Types.ObjectId, ref: "caught_loomies" }],
+    isVerified: Boolean,
+    currentLoomiesGenerationTimeout: Number,
+    lastLoomieGenerationTime: Number,
+  },
+  { versionKey: false }
+);
+
 // -- --- --- --- ---
 // Models
 
@@ -225,3 +259,5 @@ export const CaughtLoomieModel = model("caught_loomies", CaughtLoomieSchema);
 // Collectionables
 export const ItemModel = model("items", ItemsSchema);
 export const LoomBallModel = model("loom_balls", LoomBallsSchema);
+// User
+export const UserModel = model("users", UserSchema);
