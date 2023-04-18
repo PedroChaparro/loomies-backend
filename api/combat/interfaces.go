@@ -13,6 +13,7 @@ import (
 // WsCombat stores the websocket connection to be able
 // to send messages to the client
 type WsCombat struct {
+	PlayerID primitive.ObjectID
 	// We keep the gym id to easily remove it from the map when the combat ends
 	GymID string
 	// The connecton to exchange messages with the client
@@ -21,6 +22,9 @@ type WsCombat struct {
 	LastMessageTimestamp int64
 	// Keep track of the last attack timestamp to avoid spamming
 	LastUserAttackTimestamp int64
+	// Keep track of the alive user and gym loomies
+	AlivePlayerLoomies int
+	AliveGymLoomies    int
 	// Loomie teams in combat
 	GymLoomies    []interfaces.CombatLoomie
 	PlayerLoomies []interfaces.CombatLoomie
@@ -41,7 +45,7 @@ type WsMessage struct {
 	Type    string `json:"type"`
 	Message string `json:"message"`
 	// The payload field allows to send any kind of data in JSON format
-	Payload interface{} `json:"payload,omitempty"`
+	Payload map[string]interface{} `json:"payload,omitempty"`
 }
 
 // WsHub is the hub that stores all the clients
@@ -174,6 +178,10 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 		case "USER_ATTACK":
 			handleReceiveAttack(combat)
+			combat.UpdatedLastReceivedMessageTimestamp()
+
+		case "USER_USE_ITEM":
+			handleUseItem(combat, wsMessage)
 			combat.UpdatedLastReceivedMessageTimestamp()
 		}
 	}

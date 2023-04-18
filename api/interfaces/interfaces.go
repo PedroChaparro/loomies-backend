@@ -1,8 +1,6 @@
 package interfaces
 
 import (
-	"math"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -122,6 +120,13 @@ type InventoryItem struct {
 	ItemCollection string             `json:"item_collection" bson:"item_collection"`
 	ItemId         primitive.ObjectID `json:"item_id" bson:"item_id"`
 	ItemQuantity   int                `json:"item_quantity" bson:"item_quantity"`
+}
+
+type PopulatedInventoryItem struct {
+	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Name     string             `json:"name" bson:"name"`
+	Serial   int                `json:"serial" bson:"serial"`
+	Quantity int                `json:"quantity" bson:"quantity"`
 }
 
 type User struct {
@@ -256,23 +261,6 @@ type WsTokenClaims struct {
 	Longitude float64 `json:"longitude"`
 }
 
-type CombatLoomie struct {
-	Id             primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Serial         int                `json:"serial"      bson:"serial"`
-	Name           string             `json:"name"      bson:"name"`
-	Types          []string           `json:"types"     bson:"types"`
-	Rarity         string             `json:"rarity"     bson:"rarity"`
-	BaseHp         int                `json:"hp"     bson:"hp"`
-	BaseAttack     int                `json:"attack"     bson:"attack"`
-	BaseDefense    int                `json:"defense"     bson:"defense"`
-	BoostedHp      int                `json:"boosted_hp"     bson:"boosted_hp"`
-	BoostedAttack  int                `json:"boosted_attack"     bson:"boosted_attack"`
-	BoostedDefense int                `json:"boosted_defense"     bson:"boosted_defense"`
-	Level          int                `json:"level"     bson:"level"`
-	Experience     float64            `json:"experience"     bson:"experience"`
-	IsBusy         bool               `json:"is_busy"     bson:"is_busy"`
-}
-
 // ToGymProtector Converts a caught loomie to a gym protector keeping only the relevant fields
 func (caughtLoomie *CaughtLoomie) ToGymProtector() *GymProtector {
 	return &GymProtector{
@@ -303,26 +291,4 @@ func (aux *PopulatedGymAux) ToPopulatedGym() *PopulatedGym {
 	}
 
 	return &populatedGym
-}
-
-// ToCombatLoomie Converts a user loomie to a combat loomie boosting the stats according to the level
-func (normalCaughtLoomie *UserLoomiesRes) ToCombatLoomie() *CombatLoomie {
-	experienceFactor := 1.0 + ((1.0 / 8.0) * (float64(normalCaughtLoomie.Level) - 1.0))
-
-	return &CombatLoomie{
-		Id:             normalCaughtLoomie.Id,
-		Serial:         normalCaughtLoomie.Serial,
-		Name:           normalCaughtLoomie.Name,
-		Types:          normalCaughtLoomie.Types,
-		Rarity:         normalCaughtLoomie.Rarity,
-		BaseHp:         normalCaughtLoomie.Hp,
-		BaseAttack:     normalCaughtLoomie.Attack,
-		BaseDefense:    normalCaughtLoomie.Defense,
-		BoostedHp:      int(math.Floor(float64(normalCaughtLoomie.Hp) * experienceFactor)),
-		BoostedAttack:  int(math.Floor(float64(normalCaughtLoomie.Attack) * experienceFactor)),
-		BoostedDefense: int(math.Floor(float64(normalCaughtLoomie.Defense) * experienceFactor)),
-		Level:          normalCaughtLoomie.Level,
-		Experience:     normalCaughtLoomie.Experience,
-		IsBusy:         normalCaughtLoomie.IsBusy,
-	}
 }

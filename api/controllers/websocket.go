@@ -136,11 +136,14 @@ func HandleCombatInit(c *gin.Context) {
 	}
 
 	Combat := &combat.WsCombat{
+		PlayerID:             user.Id,
 		GymID:                claims.GymID,
 		Connection:           conn,
 		LastMessageTimestamp: time.Now().Unix(),
 		PlayerLoomies:        userCombatLoomies,
+		AlivePlayerLoomies:   len(userCombatLoomies),
 		GymLoomies:           gymCombatLoomies,
+		AliveGymLoomies:      len(gymCombatLoomies),
 		CurrentGymLoomie:     &gymCombatLoomies[0],
 		CurrentPlayerLoomie:  &userCombatLoomies[0],
 		FoughtGymLoomies:     make(map[primitive.ObjectID][]*interfaces.CombatLoomie),
