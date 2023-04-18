@@ -306,7 +306,7 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 			return
 		}
 
-		if err.Error() == "ITEM_DOES_NOT_EXIST" {
+		if err.Error() == "ITEM_NOT_FOUND" {
 			combat.SendMessage(WsMessage{
 				Type:    "ERROR",
 				Message: "[BAD REQUEST] Item does not exist or is not a combat item",
