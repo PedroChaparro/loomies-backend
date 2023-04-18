@@ -13,7 +13,7 @@ func main() {
 	routes.SetupRoutes(engine)
 
 	// Set gin mode to release if in production
-	if configuration.GetRunningEnvironment() == "production" {
+	if configuration.GetRunningEnvironment() == "PRODUCTION" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
