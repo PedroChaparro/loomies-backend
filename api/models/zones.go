@@ -3,41 +3,18 @@ package models
 import (
 	"context"
 	"fmt"
-	"math"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// GetZoneCoordinatesFromGPS returns the (x, y) coordinates of the zone that contains the given coordinates
-func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
-	// initial zones calculations
-	const initialLatitude = 6.9595
-	const initialLongitude = -73.1696
-	const sizeMinZone = 0.0035
-
-	coordX := math.Floor((coordinates.Longitude - initialLongitude) / sizeMinZone)
-	coordY := math.Floor((coordinates.Latitude - initialLatitude) / sizeMinZone)
-	return int(coordX), int(coordY)
-}
-
 // GetNearGyms Returns an array of gyms near the current coordinates
 func GetNearGyms(currentLatitude float64, currentLongitude float64) (p []interfaces.NearGymsRes, e error) {
-	coordX, coordY := GetZoneCoordinatesFromGPS(interfaces.Coordinates{
+	mZonesCoord := utils.GetNearZonesCoordinates(interfaces.Coordinates{
 		Latitude:  currentLatitude,
 		Longitude: currentLongitude,
 	})
-
-	var mZonesCoord []string
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX-1, coordY+1)) // Box Top Left
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX, coordY+1))   // Box Top - North
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX+1, coordY+1)) // Box Top Right
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX-1, coordY))   // Box Left
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX, coordY))     // current zone box
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX+1, coordY))   // Box Right
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX-1, coordY-1)) // Box Bottom Left
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX, coordY-1))   // Box Bottom - South
-	mZonesCoord = append(mZonesCoord, fmt.Sprintf("%v,%v", coordX+1, coordY-1)) // Box Bottom Right
 
 	// filters for aggregation and lookup into gyms collection
 	zonesFilter := bson.M{"coordinates": bson.M{"$in": mZonesCoord}}

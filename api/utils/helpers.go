@@ -67,6 +67,18 @@ func GetValidationCode() string {
 	return validationCode
 }
 
+// GetZoneCoordinatesFromGPS returns the (x, y) coordinates of the zone that contains the given coordinates
+func GetZoneCoordinatesFromGPS(coordinates interfaces.Coordinates) (int, int) {
+	// initial zones calculations
+	const initialLatitude = 6.9595
+	const initialLongitude = -73.1696
+	const sizeMinZone = 0.0035
+
+	coordX := math.Floor((coordinates.Longitude - initialLongitude) / sizeMinZone)
+	coordY := math.Floor((coordinates.Latitude - initialLatitude) / sizeMinZone)
+	return int(coordX), int(coordY)
+}
+
 // IsNear returns true if the target coordinates are near the origin coordinates
 func IsNear(target interfaces.Coordinates, origin interfaces.Coordinates) bool {
 	zoneRadiusStr := configuration.GetEnvironmentVariable("GAME_ZONE_RADIUS")
@@ -77,6 +89,25 @@ func IsNear(target interfaces.Coordinates, origin interfaces.Coordinates) bool {
 	}
 
 	return true
+}
+
+// GetNearZonesCoordinates returns the coordinates of the zones near the given coordinates
+func GetNearZonesCoordinates(userCoords interfaces.Coordinates) []string {
+	coordX, coordY := GetZoneCoordinatesFromGPS(userCoords)
+
+	// Get the zones that are near the current zone
+	var nearZonesCoordinates []string
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY+1)) // Box Top Left
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY+1))   // Box Top - North
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY+1)) // Box Top Right
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY))   // Box Left
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY))     // current zone box
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY))   // Box Right
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY-1)) // Box Bottom Left
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY-1))   // Box Bottom - South
+	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY-1)) // Box Bottom Right
+
+	return nearZonesCoordinates
 }
 
 // GetLoomiesExperience returns the experience needed to reach the given level
@@ -99,7 +130,7 @@ func FixeFloat(float float64, decimals int) float64 {
 
 // GetRandomLevel returns a random level for a loomie
 func GetRandomLevel() int {
-	sample := rand.NormFloat64()*3 + 10
+	sample := rand.NormFloat64()*4 + 15
 	level := int(sample)
 
 	if level <= 0 {

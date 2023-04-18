@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -56,6 +55,66 @@ func GetBaseLoomies() ([]interfaces.BaseLoomiesWithPopulatedRarity, error) {
 	return baseLoomies, err
 }
 
+// RemoveNearExpiredLoomies remove the expired loomies that are near the user
+func RemoveNearExpiredLoomies(coordinates interfaces.Coordinates) error {
+	zoneLoomies := []interfaces.WildLoomie{}
+
+	// Get the zones that are near the current zone
+	nearZonesCoordinates := utils.GetNearZonesCoordinates(coordinates)
+
+	// Filter
+	zonesFilter := bson.M{"coordinates": bson.M{"$in": nearZonesCoordinates}}
+	matchFilter := bson.M{"$match": zonesFilter}
+
+	// Aggregation to populate zone's loomies
+	lookupIntoLoomies := bson.M{
+		"$lookup": bson.M{
+			"from":         "wild_loomies",
+			"localField":   "loomies",
+			"foreignField": "_id",
+			"as":           "populated_loomies",
+		},
+	}
+
+	// Make the query
+	cursor, err := ZonesCollection.Aggregate(context.Background(), []bson.M{matchFilter, lookupIntoLoomies})
+
+	if err != nil {
+		return err
+	}
+
+	// Decode the loomies
+	for cursor.Next(context.Background()) {
+		var zone interfaces.ZoneWithPopulatedLoomies
+		cursor.Decode(&zone)
+		zoneLoomies = append(zoneLoomies, zone.PopulatedLoomies...)
+	}
+
+	// Get the outdated loomies
+	loomieTTL := configuration.GetWildLoomiesTTL()
+	currentTime := time.Now()
+	expiredLoomies := []primitive.ObjectID{}
+
+	for _, loomie := range zoneLoomies {
+		loomieDeadline := time.Unix(loomie.GeneratedAt, 0).Add(time.Minute * time.Duration(loomieTTL))
+
+		if !currentTime.Before(loomieDeadline) {
+			// If the loomie is expired, add it to the list of expired loomies to remove it
+			expiredLoomies = append(expiredLoomies, loomie.Id)
+		}
+	}
+
+	// Remove the outdated loomies
+	if len(expiredLoomies) > 0 {
+		_, err = WildLoomiesCollection.DeleteMany(context.Background(), bson.M{"_id": bson.M{"$in": expiredLoomies}})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // GetLoomiesFromZoneId returns the loomies that are in a zone
 func GetLoomiesFromZoneId(id primitive.ObjectID) ([]interfaces.WildLoomie, error) {
 	loomies := []interfaces.WildLoomie{}
@@ -79,7 +138,7 @@ func GetLoomiesFromZoneId(id primitive.ObjectID) ([]interfaces.WildLoomie, error
 // InsertWildLoomie inserts a wild loomie into the database if the zone doesn't have the maximum amount of loomies
 func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool) {
 	// Get the zone coordinates
-	coordX, coordY := GetZoneCoordinatesFromGPS(interfaces.Coordinates{
+	coordX, coordY := utils.GetZoneCoordinatesFromGPS(interfaces.Coordinates{
 		Latitude:  loomie.Latitude,
 		Longitude: loomie.Longitude,
 	})
@@ -119,23 +178,11 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 
 // GetNearWildLoomies returns the wild loomies that are near the coordinates
 func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLoomie, error) {
-	candidateLoomies := []interfaces.WildLoomie{}
+	zoneLoomies := []interfaces.WildLoomie{}
 	loomies := []interfaces.WildLoomie{}
 
-	// Get the zone coordinates
-	coordX, coordY := GetZoneCoordinatesFromGPS(coordinates)
-
 	// Get the zones that are near the current zone
-	var nearZonesCoordinates []string
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY+1)) // Box Top Left
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY+1))   // Box Top - North
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY+1)) // Box Top Right
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY))   // Box Left
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY))     // current zone box
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY))   // Box Right
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX-1, coordY-1)) // Box Bottom Left
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX, coordY-1))   // Box Bottom - South
-	nearZonesCoordinates = append(nearZonesCoordinates, fmt.Sprintf("%v,%v", coordX+1, coordY-1)) // Box Bottom Right
+	nearZonesCoordinates := utils.GetNearZonesCoordinates(coordinates)
 
 	// Filter
 	zonesFilter := bson.M{"coordinates": bson.M{"$in": nearZonesCoordinates}}
@@ -161,16 +208,16 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 	for cursor.Next(context.Background()) {
 		var zone interfaces.ZoneWithPopulatedLoomies
 		cursor.Decode(&zone)
-		candidateLoomies = append(candidateLoomies, zone.PopulatedLoomies...)
+		zoneLoomies = append(zoneLoomies, zone.PopulatedLoomies...)
 	}
 
 	loomieTTL := configuration.GetWildLoomiesTTL()
 	currentTime := time.Now()
 
-	// Keep only the loomies that are not expired
-	for _, loomie := range candidateLoomies {
+	for _, loomie := range zoneLoomies {
 		loomieDeadline := time.Unix(loomie.GeneratedAt, 0).Add(time.Minute * time.Duration(loomieTTL))
 
+		// If the loomie is not expired, add it to the list (Just in case)
 		if currentTime.Before(loomieDeadline) {
 			loomies = append(loomies, loomie)
 		}
