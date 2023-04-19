@@ -26,6 +26,9 @@ func main() {
 	combat.GlobalWsHub = &hub
 	routes.SetupWebSocketRoutes(engine)
 
+	// Serve static files
+	engine.Static("/static", "./static")
+
 	// Start the server
 	engine.Run()
 }
