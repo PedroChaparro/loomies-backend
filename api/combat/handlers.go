@@ -6,6 +6,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -96,18 +97,13 @@ func handleSendAttack(combat *WsCombat) {
 			return
 		}
 
-		// Find the next alive player loomie
-		newPlayerLoomie := &interfaces.CombatLoomie{}
-
-		for _, playerLoomie := range combat.PlayerLoomies {
-			if playerLoomie.BoostedHp > 0 {
-				newPlayerLoomie = &playerLoomie
+		for index := range combat.PlayerLoomies {
+			if combat.PlayerLoomies[index].BoostedHp > 0 {
+				// Update the current gym loomie
+				combat.CurrentPlayerLoomie = &combat.PlayerLoomies[index]
 				break
 			}
 		}
-
-		// Update the current player loomie
-		combat.CurrentPlayerLoomie = newPlayerLoomie
 
 		// Notify the user that the current player loomie was changed
 		combat.SendMessage(WsMessage{
@@ -207,22 +203,19 @@ func handleReceiveAttack(combat *WsCombat) {
 				Message: "You have won the battle. Now you own this gym",
 			})
 
+			fmt.Println(combat.PlayerLoomies)
+
 			combat.Close <- true
 			return
 		}
 
-		// Find the next alive gym loomie
-		newGymLoomie := &interfaces.CombatLoomie{}
-
-		for _, gymLoomie := range combat.GymLoomies {
-			if gymLoomie.BoostedHp > 0 {
-				newGymLoomie = &gymLoomie
+		for index := range combat.GymLoomies {
+			if combat.GymLoomies[index].BoostedHp > 0 {
+				// Update the current gym loomie
+				combat.CurrentGymLoomie = &combat.GymLoomies[index]
 				break
 			}
 		}
-
-		// Update the current gym loomie
-		combat.CurrentGymLoomie = newGymLoomie
 
 		// Notify the user that the current gym loomie was changed
 		combat.SendMessage(WsMessage{
@@ -234,7 +227,7 @@ func handleReceiveAttack(combat *WsCombat) {
 		})
 
 		// Add experience to the player loomies that fought the gym loomie
-		handleGymLoomieWeakened(combat, weakenedLoomie)
+		handleGymLoomieWeakened(combat, weakenedLoomie.Id, weakenedLoomie.Level)
 		return
 	} else {
 		// Notify the user that the gym loomie hp was updated
@@ -249,17 +242,35 @@ func handleReceiveAttack(combat *WsCombat) {
 	}
 }
 
+// todo correct name weakened
 // handleGymLoomieWeakened handles the "event" when a gym loomie is weakened by the player to add experience to the player loomies that fought the gym loomie
-func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomie *interfaces.CombatLoomie) {
+func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.ObjectID, levelWeakenedLoomieId int) {
+
 	// TODO: Silvia, you should add the functionality to add experience to the player
 	// loomies locally and also in the database.
 
-	fmt.Println("Handling Gym Loomie Weakened Event for:", weakenedLoomie.Name)
-	foughtWith := combat.FoughtGymLoomies[weakenedLoomie.Id]
+	fmt.Println("Handling Gym Loomie Weakened Event for:", weakenedLoomieId)
+	foughtWith := combat.FoughtGymLoomies[weakenedLoomieId]
+
+	expWeakenedLoomieId := utils.GetRequiredExperience(levelWeakenedLoomieId)
+	experienceToSet := (expWeakenedLoomieId / 3) / float64(len(foughtWith))
 
 	for _, playerLoomiePointer := range foughtWith {
 		// TODO: Add experience to the player loomie
 		fmt.Println("Adding experience to player loomie:", playerLoomiePointer)
+		// current experience + gained experience
+		availableExperience := playerLoomiePointer.Experience + experienceToSet
+		fmt.Println(playerLoomiePointer.Experience)
+		playerLoomiePointer.Experience, playerLoomiePointer.Level = utils.CalculateLevel(playerLoomiePointer.Experience, availableExperience, playerLoomiePointer.Level)
+
+		models.UpdateExperienceAndLevelInCombat(combat.PlayerID, playerLoomiePointer)
+		combat.SendMessage(WsMessage{
+			Type:    "UPDATE_EXP_LOOMIE",
+			Message: fmt.Sprintf("Loomie %s received %.4f of experience", playerLoomiePointer.Name, experienceToSet),
+			Payload: map[string]interface{}{
+				"loomie": playerLoomiePointer.Id,
+			},
+		})
 	}
 
 	fmt.Println("Weakened Event Handled")

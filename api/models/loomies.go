@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -317,6 +318,30 @@ func IncrementLoomieLevel(userId primitive.ObjectID, loomieId primitive.ObjectID
 	// Check errors
 	if result.Err() != nil {
 		return result.Err()
+	}
+
+	return nil
+}
+
+// TODO check if everything works
+// UpdateLoomieExperienceAndLevel Allows to uptade experience and level of a loomie after weakened a loomie
+func UpdateExperienceAndLevelInCombat(userId primitive.ObjectID, loomieToUpdate *interfaces.CombatLoomie) error {
+	// Update the first loomie in the caught loomies collection
+	_, err := CaughtLoomiesCollection.UpdateOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: loomieToUpdate.Id},
+		},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "experience", Value: loomieToUpdate.Experience},
+				{Key: "level", Value: loomieToUpdate.Level},
+			}},
+		},
+	)
+
+	if err != nil {
+		return errors.New("Error")
 	}
 
 	return nil
