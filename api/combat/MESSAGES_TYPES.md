@@ -5,6 +5,7 @@ The following are the supported messages types that are exchanged between the cl
 | Type                    | Description                                                                                                           | From   | To     |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
 | `ERROR`                 | Unexpected server side error. You can find more information in the message description / payload                      | Server | Client |
+| `COMBAT_TIMEOUT`        | The combat has been closed due to the player inactivity.                                                              | Server | Client |
 | `GYM_ATTACK_CANDIDATE`  | It announces an incoming attack. The user has the opportunity to dodge it using the `GYM_ATTACK_DODGED` message type. | Server | Client |
 | `USER_DODGE`            | The user avoids the gym Loomie attack. Has a 1 second cooldown                                                        | Client | Server |
 | `GYM_ATTACK_DODGED`     | Confirmation that the user avoids the gym Loomie attack                                                               | Server | Client |
