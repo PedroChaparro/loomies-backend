@@ -32,6 +32,26 @@ func HandleCombatRegister(c *gin.Context) {
 		return
 	}
 
+	// Check the gym is near the user coordinates
+	gymDoc, err := models.GetGymFromID(payload.GymID)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the gym. Please try again later."})
+		return
+	}
+
+	// Check the gym is near the user coordinates
+	if !utils.IsNear(interfaces.Coordinates{
+		Latitude:  gymDoc.Latitude,
+		Longitude: gymDoc.Longitude,
+	}, interfaces.Coordinates{
+		Latitude:  payload.Latitude,
+		Longitude: payload.Longitude,
+	}) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym is not near the user coordinates"})
+		return
+	}
+
 	// Create a token to authenticate the user with the websocket endpoint
 	userID, _ := c.Get("userid")
 	token, err := utils.CreateWsToken(userID.(string), payload.GymID, payload.Latitude, payload.Longitude)
@@ -62,24 +82,11 @@ func HandleCombatInit(c *gin.Context) {
 		return
 	}
 
-	// Check the gym is near the user coordinates
+	// Get the gym from the database
 	gymDoc, err := models.GetGymFromID(claims.GymID)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the gym. Please try again later."})
-		return
-	}
-
-	isNear := utils.IsNear(interfaces.Coordinates{
-		Latitude:  gymDoc.Latitude,
-		Longitude: gymDoc.Longitude,
-	}, interfaces.Coordinates{
-		Latitude:  claims.Latitude,
-		Longitude: claims.Longitude,
-	})
-
-	if !isNear {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "You are not near the gym. Please go to the gym to start the combat."})
 		return
 	}
 
