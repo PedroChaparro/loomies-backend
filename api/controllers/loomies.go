@@ -129,6 +129,7 @@ func HandleNearLoomies(c *gin.Context) {
 
 	// 1. Try to generate new loomies
 	id, _ := c.Get("userid")
+	userMongoId, _ := primitive.ObjectIDFromHex(id.(string))
 	err := generateLoomies(id.(string), coordinates)
 
 	if err != nil {
@@ -147,7 +148,7 @@ func HandleNearLoomies(c *gin.Context) {
 	}
 
 	// 2. Return the loomies near the user coordinates
-	wildLoomies, err := models.GetNearWildLoomies(coordinates)
+	wildLoomies, err := models.GetNearWildLoomies(coordinates, userMongoId)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
