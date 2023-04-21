@@ -377,6 +377,82 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 	})
 }
 
+// handleChangeLoomie handles the change of the player loomie
+func handleChangeLoomie(combat *WsCombat, message WsMessage) {
+	// Get the loomie id from the message payload
+	payload := message.Payload
+	loomieId := fmt.Sprint(payload["loomie_id"])
+
+	// Check the loomie id is not null
+	if loomieId == "" {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Loomie id is required",
+		})
+
+		return
+	}
+
+	// Check if the loomie id is a valid mongo id
+	loomieMongoId, err := primitive.ObjectIDFromHex(loomieId)
+
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Loomie id is not valid",
+		})
+
+		return
+	}
+
+	// Check the loomie is in the player loomies and is not weakened
+	var loomieExists, loomieAlive bool
+	var loomieIndex int
+
+	for index := range combat.PlayerLoomies {
+		if combat.PlayerLoomies[index].Id == loomieMongoId {
+			loomieExists = true
+
+			if combat.PlayerLoomies[index].BoostedHp > 0 {
+				loomieAlive = true
+			}
+
+			loomieIndex = index
+			break
+		}
+	}
+
+	if !loomieExists {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Loomie does not exist",
+		})
+
+		return
+	}
+
+	if !loomieAlive {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Loomie is weakened",
+		})
+
+		return
+	}
+
+	// Change the current player loomie
+	combat.CurrentPlayerLoomie = &combat.PlayerLoomies[loomieIndex]
+
+	// Send the message to the user
+	combat.SendMessage(WsMessage{
+		Type:    "UPDATE_PLAYER_LOOMIE",
+		Message: fmt.Sprintf("Loomie: %s is now the current player loomie", combat.CurrentPlayerLoomie.Name),
+		Payload: map[string]interface{}{
+			"loomie": combat.CurrentPlayerLoomie,
+		},
+	})
+}
+
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
 func handleClearDodgeChannel(combat *WsCombat) {
 	for len(combat.Dodges) > 0 {
