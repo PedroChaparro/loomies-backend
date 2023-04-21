@@ -18,14 +18,6 @@ import (
 
 // handleSendAttack handles the "GYM_ATTACK" message type to send an attack to the player
 func handleSendAttack(combat *WsCombat) {
-	// Check if the types of the loomie were obtained before
-	gymLoomie := combat.CurrentGymLoomie
-	playerLoomie := combat.CurrentPlayerLoomie
-	cacheTypeStrongAgainst(gymLoomie.Types, combat)
-
-	// Calculate the damage
-	calculatedAttack := calculateAttack(gymLoomie, playerLoomie)
-
 	// Send the attack "notification" to the client
 	combat.SendMessage(WsMessage{
 		Type:    "GYM_ATTACK_CANDIDATE",
@@ -56,7 +48,11 @@ func handleSendAttack(combat *WsCombat) {
 		break
 	}
 
-	// Send the attack result to the client
+	// Get the current loomies after the timeout to prevent desync
+	gymLoomie := combat.CurrentGymLoomie
+	playerLoomie := combat.CurrentPlayerLoomie
+
+	// Send the dodge message to the client if the attack was dodged
 	if wasAttackDodged {
 		combat.SendMessage(WsMessage{
 			Type:    "GYM_ATTACK_DODGED",
@@ -65,6 +61,12 @@ func handleSendAttack(combat *WsCombat) {
 
 		return
 	}
+
+	// Check if the types of the loomie were obtained before
+	cacheTypeStrongAgainst(gymLoomie.Types, combat)
+
+	// Calculate the damage
+	calculatedAttack := calculateAttack(gymLoomie, playerLoomie)
 
 	// Reduce the player loomie hp
 	playerLoomie.BoostedHp -= calculatedAttack
@@ -99,9 +101,9 @@ func handleSendAttack(combat *WsCombat) {
 		// Find the next alive player loomie
 		newPlayerLoomie := &interfaces.CombatLoomie{}
 
-		for _, playerLoomie := range combat.PlayerLoomies {
-			if playerLoomie.BoostedHp > 0 {
-				newPlayerLoomie = &playerLoomie
+		for _, playerLoomieCandidate := range combat.PlayerLoomies {
+			if playerLoomieCandidate.BoostedHp > 0 {
+				newPlayerLoomie = &playerLoomieCandidate
 				break
 			}
 		}
