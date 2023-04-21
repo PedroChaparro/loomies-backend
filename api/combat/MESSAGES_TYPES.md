@@ -7,6 +7,7 @@ The following are the supported messages types that are exchanged between the cl
 | `ERROR`                 | Unexpected server side error. You can find more information in the message description / payload                      | Server | Client |
 | `COMBAT_TIMEOUT`        | The combat has been closed due to the player inactivity.                                                              | Server | Client |
 | `USER_USE_ITEM`         | The user uses an item in the combat.                                                                                  | CLient | Server |
+| `USER_CHANGE_LOOMIE`    | The user changes the current Loomie.                                                                                  | Client | Server |
 | `GYM_ATTACK_CANDIDATE`  | It announces an incoming attack. The user has the opportunity to dodge it using the `GYM_ATTACK_DODGED` message type. | Server | Client |
 | `USER_DODGE`            | The user avoids the gym Loomie attack. Has a 1 second cooldown                                                        | Client | Server |
 | `GYM_ATTACK_DODGED`     | Confirmation that the user avoids the gym Loomie attack                                                               | Server | Client |
@@ -34,6 +35,19 @@ The application must send the item id to the server as a payload.
   "type": "USER_USE_ITEM",
   "payload": {
     "item_id": "The mongo id of the item"
+  }
+}
+```
+
+### USER_CHANGE_LOOMIE
+
+The application must send the Loomie id to the server as a payload.
+
+```json
+{
+  "type": "USER_CHANGE_LOOMIE",
+  "payload": {
+    "loomie_id": "The mongo id of the Loomie"
   }
 }
 ```
