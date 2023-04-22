@@ -41,11 +41,12 @@ export async function createRandomLoomieTeam(commonLoomies) {
     return {
       // Shared attributes
       serial: baseLoomie.serial,
+      level: getRandomInt(14, 24),
       name: baseLoomie.name,
       types: baseLoomie.types,
       rarity: baseLoomie.rarity,
       // Change names and reduce the stats to generate a weaker loomie
-      hp: baseLoomie.base_hp - getRandomInt(15, 20),
+      hp: baseLoomie.base_hp - getRandomInt(10, 15),
       attack: baseLoomie.base_attack - getRandomInt(5, 10),
       defense: baseLoomie.base_defense - getRandomInt(0, 5),
       // The loomie has no owner, it just exists to protect the gym initially
