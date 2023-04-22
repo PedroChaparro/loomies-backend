@@ -5,7 +5,7 @@ import {
   UserModel,
 } from "../models/mongoose.js";
 
-function getRandomInt(min, max) {
+export function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
@@ -46,9 +46,9 @@ export async function createRandomLoomieTeam(commonLoomies) {
       types: baseLoomie.types,
       rarity: baseLoomie.rarity,
       // Change names and reduce the stats to generate a weaker loomie
-      hp: baseLoomie.base_hp - getRandomInt(10, 15),
-      attack: baseLoomie.base_attack - getRandomInt(5, 10),
-      defense: baseLoomie.base_defense - getRandomInt(0, 5),
+      hp: baseLoomie.base_hp + getRandomInt(-2, 4),
+      attack: baseLoomie.base_attack + getRandomInt(-2, 4),
+      defense: baseLoomie.base_defense + getRandomInt(-2, 4),
       // The loomie has no owner, it just exists to protect the gym initially
       owner: null,
       // The loomie is busy defending the gym althought it's not owned by anyone
