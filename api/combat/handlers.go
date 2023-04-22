@@ -383,3 +383,12 @@ func handleClearDodgeChannel(combat *WsCombat) {
 		<-combat.Dodges
 	}
 }
+
+func handleEscapeCombat(combat *WsCombat) {
+	combat.SendMessage(WsMessage{
+		Type:    "ESCAPE_COMBAT",
+		Message: "You just escaped from combat",
+	})
+
+	combat.Connection.Close()
+}
