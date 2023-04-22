@@ -72,7 +72,7 @@ func handleSendAttack(combat *WsCombat) {
 
 	// Check if the player loomie was weakened
 	if playerLoomie.BoostedHp <= 0 {
-		weaknedLoomieId := playerLoomie.Id
+		weakenedLoomieId := playerLoomie.Id
 
 		// Reduce the alive player loomies count
 		combat.AlivePlayerLoomies--
@@ -82,7 +82,7 @@ func handleSendAttack(combat *WsCombat) {
 			Type:    "USER_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Your loomie %s was weakened", playerLoomie.Name),
 			Payload: map[string]interface{}{
-				"loomie_id": weaknedLoomieId,
+				"loomie_id": weakenedLoomieId,
 			},
 		})
 
@@ -242,35 +242,49 @@ func handleReceiveAttack(combat *WsCombat) {
 	}
 }
 
-// todo correct name weakened
 // handleGymLoomieWeakened handles the "event" when a gym loomie is weakened by the player to add experience to the player loomies that fought the gym loomie
 func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.ObjectID, levelWeakenedLoomieId int) {
 
-	// TODO: Silvia, you should add the functionality to add experience to the player
-	// loomies locally and also in the database.
-
 	fmt.Println("Handling Gym Loomie Weakened Event for:", weakenedLoomieId)
+	// Obtains Loomies who weakened the enemy Loomie
 	foughtWith := combat.FoughtGymLoomies[weakenedLoomieId]
 
+	// Calculates exp of Loomie weakened and its third part. It is divided in # of Loomies
 	expWeakenedLoomieId := utils.GetRequiredExperience(levelWeakenedLoomieId)
 	experienceToSet := (expWeakenedLoomieId / 3) / float64(len(foughtWith))
 
+	// adds the experience to each Loomie in foughtWith
 	for _, playerLoomiePointer := range foughtWith {
-		// TODO: Add experience to the player loomie
 		fmt.Println("Adding experience to player loomie:", playerLoomiePointer)
-		// current experience + gained experience
-		availableExperience := playerLoomiePointer.Experience + experienceToSet
-		fmt.Println(playerLoomiePointer.Experience)
-		playerLoomiePointer.Experience, playerLoomiePointer.Level = utils.CalculateLevel(playerLoomiePointer.Experience, availableExperience, playerLoomiePointer.Level)
 
+		// usefull if the loomie level up
+		preLevel := playerLoomiePointer.Level
+
+		// calculates and sets new exp and lvl locally
+		playerLoomiePointer.Experience, playerLoomiePointer.Level = calculateLevelAndExperience(playerLoomiePointer.Experience, experienceToSet, playerLoomiePointer.Level)
+
+		// updates and sets new exp and lvl in db
 		models.UpdateExperienceAndLevelInCombat(combat.PlayerID, playerLoomiePointer)
+
 		combat.SendMessage(WsMessage{
-			Type:    "UPDATE_EXP_LOOMIE",
+			Type:    "UPDATE_USER_LOOMIE_EXP",
 			Message: fmt.Sprintf("Loomie %s received %.4f of experience", playerLoomiePointer.Name, experienceToSet),
 			Payload: map[string]interface{}{
 				"loomie": playerLoomiePointer.Id,
 			},
 		})
+
+		// if loomie level up, there is an update in its stats
+		if playerLoomiePointer.Level-preLevel != 0 {
+			updateStatsDuringWeakenedEvent(playerLoomiePointer)
+			combat.SendMessage(WsMessage{
+				Type:    "UPDATE_PLAYER_LOOMIE",
+				Message: fmt.Sprintf("Loomie %s received an update of hp, attack and defense", playerLoomiePointer.Name),
+				Payload: map[string]interface{}{
+					"loomie": playerLoomiePointer,
+				},
+			})
+		}
 	}
 
 	fmt.Println("Weakened Event Handled")
