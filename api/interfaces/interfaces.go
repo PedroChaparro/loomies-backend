@@ -254,6 +254,12 @@ type CaughtLoomie struct {
 	Experience float64              `json:"experience"     bson:"experience"`
 }
 
+type GymChallengesRegister struct {
+	GymId      primitive.ObjectID `json:"gym_id"       bson:"gym_id"`
+	AttackerId primitive.ObjectID `json:"attacker_id"       bson:"attacker_id"`
+	Timestamp  int64              `json:"timestamp"     bson:"timestamp"`
+}
+
 type WsTokenClaims struct {
 	UserID    string  `json:"user_id"`
 	GymID     string  `json:"gym_id"`
