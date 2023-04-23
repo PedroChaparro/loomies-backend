@@ -109,7 +109,7 @@ func handleSendAttack(combat *WsCombat) {
 
 		// Notify the user that the current player loomie was changed
 		combat.SendMessage(WsMessage{
-			Type:    "UPDATE_PLAYER_LOOMIE",
+			Type:    "UPDATE_USER_LOOMIE",
 			Message: fmt.Sprintf("Your loomie %s is now your active loomie", combat.CurrentPlayerLoomie.Name),
 			Payload: map[string]interface{}{
 				"loomie": combat.CurrentPlayerLoomie,
@@ -269,6 +269,7 @@ func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.Object
 			Message: fmt.Sprintf("Loomie %s received %.4f of experience", playerLoomiePointer.Name, experienceToSet),
 			Payload: map[string]interface{}{
 				"loomie": playerLoomiePointer.Id,
+				"exp":    playerLoomiePointer.Experience,
 			},
 		})
 
@@ -276,7 +277,7 @@ func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.Object
 		if playerLoomiePointer.Level-preLevel != 0 {
 			updateStatsDuringWeakenedEvent(playerLoomiePointer)
 			combat.SendMessage(WsMessage{
-				Type:    "UPDATE_PLAYER_LOOMIE",
+				Type:    "UPDATE_USER_LOOMIE",
 				Message: fmt.Sprintf("Loomie %s received an update of hp, attack and defense", playerLoomiePointer.Name),
 				Payload: map[string]interface{}{
 					"loomie": playerLoomiePointer,
@@ -466,7 +467,7 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 
 	// Send the message to the user
 	combat.SendMessage(WsMessage{
-		Type:    "UPDATE_PLAYER_LOOMIE",
+		Type:    "UPDATE_USER_LOOMIE",
 		Message: fmt.Sprintf("Loomie: %s received the item: %s", combat.CurrentPlayerLoomie.Name, item.Name),
 		Payload: map[string]interface{}{
 			"loomie": combat.CurrentPlayerLoomie,
@@ -542,7 +543,7 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 
 	// Send the message to the user
 	combat.SendMessage(WsMessage{
-		Type:    "UPDATE_PLAYER_LOOMIE",
+		Type:    "UPDATE_USER_LOOMIE",
 		Message: fmt.Sprintf("Loomie: %s is now the current player loomie", combat.CurrentPlayerLoomie.Name),
 		Payload: map[string]interface{}{
 			"loomie": combat.CurrentPlayerLoomie,

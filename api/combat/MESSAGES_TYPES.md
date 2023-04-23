@@ -12,7 +12,7 @@ The following are the supported messages types that are exchanged between the cl
 | `USER_DODGE`             | The user avoids the gym Loomie attack. Has a 1 second cooldown                                                        | Client | Server |
 | `GYM_ATTACK_DODGED`      | Confirmation that the user avoids the gym Loomie attack                                                               | Server | Client |
 | `USER_LOOMIE_WEAKENED`   | The user Loomie was defeated by the gym Loomie                                                                        | Server | Client |
-| `UPDATE_PLAYER_LOOMIE`   | The current user Loomie was changed                                                                                   | Server | Client |
+| `UPDATE_USER_LOOMIE`     | The current user Loomie was changed                                                                                   | Server | Client |
 | `UPDATE_USER_LOOMIE_HP`  | The current user Loomie was attacked by the gym Loomie                                                                | Server | Client |
 | `UPDATE_USER_LOOMIE_EXP` | The current user Loomie experience was updated                                                                        | Server | Client |
 | `USER_HAS_LOST`          | All the user Loomies were defeated                                                                                    | Server | Client |
