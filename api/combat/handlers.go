@@ -19,14 +19,6 @@ import (
 
 // handleSendAttack handles the "GYM_ATTACK" message type to send an attack to the player
 func handleSendAttack(combat *WsCombat) {
-	// Check if the types of the loomie were obtained before
-	gymLoomie := combat.CurrentGymLoomie
-	playerLoomie := combat.CurrentPlayerLoomie
-	cacheTypeStrongAgainst(gymLoomie.Types, combat)
-
-	// Calculate the damage
-	calculatedAttack := calculateAttack(gymLoomie, playerLoomie)
-
 	// Send the attack "notification" to the client
 	combat.SendMessage(WsMessage{
 		Type:    "GYM_ATTACK_CANDIDATE",
@@ -57,7 +49,11 @@ func handleSendAttack(combat *WsCombat) {
 		break
 	}
 
-	// Send the attack result to the client
+	// Get the current loomies after the timeout to prevent desync
+	gymLoomie := combat.CurrentGymLoomie
+	playerLoomie := combat.CurrentPlayerLoomie
+
+	// Send the dodge message to the client if the attack was dodged
 	if wasAttackDodged {
 		combat.SendMessage(WsMessage{
 			Type:    "GYM_ATTACK_DODGED",
@@ -66,6 +62,12 @@ func handleSendAttack(combat *WsCombat) {
 
 		return
 	}
+
+	// Check if the types of the loomie were obtained before
+	cacheTypeStrongAgainst(gymLoomie.Types, combat)
+
+	// Calculate the damage
+	calculatedAttack := calculateAttack(gymLoomie, playerLoomie)
 
 	// Reduce the player loomie hp
 	playerLoomie.BoostedHp -= calculatedAttack
@@ -96,7 +98,7 @@ func handleSendAttack(combat *WsCombat) {
 			combat.Close <- true
 			return
 		}
-
+    
 		for index := range combat.PlayerLoomies {
 			if combat.PlayerLoomies[index].BoostedHp > 0 {
 				// Update the current gym loomie
@@ -465,6 +467,82 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 	combat.SendMessage(WsMessage{
 		Type:    "UPDATE_PLAYER_LOOMIE",
 		Message: fmt.Sprintf("Loomie: %s received the item: %s", combat.CurrentPlayerLoomie.Name, item.Name),
+		Payload: map[string]interface{}{
+			"loomie": combat.CurrentPlayerLoomie,
+		},
+	})
+}
+
+// handleChangeLoomie handles the change of the player loomie
+func handleChangeLoomie(combat *WsCombat, message WsMessage) {
+	// Get the loomie id from the message payload
+	payload := message.Payload
+	loomieId := fmt.Sprint(payload["loomie_id"])
+
+	// Check the loomie id is not null
+	if loomieId == "" {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Loomie id is required",
+		})
+
+		return
+	}
+
+	// Check if the loomie id is a valid mongo id
+	loomieMongoId, err := primitive.ObjectIDFromHex(loomieId)
+
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Loomie id is not valid",
+		})
+
+		return
+	}
+
+	// Check the loomie is in the player loomies and is not weakened
+	var loomieExists, loomieAlive bool
+	var loomieIndex int
+
+	for index := range combat.PlayerLoomies {
+		if combat.PlayerLoomies[index].Id == loomieMongoId {
+			loomieExists = true
+
+			if combat.PlayerLoomies[index].BoostedHp > 0 {
+				loomieAlive = true
+			}
+
+			loomieIndex = index
+			break
+		}
+	}
+
+	if !loomieExists {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Loomie does not exist",
+		})
+
+		return
+	}
+
+	if !loomieAlive {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[BAD REQUEST] Loomie is weakened",
+		})
+
+		return
+	}
+
+	// Change the current player loomie
+	combat.CurrentPlayerLoomie = &combat.PlayerLoomies[loomieIndex]
+
+	// Send the message to the user
+	combat.SendMessage(WsMessage{
+		Type:    "UPDATE_PLAYER_LOOMIE",
+		Message: fmt.Sprintf("Loomie: %s is now the current player loomie", combat.CurrentPlayerLoomie.Name),
 		Payload: map[string]interface{}{
 			"loomie": combat.CurrentPlayerLoomie,
 		},
