@@ -301,7 +301,7 @@ func handlePlayerVictory(combat *WsCombat) {
 	}
 
 	// Updates the loomie team of the new owner with an empty array
-	err = models.ReplaceLoomieTeam(gymId, []primitive.ObjectID{})
+	err = models.ReplaceLoomieTeam(combat.PlayerID, []primitive.ObjectID{})
 	if err != nil {
 		combat.SendMessage(WsMessage{
 			Type:    "ERROR",
