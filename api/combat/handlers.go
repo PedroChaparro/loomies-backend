@@ -252,8 +252,8 @@ func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.Object
 	experienceToSet := (expWeakenedLoomieId / 3) / float64(len(foughtWith))
 
 	// adds the experience to each Loomie in foughtWith
-	for _, playerLoomiePointer := range foughtWith {
-		//fmt.Println("Adding experience to player loomie:", playerLoomiePointer)
+	for index := range foughtWith {
+		playerLoomiePointer := foughtWith[index]
 
 		// usefull if the loomie level up
 		preLevel := playerLoomiePointer.Level
@@ -318,7 +318,7 @@ func handlePlayerVictory(combat *WsCombat) {
 	}
 
 	for _, gymLoomie := range combat.GymLoomies {
-		currentGymProtectors = append(newGymProtectors, gymLoomie.Id)
+		currentGymProtectors = append(currentGymProtectors, gymLoomie.Id)
 	}
 
 	if gymInfo.Owner != "" {
