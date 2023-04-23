@@ -205,78 +205,7 @@ func handleReceiveAttack(combat *WsCombat) {
 				Message: "You have won the battle. Now you own this gym",
 			})
 
-			gymId, _ := primitive.ObjectIDFromHex(combat.GymID)
-
-			gymInfo, err := models.GetPopulatedGymFromId(gymId, combat.PlayerID)
-
-			if err != nil {
-
-				combat.SendMessage(WsMessage{
-					Type:    "ERROR",
-					Message: "[INTERNAL SERVER ERROR] Error obtaining gym info",
-				})
-
-				return
-			}
-
-			// Updates the loomie team of the new owner
-			err = models.ReplaceLoomieTeam(gymId, []primitive.ObjectID{})
-			if err != nil {
-				combat.SendMessage(WsMessage{
-					Type:    "ERROR",
-					Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team of user",
-				})
-			}
-
-			// Obtains ids of new protectors
-			newGymProtectors := []primitive.ObjectID{}
-			currentGymProtectors := []primitive.ObjectID{}
-
-			for _, playerLoomie := range combat.PlayerLoomies {
-				newGymProtectors = append(newGymProtectors, playerLoomie.Id)
-			}
-
-			for _, gymLoomie := range combat.GymLoomies {
-				currentGymProtectors = append(newGymProtectors, gymLoomie.Id)
-			}
-
-			if gymInfo.Owner != "" {
-				// Updates the gym old protectors
-				err = models.UpdateIsBusyStatusInCombat(currentGymProtectors, false)
-				if err != nil {
-					combat.SendMessage(WsMessage{
-						Type:    "ERROR",
-						Message: "[INTERNAL SERVER ERROR] Error updating current GymTeam is_busy field",
-					})
-				}
-			} else {
-				err = models.RemoveLoomieTeam(currentGymProtectors)
-				if err != nil {
-					combat.SendMessage(WsMessage{
-						Type:    "ERROR",
-						Message: "[INTERNAL SERVER ERROR] Error deleting current GymTeam",
-					})
-				}
-			}
-
-			// Updates the gym news protectors and owner
-			err = models.UpdateGymProtectorsAndOwner(gymId, newGymProtectors, combat.PlayerID)
-			if err != nil {
-				combat.SendMessage(WsMessage{
-					Type:    "ERROR",
-					Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team of user and its owner",
-				})
-			}
-			// Updates the gym news protectors, is_busy propierties
-			err = models.UpdateIsBusyStatusInCombat(newGymProtectors, true)
-			if err != nil {
-				combat.SendMessage(WsMessage{
-					Type:    "ERROR",
-					Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team is_busy field",
-				})
-			}
-
-			combat.Close <- true
+			handlePlayerVictory(combat)
 			return
 		}
 
@@ -315,8 +244,6 @@ func handleReceiveAttack(combat *WsCombat) {
 
 // handleGymLoomieWeakened handles the "event" when a gym loomie is weakened by the player to add experience to the player loomies that fought the gym loomie
 func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.ObjectID, levelWeakenedLoomieId int) {
-
-	//fmt.Println("Handling Gym Loomie Weakened Event for:", weakenedLoomieId)
 	// Obtains Loomies who weakened the enemy Loomie
 	foughtWith := combat.FoughtGymLoomies[weakenedLoomieId]
 
@@ -335,7 +262,7 @@ func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.Object
 		playerLoomiePointer.Experience, playerLoomiePointer.Level = calculateLevelAndExperience(playerLoomiePointer.Experience, experienceToSet, playerLoomiePointer.Level)
 
 		// updates and sets new exp and lvl in db
-		models.UpdateExperienceAndLevelInCombat(combat.PlayerID, playerLoomiePointer)
+		models.UpdateLoomiesExpAndLvl(combat.PlayerID, playerLoomiePointer)
 
 		combat.SendMessage(WsMessage{
 			Type:    "UPDATE_USER_LOOMIE_EXP",
@@ -357,8 +284,82 @@ func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.Object
 			})
 		}
 	}
+}
 
-	//fmt.Println("Weakened Event Handled")
+// handlePlayerVictory handles the "event" when the player wins the battle
+func handlePlayerVictory(combat *WsCombat) {
+	gymId, _ := primitive.ObjectIDFromHex(combat.GymID)
+	gymInfo, err := models.GetPopulatedGymFromId(gymId, combat.PlayerID)
+
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] Error obtaining gym info",
+		})
+
+		return
+	}
+
+	// Updates the loomie team of the new owner with an empty array
+	err = models.ReplaceLoomieTeam(gymId, []primitive.ObjectID{})
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team of user",
+		})
+	}
+
+	// Obtains ids of new protectors
+	newGymProtectors := []primitive.ObjectID{}
+	currentGymProtectors := []primitive.ObjectID{}
+
+	for _, playerLoomie := range combat.PlayerLoomies {
+		newGymProtectors = append(newGymProtectors, playerLoomie.Id)
+	}
+
+	for _, gymLoomie := range combat.GymLoomies {
+		currentGymProtectors = append(newGymProtectors, gymLoomie.Id)
+	}
+
+	if gymInfo.Owner != "" {
+		// Updates the gym old protectors
+		err = models.UpdateLoomiesBusyState(currentGymProtectors, false)
+		if err != nil {
+			combat.SendMessage(WsMessage{
+				Type:    "ERROR",
+				Message: "[INTERNAL SERVER ERROR] Error updating current gym protectors status",
+			})
+		}
+	} else {
+		// Removes the gym old protectors
+		err = models.RemoveLoomieTeam(currentGymProtectors)
+		if err != nil {
+			combat.SendMessage(WsMessage{
+				Type:    "ERROR",
+				Message: "[INTERNAL SERVER ERROR] Error deleting current gym protectors",
+			})
+		}
+	}
+
+	// Updates the gym news protectors and owner
+	err = models.UpdateGymProtectorsAndOwner(gymId, newGymProtectors, combat.PlayerID)
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team of user and its owner",
+		})
+	}
+
+	// Updates the gym news protectors, is_busy propierties
+	err = models.UpdateLoomiesBusyState(newGymProtectors, true)
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team is_busy field",
+		})
+	}
+
+	combat.Close <- true
 }
 
 // handleUseItem handles the use of an item by the player
