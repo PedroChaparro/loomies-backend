@@ -387,8 +387,8 @@ func handleClearDodgeChannel(combat *WsCombat) {
 func handleEscapeCombat(combat *WsCombat) {
 	combat.SendMessage(WsMessage{
 		Type:    "ESCAPE_COMBAT",
-		Message: "You just escaped from combat",
+		Message: "You escaped the combat",
 	})
 
-	combat.Connection.Close()
+	combat.Close <- true
 }
