@@ -98,7 +98,7 @@ func handleSendAttack(combat *WsCombat) {
 			combat.Close <- true
 			return
 		}
-    
+
 		for index := range combat.PlayerLoomies {
 			if combat.PlayerLoomies[index].BoostedHp > 0 {
 				// Update the current gym loomie
