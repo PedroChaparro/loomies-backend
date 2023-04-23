@@ -323,7 +323,6 @@ func IncrementLoomieLevel(userId primitive.ObjectID, loomieId primitive.ObjectID
 	return nil
 }
 
-// TODO check if everything works
 // UpdateLoomieExperienceAndLevel Allows to uptade experience and level of a loomie after weakened a loomie
 func UpdateExperienceAndLevelInCombat(userId primitive.ObjectID, loomieToUpdate *interfaces.CombatLoomie) error {
 	// Update the first loomie in the caught loomies collection
@@ -345,6 +344,29 @@ func UpdateExperienceAndLevelInCombat(userId primitive.ObjectID, loomieToUpdate 
 	}
 
 	return nil
+}
+
+// UpdateIsBusyStatusInCombat Allows to uptade is_busy field of a looser o winner team of loomies (depends of the flag)
+func UpdateIsBusyStatusInCombat(loomiesProtectorsIds []primitive.ObjectID, flag bool) (err error) {
+
+	_, err = CaughtLoomiesCollection.UpdateMany(
+		context.TODO(),
+		bson.M{"_id": bson.M{"$in": loomiesProtectorsIds}},
+		bson.D{{Key: "$set", Value: bson.D{
+			{Key: "is_busy", Value: flag},
+		}}},
+	)
+
+	return err
+}
+
+// RemoveLoomieTeam Removes Loomie Team just when the gym doesnt have owner
+func RemoveLoomieTeam(loomiesProtectorsIds []primitive.ObjectID) (err error) {
+	_, err = CaughtLoomiesCollection.DeleteMany(
+		context.TODO(),
+		bson.M{"_id": bson.M{"$in": loomiesProtectorsIds}},
+	)
+	return err
 }
 
 // GetLoomieTypeDetails Returns the details of a loomie type
