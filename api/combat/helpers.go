@@ -131,7 +131,6 @@ func applyItem(userId primitive.ObjectID, item *interfaces.PopulatedInventoryIte
 // TODO generalize?
 // calculateLevelAndExperience calculates what is lvl and experience of a Loomie that weakened another one
 func calculateLevelAndExperience(loomieExperience float64, availableExperience float64, loomieLevel int) (float64, int) {
-
 	var experienceToAdd, neededExperienceToNextLevel float64
 
 	// Check if the loomie has leveled up
