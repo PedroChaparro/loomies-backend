@@ -123,7 +123,13 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				if time.Now().Unix()-combat.LastMessageTimestamp > 30 {
+				// If the last message received is older than 5 minutes, close the connection
+				if time.Now().Unix()-combat.LastMessageTimestamp > 300 {
+					combat.SendMessage(WsMessage{
+						Type:    "COMBAT_TIMEOUT",
+						Message: "You have been inactive for too long, the combat has ended",
+					})
+
 					combat.Connection.Close()
 					return
 				}

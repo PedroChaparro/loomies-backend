@@ -1,4 +1,4 @@
-# Messages types
+## Messages types
 
 The following are the supported messages types that are exchanged between the client and the server through the websocket.
 
@@ -19,3 +19,20 @@ The following are the supported messages types that are exchanged between the cl
 | `UPDATE_GYM_LOOMIE`      | The current gym Loomie was changed                                                                                    | Server | Client |
 | `UPDATE_GYM_LOOMIE_HP`   | The current gym Loomie was attacked by the user Loomie                                                                | Server | Client |
 | `USER_HAS_WON`           | All the gym Loomies were defeated                                                                                     | Server | Client |
+
+## Payloads
+
+The following are the payloads that are sent with some of the messages types.
+
+### USER_USE_ITEM
+
+The application must send the item id to the server as a payload.
+
+```json
+{
+  "type": "USER_USE_ITEM",
+  "payload": {
+    "item_id": "The mongo id of the item"
+  }
+}
+```
