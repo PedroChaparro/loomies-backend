@@ -340,8 +340,8 @@ func IncrementLoomieLevel(userId primitive.ObjectID, loomieId primitive.ObjectID
 	return nil
 }
 
-// UpdateLoomieExperienceAndLevel Allows to uptade experience and level of a loomie after weakened a loomie
-func UpdateExperienceAndLevelInCombat(userId primitive.ObjectID, loomieToUpdate *interfaces.CombatLoomie) error {
+// UpdateLoomiesExpAndLvl Allows to uptade experience and level of a loomie after weakened a loomie
+func UpdateLoomiesExpAndLvl(userId primitive.ObjectID, loomieToUpdate *interfaces.CombatLoomie) error {
 	// Update the first loomie in the caught loomies collection
 	_, err := CaughtLoomiesCollection.UpdateOne(
 		context.TODO(),
@@ -363,9 +363,8 @@ func UpdateExperienceAndLevelInCombat(userId primitive.ObjectID, loomieToUpdate 
 	return nil
 }
 
-// UpdateIsBusyStatusInCombat Allows to uptade is_busy field of a looser o winner team of loomies (depends of the flag)
-func UpdateIsBusyStatusInCombat(loomiesProtectorsIds []primitive.ObjectID, flag bool) (err error) {
-
+// UpdateLoomiesBusyState Allows to uptade is_busy field of a looser o winner team of loomies (depends of the flag)
+func UpdateLoomiesBusyState(loomiesProtectorsIds []primitive.ObjectID, flag bool) (err error) {
 	_, err = CaughtLoomiesCollection.UpdateMany(
 		context.TODO(),
 		bson.M{"_id": bson.M{"$in": loomiesProtectorsIds}},
