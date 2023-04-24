@@ -52,8 +52,22 @@ func HandleCombatRegister(c *gin.Context) {
 		return
 	}
 
-	// Create a token to authenticate the user with the websocket endpoint
+	// Check the user and the gym have a loomie team
 	userID, _ := c.Get("userid")
+	userDoc, _ := models.GetUserById(userID.(string))
+	gymDoc, _ = models.GetGymFromID(payload.GymID)
+
+	if len(userDoc.LoomieTeam) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You must have at least one loomie in your team to start a combat."})
+		return
+	}
+
+	if len(gymDoc.Protectors) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym doesn't have any protector loomies. Try with another gym."})
+		return
+	}
+
+	// Create a token to authenticate the user with the websocket endpoint
 	token, err := utils.CreateWsToken(userID.(string), payload.GymID, payload.Latitude, payload.Longitude)
 
 	if err != nil {
