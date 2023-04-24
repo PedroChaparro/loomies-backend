@@ -84,7 +84,7 @@ func handleSendAttack(combat *WsCombat) {
 			Type:    "USER_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Your loomie %s was weakened", playerLoomie.Name),
 			Payload: map[string]interface{}{
-				"loomie_id":          weaknedLoomieId,
+				"loomie_id":          weakenedLoomieId,
 				"alive_user_loomies": combat.AlivePlayerLoomies,
 			},
 		})
