@@ -190,6 +190,9 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 			handleUseItem(combat, wsMessage)
 			combat.UpdatedLastReceivedMessageTimestamp()
 
+		case "USER_ESCAPE_COMBAT":
+			handleEscapeCombat(combat)
+
 		case "USER_CHANGE_LOOMIE":
 			handleChangeLoomie(combat, wsMessage)
 			combat.UpdatedLastReceivedMessageTimestamp()
