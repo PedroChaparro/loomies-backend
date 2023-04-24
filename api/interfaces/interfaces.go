@@ -258,6 +258,7 @@ type GymChallengesRegister struct {
 	GymId      primitive.ObjectID `json:"gym_id"       bson:"gym_id"`
 	AttackerId primitive.ObjectID `json:"attacker_id"       bson:"attacker_id"`
 	Timestamp  int64              `json:"timestamp"     bson:"timestamp"`
+	IsActive   bool               `json:"is_active"     bson:"is_active"`
 }
 
 type WsTokenClaims struct {

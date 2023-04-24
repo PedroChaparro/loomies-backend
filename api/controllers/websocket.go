@@ -57,6 +57,19 @@ func HandleCombatRegister(c *gin.Context) {
 	userID, _ := c.Get("userid")
 	userMongoID, _ := primitive.ObjectIDFromHex(userID.(string))
 
+	// Check the user is not in combat
+	_, err = models.GetActiveCombatByUseId(userMongoID)
+
+	if err == nil {
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": true, "message": "You are already in combat"})
+		return
+	}
+
+	if err != mongo.ErrNoDocuments {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the active combat. Please try again later."})
+		return
+	}
+
 	// Check the user has not challenged the gym recently
 	lastUserChallenge, err := models.GetLastGymChallengeTimestamp(gymDoc.Id, userMongoID)
 	gymsChallengesTimeout := configuration.GetCombatChallengeTimeout()

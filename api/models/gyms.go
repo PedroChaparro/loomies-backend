@@ -112,6 +112,7 @@ func UpdateLastGymChallengeTimestamp(gymId, playerId primitive.ObjectID) (err er
 			GymId:      gymId,
 			AttackerId: playerId,
 			Timestamp:  currentTimestamp,
+			IsActive:   true,
 		})
 
 		return err
@@ -120,4 +121,10 @@ func UpdateLastGymChallengeTimestamp(gymId, playerId primitive.ObjectID) (err er
 		_, err = GymsChallengesCollection.UpdateOne(context.Background(), bson.M{"gym_id": gymId, "attacker_id": playerId}, bson.M{"$set": bson.M{"timestamp": currentTimestamp}})
 		return err
 	}
+}
+
+// FinishGymChallenge marks the gym challenge as finished
+func FinishGymChallenge(gymId, playerId primitive.ObjectID) (err error) {
+	_, err = GymsChallengesCollection.UpdateOne(context.Background(), bson.M{"gym_id": gymId, "attacker_id": playerId}, bson.M{"$set": bson.M{"is_active": false}})
+	return err
 }

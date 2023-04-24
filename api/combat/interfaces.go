@@ -6,6 +6,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
+	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -110,6 +111,10 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 	defer func() {
 		// Remove the combat from the hub, so the gym can be challenged again
 		hub.Unregister(combat.GymID)
+
+		// Mark the combat as closed
+		gymIdMongo, _ := primitive.ObjectIDFromHex(combat.GymID)
+		models.FinishGymChallenge(gymIdMongo, combat.PlayerID)
 	}()
 
 	// --- Independent goroutine to check if the client is inactive ---
