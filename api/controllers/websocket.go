@@ -164,10 +164,12 @@ func HandleCombatInit(c *gin.Context) {
 	// Send the initial loomies to the client
 	Combat.SendMessage(combat.WsMessage{
 		Type:    "start",
-		Message: "The combat has started with the following loomies",
+		Message: "The combat has started.",
 		Payload: gin.H{
-			"player": Combat.CurrentPlayerLoomie,
-			"gym":    Combat.CurrentGymLoomie,
+			"player_loomie":      Combat.CurrentPlayerLoomie,
+			"alive_user_loomies": Combat.AlivePlayerLoomies,
+			"gym_loomie":         Combat.CurrentGymLoomie,
+			"alive_gym_loomies":  Combat.AliveGymLoomies,
 		},
 	})
 

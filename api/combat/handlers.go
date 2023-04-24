@@ -83,7 +83,8 @@ func handleSendAttack(combat *WsCombat) {
 			Type:    "USER_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Your loomie %s was weakened", playerLoomie.Name),
 			Payload: map[string]interface{}{
-				"loomie_id": weaknedLoomieId,
+				"loomie_id":          weaknedLoomieId,
+				"alive_user_loomies": combat.AlivePlayerLoomies,
 			},
 		})
 
@@ -200,7 +201,8 @@ func handleReceiveAttack(combat *WsCombat) {
 			Type:    "GYM_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Enemy loomie %s was weakened", gymLoomie.Name),
 			Payload: map[string]interface{}{
-				"loomie_id": weakenedLoomie.Id,
+				"loomie_id":         weakenedLoomie.Id,
+				"alive_gym_loomies": combat.AliveGymLoomies,
 			},
 		})
 
@@ -330,7 +332,7 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 	}
 
 	// Apply the item
-	err = applyItem(combat.PlayerID, &item, combat.CurrentPlayerLoomie)
+	err = applyItem(combat, &item, combat.CurrentPlayerLoomie)
 
 	if err != nil {
 		// If the loomie does not need healing, send a message to the user
@@ -378,7 +380,8 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 		Type:    "UPDATE_PLAYER_LOOMIE",
 		Message: fmt.Sprintf("Loomie: %s received the item: %s", combat.CurrentPlayerLoomie.Name, item.Name),
 		Payload: map[string]interface{}{
-			"loomie": combat.CurrentPlayerLoomie,
+			"loomie":             combat.CurrentPlayerLoomie,
+			"alive_user_loomies": combat.AlivePlayerLoomies,
 		},
 	})
 }
