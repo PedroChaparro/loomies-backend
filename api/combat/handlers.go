@@ -66,7 +66,7 @@ func handleSendAttack(combat *WsCombat) {
 	cacheTypeStrongAgainst(gymLoomie.Types, combat)
 
 	// Calculate the damage
-	calculatedAttack := calculateAttack(gymLoomie, playerLoomie)
+	calculatedAttack, isCritical := calculateAttack(gymLoomie, playerLoomie)
 
 	// Reduce the player loomie hp
 	playerLoomie.BoostedHp -= calculatedAttack
@@ -127,8 +127,10 @@ func handleSendAttack(combat *WsCombat) {
 			Type:    "UPDATE_USER_LOOMIE_HP",
 			Message: fmt.Sprintf("Your loomie %s received %d damage", playerLoomie.Name, calculatedAttack),
 			Payload: map[string]interface{}{
-				"loomie_id": playerLoomie.Id,
-				"hp":        playerLoomie.BoostedHp,
+				"loomie_id":    playerLoomie.Id,
+				"hp":           playerLoomie.BoostedHp,
+				"damage":       calculatedAttack,
+				"was_critical": isCritical,
 			},
 		})
 	}
@@ -169,7 +171,7 @@ func handleReceiveAttack(combat *WsCombat) {
 	}
 
 	// Calculate the attack
-	calculatedAttack := calculateAttack(playerLoomie, gymLoomie)
+	calculatedAttack, isCritical := calculateAttack(playerLoomie, gymLoomie)
 
 	// Check if the gym loomie dodged the attack
 	gymLoomieDodgeProbability := 10
@@ -244,8 +246,10 @@ func handleReceiveAttack(combat *WsCombat) {
 			Type:    "UPDATE_GYM_LOOMIE_HP",
 			Message: fmt.Sprintf("Enemy loomie %s received %d damage", gymLoomie.Name, calculatedAttack),
 			Payload: map[string]interface{}{
-				"loomie_id": gymLoomie.Id,
-				"hp":        gymLoomie.BoostedHp,
+				"loomie_id":    gymLoomie.Id,
+				"hp":           gymLoomie.BoostedHp,
+				"damanage":     calculatedAttack,
+				"was_critical": isCritical,
 			},
 		})
 	}

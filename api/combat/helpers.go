@@ -60,14 +60,16 @@ func cacheTypeStrongAgainst(loomieTypes []string, combat *WsCombat) {
 }
 
 // calculateAttack calculates the final attack of the atacking loomie
-func calculateAttack(atackingLoomie, defendingLoomie *interfaces.CombatLoomie) int {
+func calculateAttack(atackingLoomie, defendingLoomie *interfaces.CombatLoomie) (int, bool) {
 	// Initial attack value
+	isCritical := false
 	finalAttack := atackingLoomie.BoostedAttack
 	minAttack := float64(atackingLoomie.BoostedAttack) * 0.1
 
 	// Increment the attack if the loomie is strong against the defending loomie
 	for _, atackingLoomieType := range atackingLoomie.Types {
 		if isTypeStrongAgainst(atackingLoomieType, defendingLoomie.Types) {
+			isCritical = true
 			finalAttack *= 2
 			break
 		}
@@ -76,7 +78,7 @@ func calculateAttack(atackingLoomie, defendingLoomie *interfaces.CombatLoomie) i
 	// Apply the user loomie defense
 	finalAttack -= finalAttack * (defendingLoomie.BoostedDefense / 100)
 	finalAttack = int(math.Max(float64(finalAttack), minAttack))
-	return finalAttack
+	return finalAttack, isCritical
 }
 
 // applyItem Applies the item to the loomie by its serial
