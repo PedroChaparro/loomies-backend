@@ -8,6 +8,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -125,4 +126,54 @@ func applyItem(userId primitive.ObjectID, item *interfaces.PopulatedInventoryIte
 	}
 
 	return nil
+}
+
+// TODO generalize?
+// calculateLevelAndExperience calculates what is lvl and experience of a Loomie that weakened another one
+func calculateLevelAndExperience(loomieExperience float64, availableExperience float64, loomieLevel int) (float64, int) {
+	var experienceToAdd, neededExperienceToNextLevel float64
+
+	// Check if the loomie has leveled up
+	for (loomieExperience + availableExperience) >= utils.GetRequiredExperience(loomieLevel+1) {
+		neededExperienceToNextLevel = utils.GetRequiredExperience(loomieLevel+1) - loomieExperience
+		experienceToAdd = math.Min(availableExperience, neededExperienceToNextLevel)
+		experienceToAdd = utils.FixeFloat(experienceToAdd, 4)
+		loomieLevel++
+		loomieExperience = 0
+		availableExperience -= experienceToAdd
+	}
+
+	loomieExperience += availableExperience
+
+	resultExp := utils.FixeFloat(loomieExperience, 4)
+	return resultExp, loomieLevel
+}
+
+// UpdateStatsDuringWeakenedEvent updates maxhp, hp, attack and defense if a loomie advance in lvl during a weakened event
+func updateStatsDuringWeakenedEvent(loomieToUpdate *interfaces.CombatLoomie) {
+	// Tracking previous boosts in MaxHP, Attack, Defense
+	initialMaxHp := calulateExperienceFactorStats(loomieToUpdate.BaseHp, loomieToUpdate.Level-1)
+	previousMaxHpBoosts := loomieToUpdate.MaxHp - initialMaxHp
+
+	initialBoostedAttack := calulateExperienceFactorStats(loomieToUpdate.BaseAttack, loomieToUpdate.Level-1)
+	previousAttackBoosts := loomieToUpdate.BoostedAttack - initialBoostedAttack
+
+	initialBoostedDefense := calulateExperienceFactorStats(loomieToUpdate.BaseDefense, loomieToUpdate.Level-1)
+	previousDefenseBoosts := loomieToUpdate.BoostedDefense - initialBoostedDefense
+
+	// Update previous boosts in MaxHP, Attack, Defense
+	loomieToUpdate.MaxHp = calulateExperienceFactorStats(loomieToUpdate.BaseHp, loomieToUpdate.Level) + previousMaxHpBoosts
+	loomieToUpdate.BoostedAttack = calulateExperienceFactorStats(loomieToUpdate.BaseAttack, loomieToUpdate.Level) + previousAttackBoosts
+	loomieToUpdate.BaseDefense = calulateExperienceFactorStats(loomieToUpdate.BaseDefense, loomieToUpdate.Level) + previousDefenseBoosts
+
+	// Here the new level boost (+1/8 of the base hp) is incremented
+	possibleHpIncrement := int(math.Floor(float64(loomieToUpdate.BaseHp)) * (1.0 / 8.0))
+	possibleBoostedHp := float64(loomieToUpdate.BoostedHp) + float64(possibleHpIncrement)
+	loomieToUpdate.BoostedHp = int(math.Min(possibleBoostedHp, float64(loomieToUpdate.MaxHp)))
+}
+
+// CalulateExperienceFactorStats helper of updateStatsDuringWeakenedEvent
+func calulateExperienceFactorStats(baseStat int, level int) int {
+	experienceFactor := (1.0 + ((1.0 / 8.0) * (float64(level) - 1.0)))
+	return int(math.Floor(float64(baseStat) * experienceFactor))
 }
