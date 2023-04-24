@@ -16,6 +16,8 @@ The following are the supported messages types that are exchanged between the cl
 | `UPDATE_USER_LOOMIE_HP`  | The current user Loomie was attacked by the gym Loomie                                                                | Server | Client |
 | `UPDATE_USER_LOOMIE_EXP` | The current user Loomie experience was updated                                                                        | Server | Client |
 | `USER_HAS_LOST`          | All the user Loomies were defeated                                                                                    | Server | Client |
+| `USER_ESCAPE_COMBAT`     | The user escapes from combat                                                                                          | Client | Server |
+| `ESCAPE_COMBAT`          | Message when the user escapes combat                                                                                  | Server | Client |
 | `USER_ATTACK`            | It will reduce the gym Loomie hp. The enemy Loomie has a chance to dodge it (10%). Has a 1 second cooldown            | Client | Server |
 | `USER_ATTACK_DODGED`     | The gym avoid the user Loomie attack                                                                                  | Server | Client |
 | `GYM_LOOMIE_WEAKENED`    | The gym Loomie was defeated by the user Loomie                                                                        | Server | Client |
