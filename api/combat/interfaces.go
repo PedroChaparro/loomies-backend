@@ -100,9 +100,7 @@ func (combat *WsCombat) UpdatedLastUserAttackTimestamp() {
 
 // SendMessage sends a message to the client
 func (combat *WsCombat) SendMessage(message WsMessage) {
-	jsonMessage, _ := json.Marshal(message)
-	stringJson := string(jsonMessage)
-	combat.Connection.WriteJSON(stringJson)
+	combat.Connection.WriteJSON(message)
 }
 
 // Listen is the function that listens for messages from the client
@@ -194,6 +192,9 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 		case "USER_USE_ITEM":
 			handleUseItem(combat, wsMessage)
 			combat.UpdatedLastReceivedMessageTimestamp()
+
+		case "USER_ESCAPE_COMBAT":
+			handleEscapeCombat(combat)
 
 		case "USER_CHANGE_LOOMIE":
 			handleChangeLoomie(combat, wsMessage)

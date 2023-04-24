@@ -6,6 +6,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
+	"github.com/PedroChaparro/loomies-backend/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -73,7 +74,7 @@ func handleSendAttack(combat *WsCombat) {
 
 	// Check if the player loomie was weakened
 	if playerLoomie.BoostedHp <= 0 {
-		weaknedLoomieId := playerLoomie.Id
+		weakenedLoomieId := playerLoomie.Id
 
 		// Reduce the alive player loomies count
 		combat.AlivePlayerLoomies--
@@ -83,7 +84,7 @@ func handleSendAttack(combat *WsCombat) {
 			Type:    "USER_LOOMIE_WEAKENED",
 			Message: fmt.Sprintf("Your loomie %s was weakened", playerLoomie.Name),
 			Payload: map[string]interface{}{
-				"loomie_id": weaknedLoomieId,
+				"loomie_id": weakenedLoomieId,
 			},
 		})
 
@@ -98,22 +99,17 @@ func handleSendAttack(combat *WsCombat) {
 			return
 		}
 
-		// Find the next alive player loomie
-		newPlayerLoomie := &interfaces.CombatLoomie{}
-
-		for _, playerLoomieCandidate := range combat.PlayerLoomies {
-			if playerLoomieCandidate.BoostedHp > 0 {
-				newPlayerLoomie = &playerLoomieCandidate
+		for index := range combat.PlayerLoomies {
+			if combat.PlayerLoomies[index].BoostedHp > 0 {
+				// Update the current gym loomie
+				combat.CurrentPlayerLoomie = &combat.PlayerLoomies[index]
 				break
 			}
 		}
 
-		// Update the current player loomie
-		combat.CurrentPlayerLoomie = newPlayerLoomie
-
 		// Notify the user that the current player loomie was changed
 		combat.SendMessage(WsMessage{
-			Type:    "UPDATE_PLAYER_LOOMIE",
+			Type:    "UPDATE_USER_LOOMIE",
 			Message: fmt.Sprintf("Your loomie %s is now your active loomie", combat.CurrentPlayerLoomie.Name),
 			Payload: map[string]interface{}{
 				"loomie": combat.CurrentPlayerLoomie,
@@ -209,22 +205,17 @@ func handleReceiveAttack(combat *WsCombat) {
 				Message: "You have won the battle. Now you own this gym",
 			})
 
-			combat.Close <- true
+			handlePlayerVictory(combat)
 			return
 		}
 
-		// Find the next alive gym loomie
-		newGymLoomie := &interfaces.CombatLoomie{}
-
-		for _, gymLoomie := range combat.GymLoomies {
-			if gymLoomie.BoostedHp > 0 {
-				newGymLoomie = &gymLoomie
+		for index := range combat.GymLoomies {
+			if combat.GymLoomies[index].BoostedHp > 0 {
+				// Update the current gym loomie
+				combat.CurrentGymLoomie = &combat.GymLoomies[index]
 				break
 			}
 		}
-
-		// Update the current gym loomie
-		combat.CurrentGymLoomie = newGymLoomie
 
 		// Notify the user that the current gym loomie was changed
 		combat.SendMessage(WsMessage{
@@ -236,7 +227,7 @@ func handleReceiveAttack(combat *WsCombat) {
 		})
 
 		// Add experience to the player loomies that fought the gym loomie
-		handleGymLoomieWeakened(combat, weakenedLoomie)
+		handleGymLoomieWeakened(combat, weakenedLoomie.Id, weakenedLoomie.Level)
 		return
 	} else {
 		// Notify the user that the gym loomie hp was updated
@@ -252,19 +243,124 @@ func handleReceiveAttack(combat *WsCombat) {
 }
 
 // handleGymLoomieWeakened handles the "event" when a gym loomie is weakened by the player to add experience to the player loomies that fought the gym loomie
-func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomie *interfaces.CombatLoomie) {
-	// TODO: Silvia, you should add the functionality to add experience to the player
-	// loomies locally and also in the database.
+func handleGymLoomieWeakened(combat *WsCombat, weakenedLoomieId primitive.ObjectID, levelWeakenedLoomieId int) {
+	// Obtains Loomies who weakened the enemy Loomie
+	foughtWith := combat.FoughtGymLoomies[weakenedLoomieId]
 
-	fmt.Println("Handling Gym Loomie Weakened Event for:", weakenedLoomie.Name)
-	foughtWith := combat.FoughtGymLoomies[weakenedLoomie.Id]
+	// Calculates exp of Loomie weakened and its third part. It is divided in # of Loomies
+	expWeakenedLoomieId := utils.GetRequiredExperience(levelWeakenedLoomieId)
+	experienceToSet := (expWeakenedLoomieId / 3) / float64(len(foughtWith))
 
-	for _, playerLoomiePointer := range foughtWith {
-		// TODO: Add experience to the player loomie
-		fmt.Println("Adding experience to player loomie:", playerLoomiePointer)
+	// adds the experience to each Loomie in foughtWith
+	for index := range foughtWith {
+		playerLoomiePointer := foughtWith[index]
+
+		// usefull if the loomie level up
+		preLevel := playerLoomiePointer.Level
+
+		// calculates and sets new exp and lvl locally
+		playerLoomiePointer.Experience, playerLoomiePointer.Level = calculateLevelAndExperience(playerLoomiePointer.Experience, experienceToSet, playerLoomiePointer.Level)
+
+		// updates and sets new exp and lvl in db
+		models.UpdateLoomiesExpAndLvl(combat.PlayerID, playerLoomiePointer)
+
+		combat.SendMessage(WsMessage{
+			Type:    "UPDATE_USER_LOOMIE_EXP",
+			Message: fmt.Sprintf("Loomie %s received %.4f of experience", playerLoomiePointer.Name, experienceToSet),
+			Payload: map[string]interface{}{
+				"loomie": playerLoomiePointer.Id,
+				"exp":    playerLoomiePointer.Experience,
+			},
+		})
+
+		// if loomie level up, there is an update in its stats
+		if playerLoomiePointer.Level-preLevel != 0 {
+			updateStatsDuringWeakenedEvent(playerLoomiePointer)
+			combat.SendMessage(WsMessage{
+				Type:    "UPDATE_USER_LOOMIE",
+				Message: fmt.Sprintf("Loomie %s received an update of hp, attack and defense", playerLoomiePointer.Name),
+				Payload: map[string]interface{}{
+					"loomie": playerLoomiePointer,
+				},
+			})
+		}
+	}
+}
+
+// handlePlayerVictory handles the "event" when the player wins the battle
+func handlePlayerVictory(combat *WsCombat) {
+	gymId, _ := primitive.ObjectIDFromHex(combat.GymID)
+	gymInfo, err := models.GetPopulatedGymFromId(gymId, combat.PlayerID)
+
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] Error obtaining gym info",
+		})
+
+		return
 	}
 
-	fmt.Println("Weakened Event Handled")
+	// Updates the loomie team of the new owner with an empty array
+	err = models.ReplaceLoomieTeam(combat.PlayerID, []primitive.ObjectID{})
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team of user",
+		})
+	}
+
+	// Obtains ids of new protectors
+	newGymProtectors := []primitive.ObjectID{}
+	currentGymProtectors := []primitive.ObjectID{}
+
+	for _, playerLoomie := range combat.PlayerLoomies {
+		newGymProtectors = append(newGymProtectors, playerLoomie.Id)
+	}
+
+	for _, gymLoomie := range combat.GymLoomies {
+		currentGymProtectors = append(currentGymProtectors, gymLoomie.Id)
+	}
+
+	if gymInfo.Owner != "" {
+		// Updates the gym old protectors
+		err = models.UpdateLoomiesBusyState(currentGymProtectors, false)
+		if err != nil {
+			combat.SendMessage(WsMessage{
+				Type:    "ERROR",
+				Message: "[INTERNAL SERVER ERROR] Error updating current gym protectors status",
+			})
+		}
+	} else {
+		// Removes the gym old protectors
+		err = models.RemoveLoomieTeam(currentGymProtectors)
+		if err != nil {
+			combat.SendMessage(WsMessage{
+				Type:    "ERROR",
+				Message: "[INTERNAL SERVER ERROR] Error deleting current gym protectors",
+			})
+		}
+	}
+
+	// Updates the gym news protectors and owner
+	err = models.UpdateGymProtectorsAndOwner(gymId, newGymProtectors, combat.PlayerID)
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team of user and its owner",
+		})
+	}
+
+	// Updates the gym news protectors, is_busy propierties
+	err = models.UpdateLoomiesBusyState(newGymProtectors, true)
+	if err != nil {
+		combat.SendMessage(WsMessage{
+			Type:    "ERROR",
+			Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team is_busy field",
+		})
+	}
+
+	combat.Close <- true
 }
 
 // handleUseItem handles the use of an item by the player
@@ -371,7 +467,7 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 
 	// Send the message to the user
 	combat.SendMessage(WsMessage{
-		Type:    "UPDATE_PLAYER_LOOMIE",
+		Type:    "UPDATE_USER_LOOMIE",
 		Message: fmt.Sprintf("Loomie: %s received the item: %s", combat.CurrentPlayerLoomie.Name, item.Name),
 		Payload: map[string]interface{}{
 			"loomie": combat.CurrentPlayerLoomie,
@@ -447,7 +543,7 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 
 	// Send the message to the user
 	combat.SendMessage(WsMessage{
-		Type:    "UPDATE_PLAYER_LOOMIE",
+		Type:    "UPDATE_USER_LOOMIE",
 		Message: fmt.Sprintf("Loomie: %s is now the current player loomie", combat.CurrentPlayerLoomie.Name),
 		Payload: map[string]interface{}{
 			"loomie": combat.CurrentPlayerLoomie,
@@ -460,4 +556,13 @@ func handleClearDodgeChannel(combat *WsCombat) {
 	for len(combat.Dodges) > 0 {
 		<-combat.Dodges
 	}
+}
+
+func handleEscapeCombat(combat *WsCombat) {
+	combat.SendMessage(WsMessage{
+		Type:    "ESCAPE_COMBAT",
+		Message: "You escaped the combat",
+	})
+
+	combat.Close <- true
 }

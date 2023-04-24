@@ -126,5 +126,20 @@ func UpdateLastGymChallengeTimestamp(gymId, playerId primitive.ObjectID) (err er
 // FinishGymChallenge marks the gym challenge as finished
 func FinishGymChallenge(gymId, playerId primitive.ObjectID) (err error) {
 	_, err = GymsChallengesCollection.UpdateOne(context.Background(), bson.M{"gym_id": gymId, "attacker_id": playerId}, bson.M{"$set": bson.M{"is_active": false}})
+ 	return err
+}
+
+// UpdateGymProtectors Updates Gym Protectors (the loomies team of the owner) and new owner
+func UpdateGymProtectorsAndOwner(GymId primitive.ObjectID, loomiesProtectorsIds []primitive.ObjectID, newOwner primitive.ObjectID) (err error) {
+	_, err = GymsCollection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: GymId}},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "protectors", Value: loomiesProtectorsIds},
+				{Key: "owner", Value: newOwner},
+			}},
+		},
+	)
 	return err
 }
