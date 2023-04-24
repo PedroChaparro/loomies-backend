@@ -126,7 +126,7 @@ func UpdateLastGymChallengeTimestamp(gymId, playerId primitive.ObjectID) (err er
 // FinishGymChallenge marks the gym challenge as finished
 func FinishGymChallenge(gymId, playerId primitive.ObjectID) (err error) {
 	_, err = GymsChallengesCollection.UpdateOne(context.Background(), bson.M{"gym_id": gymId, "attacker_id": playerId}, bson.M{"$set": bson.M{"is_active": false}})
- 	return err
+	return err
 }
 
 // UpdateGymProtectors Updates Gym Protectors (the loomies team of the owner) and new owner
