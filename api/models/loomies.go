@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -337,6 +338,51 @@ func IncrementLoomieLevel(userId primitive.ObjectID, loomieId primitive.ObjectID
 	}
 
 	return nil
+}
+
+// UpdateLoomiesExpAndLvl Allows to uptade experience and level of a loomie after weakened a loomie
+func UpdateLoomiesExpAndLvl(userId primitive.ObjectID, loomieToUpdate *interfaces.CombatLoomie) error {
+	// Update the first loomie in the caught loomies collection
+	_, err := CaughtLoomiesCollection.UpdateOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: loomieToUpdate.Id},
+		},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "experience", Value: loomieToUpdate.Experience},
+				{Key: "level", Value: loomieToUpdate.Level},
+			}},
+		},
+	)
+
+	if err != nil {
+		return errors.New("Error")
+	}
+
+	return nil
+}
+
+// UpdateLoomiesBusyState Allows to uptade is_busy field of a looser o winner team of loomies (depends of the flag)
+func UpdateLoomiesBusyState(loomiesProtectorsIds []primitive.ObjectID, flag bool) (err error) {
+	_, err = CaughtLoomiesCollection.UpdateMany(
+		context.TODO(),
+		bson.M{"_id": bson.M{"$in": loomiesProtectorsIds}},
+		bson.D{{Key: "$set", Value: bson.D{
+			{Key: "is_busy", Value: flag},
+		}}},
+	)
+
+	return err
+}
+
+// RemoveLoomieTeam Removes Loomie Team just when the gym doesnt have owner
+func RemoveLoomieTeam(loomiesProtectorsIds []primitive.ObjectID) (err error) {
+	_, err = CaughtLoomiesCollection.DeleteMany(
+		context.TODO(),
+		bson.M{"_id": bson.M{"$in": loomiesProtectorsIds}},
+	)
+	return err
 }
 
 // GetLoomieTypeDetails Returns the details of a loomie type
