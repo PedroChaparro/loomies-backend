@@ -54,12 +54,19 @@ func HandleCombatRegister(c *gin.Context) {
 		return
 	}
 
-	// Check the user and the gym have a loomie team
+	// Get the user and the gym from the database
 	userID, _ := c.Get("userid")
 	userMongoID, _ := primitive.ObjectIDFromHex(userID.(string))
 	userDoc, _ := models.GetUserById(userID.(string))
 	gymDoc, _ = models.GetGymFromID(payload.GymID)
 
+	// Check the user is not the gym owner
+	if userDoc.Id == gymDoc.Owner {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You can't challenge your own gym"})
+		return
+	}
+
+	// Check the user and the gym have a loomie team
 	if len(userDoc.LoomieTeam) == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You must have at least one loomie in your team to start a combat."})
 		return
