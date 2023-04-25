@@ -241,7 +241,7 @@ func handleReceiveAttack(combat *WsCombat) {
 			Payload: map[string]interface{}{
 				"loomie_id":    gymLoomie.Id,
 				"hp":           gymLoomie.BoostedHp,
-				"damanage":     calculatedAttack,
+				"damage":       calculatedAttack,
 				"was_critical": isCritical,
 			},
 		})
