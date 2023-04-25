@@ -9,7 +9,6 @@ import (
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/utils"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // getRandomInt returns a random integer between min and max (both included)
@@ -61,14 +60,16 @@ func cacheTypeStrongAgainst(loomieTypes []string, combat *WsCombat) {
 }
 
 // calculateAttack calculates the final attack of the atacking loomie
-func calculateAttack(atackingLoomie, defendingLoomie *interfaces.CombatLoomie) int {
+func calculateAttack(atackingLoomie, defendingLoomie *interfaces.CombatLoomie) (int, bool) {
 	// Initial attack value
+	isCritical := false
 	finalAttack := atackingLoomie.BoostedAttack
 	minAttack := float64(atackingLoomie.BoostedAttack) * 0.1
 
 	// Increment the attack if the loomie is strong against the defending loomie
 	for _, atackingLoomieType := range atackingLoomie.Types {
 		if isTypeStrongAgainst(atackingLoomieType, defendingLoomie.Types) {
+			isCritical = true
 			finalAttack *= 2
 			break
 		}
@@ -77,46 +78,49 @@ func calculateAttack(atackingLoomie, defendingLoomie *interfaces.CombatLoomie) i
 	// Apply the user loomie defense
 	finalAttack -= finalAttack * (defendingLoomie.BoostedDefense / 100)
 	finalAttack = int(math.Max(float64(finalAttack), minAttack))
-	return finalAttack
+	return finalAttack, isCritical
 }
 
 // applyItem Applies the item to the loomie by its serial
-func applyItem(userId primitive.ObjectID, item *interfaces.PopulatedInventoryItem, loomie *interfaces.CombatLoomie) error {
+func applyItem(combat *WsCombat, item *interfaces.PopulatedInventoryItem, loomie *interfaces.CombatLoomie) error {
 	switch item.Serial {
 	// Painkiller
 	case 1:
 		wasApplied := loomie.ApplyPainKillers()
 		if !wasApplied {
-			return fmt.Errorf("HEALING_NOT_NEEDED")
+			return fmt.Errorf("USER_ALREADY_HEALED")
 		}
 	// Small aid kit
 	case 2:
 		wasApplied := loomie.ApplySmallAidKit()
 		if !wasApplied {
-			return fmt.Errorf("HEALING_NOT_NEEDED")
+			return fmt.Errorf("USER_ALREADY_HEALED")
 		}
 	// Big aid kit
 	case 3:
 		wasApplied := loomie.ApplyBigAidKit()
 		if !wasApplied {
-			return fmt.Errorf("HEALING_NOT_NEEDED")
+			return fmt.Errorf("USER_ALREADY_HEALED")
 		}
-		// Defibrillator
+	// Defibrillator
 	case 4:
 		wasApplied := loomie.ApplyDefibrillator()
 		if !wasApplied {
-			return fmt.Errorf("HEALING_NOT_NEEDED")
+			return fmt.Errorf("USER_NOT_WEAKENED")
 		}
-		// Steroids injection
+
+		// Increment the number of alive loomies
+		combat.AlivePlayerLoomies++
+	// Steroids injection
 	case 5:
 		loomie.ApplySteroidsInjection()
-		// Vitamins
+	// Vitamins
 	case 6:
 		loomie.ApplyVitamins()
-		// Unknown bevarage
+	// Unknown bevarage
 	case 7:
 		loomie.ApplyUnknownBevarage()
-		err := models.IncrementLoomieLevel(userId, loomie.Id, 1)
+		err := models.IncrementLoomieLevel(combat.PlayerID, loomie.Id, 1)
 
 		if err != nil {
 			return fmt.Errorf("SERVER_ERROR")

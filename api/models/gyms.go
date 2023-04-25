@@ -87,7 +87,7 @@ func GetPopulatedGymFromId(GymId, UserId primitive.ObjectID) (gym interfaces.Pop
 	}
 
 	// Parse the auxiliar gym into a populated gym
-	GymDoc = *auxiliarGymDoc.ToPopulatedGym()
+	GymDoc = *auxiliarGymDoc.ToPopulatedGym(UserId)
 	GymDoc.WasRewardClaimed = HasUserClaimedReward(auxiliarGymDoc.RewardsClaimedBy, UserId)
 	return GymDoc, nil
 }

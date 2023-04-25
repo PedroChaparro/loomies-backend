@@ -180,6 +180,7 @@ func HandleGetGym(c *gin.Context) {
 		"name":               gym.Name,
 		"protectors":         gym.Protectors,
 		"was_reward_claimed": gym.WasRewardClaimed,
+		"user_owns_it":       gym.UserOwnsIt,
 	}
 
 	if gym.Owner == "" {

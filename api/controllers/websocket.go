@@ -54,8 +54,28 @@ func HandleCombatRegister(c *gin.Context) {
 		return
 	}
 
+	// Get the user and the gym from the database
 	userID, _ := c.Get("userid")
 	userMongoID, _ := primitive.ObjectIDFromHex(userID.(string))
+	userDoc, _ := models.GetUserById(userID.(string))
+	gymDoc, _ = models.GetGymFromID(payload.GymID)
+
+	// Check the user is not the gym owner
+	if userDoc.Id == gymDoc.Owner {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You can't challenge your own gym"})
+		return
+	}
+
+	// Check the user and the gym have a loomie team
+	if len(userDoc.LoomieTeam) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You must have at least one loomie in your team to start a combat."})
+		return
+	}
+
+	if len(gymDoc.Protectors) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym doesn't have any protector loomies. Try with another gym."})
+		return
+	}
 
 	// Check the user is not in combat
 	_, err = models.GetActiveCombatByUseId(userMongoID)
@@ -205,10 +225,12 @@ func HandleCombatInit(c *gin.Context) {
 	// Send the initial loomies to the client
 	Combat.SendMessage(combat.WsMessage{
 		Type:    "start",
-		Message: "The combat has started with the following loomies",
+		Message: "The combat has started.",
 		Payload: gin.H{
-			"player": Combat.CurrentPlayerLoomie,
-			"gym":    Combat.CurrentGymLoomie,
+			"player_loomie":      Combat.CurrentPlayerLoomie,
+			"alive_user_loomies": Combat.AlivePlayerLoomies,
+			"gym_loomie":         Combat.CurrentGymLoomie,
+			"alive_gym_loomies":  Combat.AliveGymLoomies,
 		},
 	})
 
