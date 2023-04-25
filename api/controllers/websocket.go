@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/combat"
+	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // The upgrader is used to upgrade the http connection to a websocket connection
@@ -52,8 +54,39 @@ func HandleCombatRegister(c *gin.Context) {
 		return
 	}
 
-	// Create a token to authenticate the user with the websocket endpoint
 	userID, _ := c.Get("userid")
+	userMongoID, _ := primitive.ObjectIDFromHex(userID.(string))
+
+	// Check the user is not in combat
+	_, err = models.GetActiveCombatByUseId(userMongoID)
+
+	if err == nil {
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": true, "message": "You are already in combat"})
+		return
+	}
+
+	if err != mongo.ErrNoDocuments {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the active combat. Please try again later."})
+		return
+	}
+
+	// Check the user has not challenged the gym recently
+	lastUserChallenge, err := models.GetLastGymChallengeTimestamp(gymDoc.Id, userMongoID)
+	gymsChallengesTimeout := configuration.GetCombatChallengeTimeout()
+	previousAttackTime := time.Unix(lastUserChallenge.Timestamp, 0)
+	nextValidChallenge := previousAttackTime.Add(time.Duration(gymsChallengesTimeout) * time.Minute)
+
+	if err != nil && err != mongo.ErrNoDocuments {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the last gym challenge. Please try again later."})
+		return
+	}
+
+	if time.Now().Before(nextValidChallenge) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You have already challenged this gym recently. Please try again later"})
+		return
+	}
+
+	// Create a token to authenticate the user with the websocket endpoint
 	token, err := utils.CreateWsToken(userID.(string), payload.GymID, payload.Latitude, payload.Longitude)
 
 	if err != nil {
@@ -156,6 +189,14 @@ func HandleCombatInit(c *gin.Context) {
 		FoughtGymLoomies:     make(map[primitive.ObjectID][]*interfaces.CombatLoomie),
 		Dodges:               make(chan bool, 1),
 		Close:                make(chan bool, 1),
+	}
+
+	// Update the last user challenge
+	err = models.UpdateLastGymChallengeTimestamp(gymDoc.Id, user.Id)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to update the last gym challenge. Please try again later."})
+		return
 	}
 
 	// Register the connection on the hub

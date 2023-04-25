@@ -212,6 +212,22 @@ func GetCombatTimeouts() (int, int) {
 	return Globals.MinCombatAttackTimeout, Globals.MaxCombatAttackTimeout
 }
 
+// GetCombatChallengeTimeout returns the value of the GAME_COMBAT_CHALLENGE_TIMEOUT environment variable and update the global variable if it is empty
+func GetCombatChallengeTimeout() int {
+	if Globals.CombatChallengeTimeout == 0 {
+		// Get value (as string) from the environment
+		combatChallengeTimeoutString := GetEnvironmentVariable("GAME_COMBAT_CHALLENGE_TIMEOUT")
+
+		// Convert the string to integer
+		combatChallengeTimeout, _ := strconv.Atoi(combatChallengeTimeoutString)
+
+		// Set the value in the globals
+		Globals.CombatChallengeTimeout = combatChallengeTimeout
+	}
+
+	return Globals.CombatChallengeTimeout
+}
+
 // getMongoClient returns a MongoDB client
 func getMongoClient() *mongo.Client {
 	// Create the connection if it does not exist
