@@ -560,3 +560,15 @@ func IncrementItemFromUserInventory(userId primitive.ObjectID, itemId primitive.
 
 	return nil
 }
+
+// GetActiveCombatByUseId Gets the active combat of the user if any
+func GetActiveCombatByUseId(userId primitive.ObjectID) (interfaces.GymChallengesRegister, error) {
+	var gymChallengeRegister interfaces.GymChallengesRegister
+
+	err := GymsChallengesCollection.FindOne(context.TODO(), bson.D{
+		{Key: "attacker_id", Value: userId},
+		{Key: "is_active", Value: true},
+	}).Decode(&gymChallengeRegister)
+
+	return gymChallengeRegister, err
+}

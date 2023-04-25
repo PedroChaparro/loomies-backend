@@ -24,4 +24,5 @@ type TGlobals struct {
 	// Global settings to be used on combats
 	MinCombatAttackTimeout int
 	MaxCombatAttackTimeout int
+	CombatChallengeTimeout int
 }
