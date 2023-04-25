@@ -88,6 +88,7 @@ type PopulatedGym struct {
 	Owner            string             `json:"owner,omitempty"      bson:"owner,omitempty"`
 	Protectors       []GymProtector     `json:"protectors"      bson:"protectors"`
 	WasRewardClaimed bool               `json:"was_reward_claimed"      bson:"was_reward_claimed"`
+	UserOwnsIt       bool               `json:"user_owns_it" bson:"user_owns_it"`
 }
 
 type Item struct {
@@ -279,7 +280,7 @@ func (caughtLoomie *CaughtLoomie) ToGymProtector() *GymProtector {
 }
 
 // ToPopulatedGym Converts the database response to a populated gym
-func (aux *PopulatedGymAux) ToPopulatedGym() *PopulatedGym {
+func (aux *PopulatedGymAux) ToPopulatedGym(userId primitive.ObjectID) *PopulatedGym {
 	// Remove unneded fields form the loomies
 	var loomies []GymProtector = []GymProtector{}
 	populatedGym := PopulatedGym{
@@ -292,9 +293,11 @@ func (aux *PopulatedGymAux) ToPopulatedGym() *PopulatedGym {
 	}
 
 	populatedGym.Protectors = loomies
+	populatedGym.UserOwnsIt = false
 
 	if len(aux.Owner) == 1 {
 		populatedGym.Owner = aux.Owner[0].Username
+		populatedGym.UserOwnsIt = aux.Owner[0].Id == userId
 	}
 
 	return &populatedGym
