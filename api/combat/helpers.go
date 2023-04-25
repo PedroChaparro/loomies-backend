@@ -88,25 +88,25 @@ func applyItem(combat *WsCombat, item *interfaces.PopulatedInventoryItem, loomie
 	case 1:
 		wasApplied := loomie.ApplyPainKillers()
 		if !wasApplied {
-			return fmt.Errorf("HEALING_NOT_NEEDED")
+			return fmt.Errorf("USER_ALREADY_HEALED")
 		}
 	// Small aid kit
 	case 2:
 		wasApplied := loomie.ApplySmallAidKit()
 		if !wasApplied {
-			return fmt.Errorf("HEALING_NOT_NEEDED")
+			return fmt.Errorf("USER_ALREADY_HEALED")
 		}
 	// Big aid kit
 	case 3:
 		wasApplied := loomie.ApplyBigAidKit()
 		if !wasApplied {
-			return fmt.Errorf("HEALING_NOT_NEEDED")
+			return fmt.Errorf("USER_ALREADY_HEALED")
 		}
 	// Defibrillator
 	case 4:
 		wasApplied := loomie.ApplyDefibrillator()
 		if !wasApplied {
-			return fmt.Errorf("HEALING_NOT_NEEDED")
+			return fmt.Errorf("USER_NOT_WEAKENED")
 		}
 
 		// Increment the number of alive loomies

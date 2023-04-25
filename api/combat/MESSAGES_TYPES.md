@@ -4,7 +4,8 @@ The following are the supported messages types that are exchanged between the cl
 
 | Type                     | Description                                                                                                           | From   | To     |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
-| `ERROR`                  | Unexpected server side error. You can find more information in the message description / payload                      | Server | Client |
+| `ERROR`                  | Unexpected server side error. You can find more information in the response message / payload                         | Server | Client |
+| `ERROR_USING_ITEM`       | The user can't use the item. You can find more information in the response message / payload                          | Server | Client |
 | `COMBAT_TIMEOUT`         | The combat has been closed due to the player inactivity.                                                              | Server | Client |
 | `USER_USE_ITEM`          | The user uses an item in the combat.                                                                                  | CLient | Server |
 | `USER_ITEM_USED`         | Confirmation that the user uses an item in the combat.                                                                | Server | Client |

@@ -432,12 +432,16 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 
 	if err != nil {
 		// If the loomie does not need healing, send a message to the user
-		if err.Error() == "HEALING_NOT_NEEDED" {
+		if err.Error() == "USER_ALREADY_HEALED" || err.Error() == "USER_NOT_WEAKENED" {
 			combat.SendMessage(WsMessage{
-				Type:    "ERROR",
-				Message: "[BAD REQUEST] The loomie is not damaged",
+				Type:    "ERROR_USING_ITEM",
+				Message: "The loomie is not damaged or weakened",
+				Payload: map[string]interface{}{
+					"item_id":      itemId,
+					"item_serial":  item.Serial,
+					"error_reason": err.Error(),
+				},
 			})
-
 			return
 		}
 
