@@ -56,7 +56,7 @@ func HandleCombatRegister(c *gin.Context) {
 
 	// Check the user and the gym have a loomie team
 	userID, _ := c.Get("userid")
-  userMongoID, _ := primitive.ObjectIDFromHex(userID.(string))
+	userMongoID, _ := primitive.ObjectIDFromHex(userID.(string))
 	userDoc, _ := models.GetUserById(userID.(string))
 	gymDoc, _ = models.GetGymFromID(payload.GymID)
 
@@ -67,9 +67,9 @@ func HandleCombatRegister(c *gin.Context) {
 
 	if len(gymDoc.Protectors) == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym doesn't have any protector loomies. Try with another gym."})
-    return
+		return
 	}
-  
+
 	// Check the user is not in combat
 	_, err = models.GetActiveCombatByUseId(userMongoID)
 
