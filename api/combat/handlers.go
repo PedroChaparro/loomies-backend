@@ -300,8 +300,11 @@ func handlePlayerVictory(combat *WsCombat) {
 
 	if err != nil {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[INTERNAL SERVER ERROR] Error obtaining gym info",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "INTERNAL_SERVER_ERROR",
+				"error_message": "Error obtaining the gym info.",
+			},
 		})
 
 		return
@@ -311,8 +314,11 @@ func handlePlayerVictory(combat *WsCombat) {
 	err = models.ReplaceLoomieTeam(combat.PlayerID, []primitive.ObjectID{})
 	if err != nil {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team of user",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "INTERNAL_SERVER_ERROR",
+				"error_message": "Error updating your loomie team.",
+			},
 		})
 	}
 
@@ -333,27 +339,27 @@ func handlePlayerVictory(combat *WsCombat) {
 		err = models.UpdateLoomiesBusyState(currentGymProtectors, false)
 		if err != nil {
 			combat.SendMessage(WsMessage{
-				Type:    "ERROR",
-				Message: "[INTERNAL SERVER ERROR] Error updating current gym protectors status",
+				Type: "ERROR",
+				Payload: map[string]interface{}{
+					"error_type":    "INTERNAL_SERVER_ERROR",
+					"error_message": "Error updating the busy state of the old gym protectors.",
+				},
 			})
 		}
 	} else {
 		// Removes the gym old protectors
-		err = models.RemoveLoomieTeam(currentGymProtectors)
-		if err != nil {
-			combat.SendMessage(WsMessage{
-				Type:    "ERROR",
-				Message: "[INTERNAL SERVER ERROR] Error deleting current gym protectors",
-			})
-		}
+		models.RemoveLoomieTeam(currentGymProtectors)
 	}
 
 	// Updates the gym news protectors and owner
 	err = models.UpdateGymProtectorsAndOwner(gymId, newGymProtectors, combat.PlayerID)
 	if err != nil {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team of user and its owner",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "INTERNAL_SERVER_ERROR",
+				"error_message": "Error updating the gym protectors and owner.",
+			},
 		})
 	}
 
@@ -361,8 +367,11 @@ func handlePlayerVictory(combat *WsCombat) {
 	err = models.UpdateLoomiesBusyState(newGymProtectors, true)
 	if err != nil {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[INTERNAL SERVER ERROR] Error updating Loomie Team is_busy field",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "INTERNAL_SERVER_ERROR",
+				"error_message": "Error updating the busy state of the new gym protectors.",
+			},
 		})
 	}
 
@@ -378,8 +387,11 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 	// Check the item is not null
 	if itemId == "" {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[BAD REQUEST] Item id is required",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "BAD_REQUEST",
+				"error_message": "Item id is required",
+			},
 		})
 
 		return
@@ -390,8 +402,11 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 
 	if err != nil {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[BAD REQUEST] Item id is not valid",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "BAD_REQUEST",
+				"error_message": "Item id is not valid",
+			},
 		})
 
 		return
@@ -403,8 +418,11 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 	if err != nil {
 		if err.Error() == "USER_DOES_NOT_OWN_ITEM" {
 			combat.SendMessage(WsMessage{
-				Type:    "ERROR",
-				Message: "[BAD REQUEST] You don't own this item",
+				Type: "ERROR",
+				Payload: map[string]interface{}{
+					"error_type":    "BAD_REQUEST",
+					"error_message": "The item does not exist in your inventory",
+				},
 			})
 
 			return
@@ -412,16 +430,22 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 
 		if err.Error() == "ITEM_NOT_FOUND" {
 			combat.SendMessage(WsMessage{
-				Type:    "ERROR",
-				Message: "[BAD REQUEST] Item does not exist or is not a combat item",
+				Type: "ERROR",
+				Payload: map[string]interface{}{
+					"error_type":    "BAD_REQUEST",
+					"error_message": "Item does not exist or is not a combat item",
+				},
 			})
 
 			return
 		}
 
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[INTERNAL SERVER ERROR] Error getting the item from the user inventory",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "INTERNAL_SERVER_ERROR",
+				"error_message": "Error getting the item from your inventory",
+			},
 		})
 
 		return
@@ -447,8 +471,11 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 
 		if err.Error() == "SERVER_ERROR" {
 			combat.SendMessage(WsMessage{
-				Type:    "ERROR",
-				Message: "[INTERNAL SERVER ERROR] There was an error using the item. Please try again later",
+				Type: "ERROR",
+				Payload: map[string]interface{}{
+					"error_type":    "INTERNAL_SERVER_ERROR",
+					"error_message": "Unexpected error using the item",
+				},
 			})
 
 			return
@@ -456,8 +483,11 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 
 		// If the item is not supported, send a message to the user
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[BAD REQUEST] The item is not supported",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "BAD_REQUEST",
+				"error_message": "The item is not supported in combat",
+			},
 		})
 
 		return
@@ -468,8 +498,11 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 
 	if err != nil {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[INTERNAL SERVER ERROR] There was an error using the item. Please try again later",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "INTERNAL_SERVER_ERROR",
+				"error_message": "Error decrementing the item from the user inventory",
+			},
 		})
 
 		return
@@ -505,8 +538,11 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 	// Check the loomie id is not null
 	if loomieId == "" {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[BAD REQUEST] Loomie id is required",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "BAD_REQUEST",
+				"error_message": "Loomie id is required",
+			},
 		})
 
 		return
@@ -517,8 +553,11 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 
 	if err != nil {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[BAD REQUEST] Loomie id is not valid",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "BAD_REQUEST",
+				"error_message": "Loomie id is not valid",
+			},
 		})
 
 		return
@@ -543,8 +582,11 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 
 	if !loomieExists {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[BAD REQUEST] Loomie does not exist",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "BAD_REQUEST",
+				"error_message": "The loomie was not found in the combat player loomies",
+			},
 		})
 
 		return
@@ -552,8 +594,11 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 
 	if !loomieAlive {
 		combat.SendMessage(WsMessage{
-			Type:    "ERROR",
-			Message: "[BAD REQUEST] Loomie is weakened",
+			Type: "ERROR",
+			Payload: map[string]interface{}{
+				"error_type":    "BAD_REQUEST",
+				"error_message": "You can't use a weakened loomie",
+			},
 		})
 
 		return
