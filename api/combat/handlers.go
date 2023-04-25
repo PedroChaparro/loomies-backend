@@ -471,10 +471,20 @@ func handleUseItem(combat *WsCombat, message WsMessage) {
 		return
 	}
 
-	// Send the message to the user
+	// Send the confirmation message
+	combat.SendMessage(WsMessage{
+		Type:    "USER_ITEM_USED",
+		Message: fmt.Sprintf("Item: %s used", item.Name),
+		Payload: map[string]interface{}{
+			"item_id":     item.Id.Hex(),
+			"item_serial": item.Serial,
+		},
+	})
+
+	// Send the loomie update
 	combat.SendMessage(WsMessage{
 		Type:    "UPDATE_USER_LOOMIE",
-		Message: fmt.Sprintf("Loomie: %s received the item: %s", combat.CurrentPlayerLoomie.Name, item.Name),
+		Message: fmt.Sprintf("Loomie: %s was updated by item: %s", combat.CurrentPlayerLoomie.Name, item.Name),
 		Payload: map[string]interface{}{
 			"loomie":             combat.CurrentPlayerLoomie,
 			"alive_user_loomies": combat.AlivePlayerLoomies,
