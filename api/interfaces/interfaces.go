@@ -1,8 +1,6 @@
 package interfaces
 
 import (
-	"math"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -90,6 +88,7 @@ type PopulatedGym struct {
 	Owner            string             `json:"owner,omitempty"      bson:"owner,omitempty"`
 	Protectors       []GymProtector     `json:"protectors"      bson:"protectors"`
 	WasRewardClaimed bool               `json:"was_reward_claimed"      bson:"was_reward_claimed"`
+	UserOwnsIt       bool               `json:"user_owns_it" bson:"user_owns_it"`
 }
 
 type Item struct {
@@ -122,6 +121,13 @@ type InventoryItem struct {
 	ItemCollection string             `json:"item_collection" bson:"item_collection"`
 	ItemId         primitive.ObjectID `json:"item_id" bson:"item_id"`
 	ItemQuantity   int                `json:"item_quantity" bson:"item_quantity"`
+}
+
+type PopulatedInventoryItem struct {
+	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Name     string             `json:"name" bson:"name"`
+	Serial   int                `json:"serial" bson:"serial"`
+	Quantity int                `json:"quantity" bson:"quantity"`
 }
 
 type User struct {
@@ -249,28 +255,18 @@ type CaughtLoomie struct {
 	Experience float64              `json:"experience"     bson:"experience"`
 }
 
+type GymChallengesRegister struct {
+	GymId      primitive.ObjectID `json:"gym_id"       bson:"gym_id"`
+	AttackerId primitive.ObjectID `json:"attacker_id"       bson:"attacker_id"`
+	Timestamp  int64              `json:"timestamp"     bson:"timestamp"`
+	IsActive   bool               `json:"is_active"     bson:"is_active"`
+}
+
 type WsTokenClaims struct {
 	UserID    string  `json:"user_id"`
 	GymID     string  `json:"gym_id"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
-}
-
-type CombatLoomie struct {
-	Id             primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
-	Serial         int                `json:"serial"      bson:"serial"`
-	Name           string             `json:"name"      bson:"name"`
-	Types          []string           `json:"types"     bson:"types"`
-	Rarity         string             `json:"rarity"     bson:"rarity"`
-	BaseHp         int                `json:"hp"     bson:"hp"`
-	BaseAttack     int                `json:"attack"     bson:"attack"`
-	BaseDefense    int                `json:"defense"     bson:"defense"`
-	BoostedHp      int                `json:"boosted_hp"     bson:"boosted_hp"`
-	BoostedAttack  int                `json:"boosted_attack"     bson:"boosted_attack"`
-	BoostedDefense int                `json:"boosted_defense"     bson:"boosted_defense"`
-	Level          int                `json:"level"     bson:"level"`
-	Experience     float64            `json:"experience"     bson:"experience"`
-	IsBusy         bool               `json:"is_busy"     bson:"is_busy"`
 }
 
 // ToGymProtector Converts a caught loomie to a gym protector keeping only the relevant fields
@@ -284,7 +280,7 @@ func (caughtLoomie *CaughtLoomie) ToGymProtector() *GymProtector {
 }
 
 // ToPopulatedGym Converts the database response to a populated gym
-func (aux *PopulatedGymAux) ToPopulatedGym() *PopulatedGym {
+func (aux *PopulatedGymAux) ToPopulatedGym(userId primitive.ObjectID) *PopulatedGym {
 	// Remove unneded fields form the loomies
 	var loomies []GymProtector = []GymProtector{}
 	populatedGym := PopulatedGym{
@@ -297,32 +293,12 @@ func (aux *PopulatedGymAux) ToPopulatedGym() *PopulatedGym {
 	}
 
 	populatedGym.Protectors = loomies
+	populatedGym.UserOwnsIt = false
 
 	if len(aux.Owner) == 1 {
 		populatedGym.Owner = aux.Owner[0].Username
+		populatedGym.UserOwnsIt = aux.Owner[0].Id == userId
 	}
 
 	return &populatedGym
-}
-
-// ToCombatLoomie Converts a user loomie to a combat loomie boosting the stats according to the level
-func (normalCaughtLoomie *UserLoomiesRes) ToCombatLoomie() *CombatLoomie {
-	experienceFactor := 1.0 + ((1.0 / 8.0) * (float64(normalCaughtLoomie.Level) - 1.0))
-
-	return &CombatLoomie{
-		Id:             normalCaughtLoomie.Id,
-		Serial:         normalCaughtLoomie.Serial,
-		Name:           normalCaughtLoomie.Name,
-		Types:          normalCaughtLoomie.Types,
-		Rarity:         normalCaughtLoomie.Rarity,
-		BaseHp:         normalCaughtLoomie.Hp,
-		BaseAttack:     normalCaughtLoomie.Attack,
-		BaseDefense:    normalCaughtLoomie.Defense,
-		BoostedHp:      int(math.Floor(float64(normalCaughtLoomie.Hp) * experienceFactor)),
-		BoostedAttack:  int(math.Floor(float64(normalCaughtLoomie.Attack) * experienceFactor)),
-		BoostedDefense: int(math.Floor(float64(normalCaughtLoomie.Defense) * experienceFactor)),
-		Level:          normalCaughtLoomie.Level,
-		Experience:     normalCaughtLoomie.Experience,
-		IsBusy:         normalCaughtLoomie.IsBusy,
-	}
 }

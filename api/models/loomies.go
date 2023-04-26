@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
@@ -177,7 +178,7 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 }
 
 // GetNearWildLoomies returns the wild loomies that are near the coordinates
-func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLoomie, error) {
+func GetNearWildLoomies(coordinates interfaces.Coordinates, userId primitive.ObjectID) ([]interfaces.WildLoomie, error) {
 	zoneLoomies := []interfaces.WildLoomie{}
 	loomies := []interfaces.WildLoomie{}
 
@@ -198,8 +199,25 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates) ([]interfaces.WildLo
 		},
 	}
 
+	// Ignore the loomies that are captured by the user
+	aggProject := bson.M{
+		"$project": bson.M{
+			"populated_loomies": bson.M{
+				"$filter": bson.M{
+					"input": "$populated_loomies",
+					"as":    "loomie",
+					"cond": bson.M{
+						"$not": bson.M{
+							"$in": []interface{}{userId, "$$loomie.captured_by"},
+						},
+					},
+				},
+			},
+		},
+	}
+
 	// Make the query
-	cursor, err := ZonesCollection.Aggregate(context.Background(), []bson.M{matchFilter, lookupIntoLoomies})
+	cursor, err := ZonesCollection.Aggregate(context.Background(), []bson.M{matchFilter, lookupIntoLoomies, aggProject})
 
 	if err != nil {
 		return []interfaces.WildLoomie{}, err
@@ -299,7 +317,7 @@ func InsertUserInArrayOfWildLoomie(loomie interfaces.WildLoomie, user interfaces
 }
 
 // IncrementLoomieLevel increment the level of the loomie by the given amount
-func IncrementLoomieLevel(userId primitive.ObjectID, loomieId primitive.ObjectID, amount uint) (bool, error) {
+func IncrementLoomieLevel(userId primitive.ObjectID, loomieId primitive.ObjectID, amount uint) error {
 	// Check if and user is owner from a caught_loomie
 	filter := bson.M{
 		"_id":   loomieId,
@@ -316,10 +334,55 @@ func IncrementLoomieLevel(userId primitive.ObjectID, loomieId primitive.ObjectID
 
 	// Check errors
 	if result.Err() != nil {
-		return true, result.Err()
+		return result.Err()
 	}
 
-	return false, nil
+	return nil
+}
+
+// UpdateLoomiesExpAndLvl Allows to uptade experience and level of a loomie after weakened a loomie
+func UpdateLoomiesExpAndLvl(userId primitive.ObjectID, loomieToUpdate *interfaces.CombatLoomie) error {
+	// Update the first loomie in the caught loomies collection
+	_, err := CaughtLoomiesCollection.UpdateOne(
+		context.TODO(),
+		bson.D{
+			{Key: "_id", Value: loomieToUpdate.Id},
+		},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "experience", Value: loomieToUpdate.Experience},
+				{Key: "level", Value: loomieToUpdate.Level},
+			}},
+		},
+	)
+
+	if err != nil {
+		return errors.New("Error")
+	}
+
+	return nil
+}
+
+// UpdateLoomiesBusyState Allows to uptade is_busy field of a looser o winner team of loomies (depends of the flag)
+func UpdateLoomiesBusyState(loomiesProtectorsIds []primitive.ObjectID, flag bool) (err error) {
+	_, err = CaughtLoomiesCollection.UpdateMany(
+		context.TODO(),
+		bson.M{"_id": bson.M{"$in": loomiesProtectorsIds}},
+		bson.D{{Key: "$set", Value: bson.D{
+			{Key: "is_busy", Value: flag},
+		}}},
+	)
+
+	return err
+}
+
+// RemoveLoomieTeam Removes Loomie Team just when the gym doesnt have owner
+func RemoveLoomieTeam(loomiesProtectorsIds []primitive.ObjectID) (err error) {
+	_, err = CaughtLoomiesCollection.DeleteMany(
+		context.TODO(),
+		bson.M{"_id": bson.M{"$in": loomiesProtectorsIds}},
+	)
+	return err
 }
 
 // GetLoomieTypeDetails Returns the details of a loomie type

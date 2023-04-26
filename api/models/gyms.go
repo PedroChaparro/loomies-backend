@@ -3,10 +3,12 @@ package models
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // GetNearGymsFromID returns the gym with the given ID if it exists or an error otherwise
@@ -85,7 +87,59 @@ func GetPopulatedGymFromId(GymId, UserId primitive.ObjectID) (gym interfaces.Pop
 	}
 
 	// Parse the auxiliar gym into a populated gym
-	GymDoc = *auxiliarGymDoc.ToPopulatedGym()
+	GymDoc = *auxiliarGymDoc.ToPopulatedGym(UserId)
 	GymDoc.WasRewardClaimed = HasUserClaimedReward(auxiliarGymDoc.RewardsClaimedBy, UserId)
 	return GymDoc, nil
+}
+
+// GetLastGymChallengeTimestamp returns the last challenge timestamp for the given gym and player
+func GetLastGymChallengeTimestamp(gymId, playerId primitive.ObjectID) (challenge interfaces.GymChallengesRegister, err error) {
+	var register interfaces.GymChallengesRegister
+	err = GymsChallengesCollection.FindOne(context.Background(), bson.M{"gym_id": gymId, "attacker_id": playerId}).Decode(&register)
+	return register, err
+}
+
+// UpdteLastGymChallengeTimestamp updates the last challenge timestamp for the given gym and player
+func UpdateLastGymChallengeTimestamp(gymId, playerId primitive.ObjectID) (err error) {
+	// Check if the register exists
+	currentTimestamp := time.Now().Unix()
+	var register interfaces.GymChallengesRegister
+	err = GymsChallengesCollection.FindOne(context.Background(), bson.M{"gym_id": gymId, "attacker_id": playerId}).Decode(&register)
+
+	if err != nil && err == mongo.ErrNoDocuments {
+		// If the register does not exist, create it
+		_, err = GymsChallengesCollection.InsertOne(context.Background(), interfaces.GymChallengesRegister{
+			GymId:      gymId,
+			AttackerId: playerId,
+			Timestamp:  currentTimestamp,
+			IsActive:   true,
+		})
+
+		return err
+	} else {
+		// If the register exists, update it
+		_, err = GymsChallengesCollection.UpdateOne(context.Background(), bson.M{"gym_id": gymId, "attacker_id": playerId}, bson.M{"$set": bson.M{"timestamp": currentTimestamp}})
+		return err
+	}
+}
+
+// FinishGymChallenge marks the gym challenge as finished
+func FinishGymChallenge(gymId, playerId primitive.ObjectID) (err error) {
+	_, err = GymsChallengesCollection.UpdateOne(context.Background(), bson.M{"gym_id": gymId, "attacker_id": playerId}, bson.M{"$set": bson.M{"is_active": false}})
+	return err
+}
+
+// UpdateGymProtectors Updates Gym Protectors (the loomies team of the owner) and new owner
+func UpdateGymProtectorsAndOwner(GymId primitive.ObjectID, loomiesProtectorsIds []primitive.ObjectID, newOwner primitive.ObjectID) (err error) {
+	_, err = GymsCollection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: GymId}},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "protectors", Value: loomiesProtectorsIds},
+				{Key: "owner", Value: newOwner},
+			}},
+		},
+	)
+	return err
 }

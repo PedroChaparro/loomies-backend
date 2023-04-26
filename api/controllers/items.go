@@ -113,7 +113,7 @@ func HandleUseItem(c *gin.Context) {
 		return
 	}
 
-	_, err = models.IncrementLoomieLevel(user, loomieId, 1)
+	err = models.IncrementLoomieLevel(user, loomieId, 1)
 
 	if err != nil {
 		// Item quantity is restored to the user

@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// GetItemById returns the items and loomballs from an array of items
 func GetItemById(itemsArray []interfaces.InventoryItem) ([]interfaces.UserItemsRes, []interfaces.UserLoomballsRes, error) {
 	// Create the maps to store the items to access them faster
 	userItems := make(map[primitive.ObjectID]interfaces.InventoryItem)
