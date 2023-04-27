@@ -143,3 +143,17 @@ func UpdateGymProtectorsAndOwner(GymId primitive.ObjectID, loomiesProtectorsIds 
 	)
 	return err
 }
+
+// UpdateGymProtectors Updates Gym Protectors
+func UpdateGymProtectors(GymId primitive.ObjectID, protectorsIds []primitive.ObjectID) error {
+	_, err := GymsCollection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: GymId}},
+		bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "protectors", Value: protectorsIds},
+			}},
+		},
+	)
+	return err
+}
