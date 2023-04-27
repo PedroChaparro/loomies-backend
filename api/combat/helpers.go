@@ -77,6 +77,11 @@ func calculateAttack(atackingLoomie, defendingLoomie *interfaces.CombatLoomie) (
 
 	// Apply the user loomie defense
 	finalAttack -= finalAttack * (defendingLoomie.BoostedDefense / 100)
+
+	// Add a random number between -5 and 5
+	finalAttack += getRandomInt(-5, 5)
+
+	// Lower limit
 	finalAttack = int(math.Max(float64(finalAttack), minAttack))
 	return finalAttack, isCritical
 }
