@@ -762,10 +762,6 @@ paths:
           description: There wasn't any error.
           content: 
             application/json: 
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Capture'
-                  - $ref: '#/components/schemas/NotCapture'
               examples:
                 car:
                   summary: Capture
