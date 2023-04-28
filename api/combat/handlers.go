@@ -85,6 +85,7 @@ func handleSendAttack(combat *WsCombat) {
 			Message: fmt.Sprintf("Your loomie %s was weakened", playerLoomie.Name),
 			Payload: map[string]interface{}{
 				"loomie_id":          weakenedLoomieId,
+				"damage":             calculatedAttack,
 				"alive_user_loomies": combat.AlivePlayerLoomies,
 			},
 		})
@@ -198,6 +199,7 @@ func handleReceiveAttack(combat *WsCombat) {
 			Message: fmt.Sprintf("Enemy loomie %s was weakened", gymLoomie.Name),
 			Payload: map[string]interface{}{
 				"loomie_id":         weakenedLoomie.Id,
+				"damage":            calculatedAttack,
 				"alive_gym_loomies": combat.AliveGymLoomies,
 			},
 		})
