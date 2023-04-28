@@ -6,6 +6,7 @@ import (
 
 	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
+	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -13,6 +14,7 @@ import (
 // WsCombat stores the websocket connection to be able
 // to send messages to the client
 type WsCombat struct {
+	PlayerID primitive.ObjectID
 	// We keep the gym id to easily remove it from the map when the combat ends
 	GymID string
 	// The connecton to exchange messages with the client
@@ -21,6 +23,9 @@ type WsCombat struct {
 	LastMessageTimestamp int64
 	// Keep track of the last attack timestamp to avoid spamming
 	LastUserAttackTimestamp int64
+	// Keep track of the alive user and gym loomies
+	AlivePlayerLoomies int
+	AliveGymLoomies    int
 	// Loomie teams in combat
 	GymLoomies    []interfaces.CombatLoomie
 	PlayerLoomies []interfaces.CombatLoomie
@@ -41,7 +46,7 @@ type WsMessage struct {
 	Type    string `json:"type"`
 	Message string `json:"message"`
 	// The payload field allows to send any kind of data in JSON format
-	Payload interface{} `json:"payload,omitempty"`
+	Payload map[string]interface{} `json:"payload,omitempty"`
 }
 
 // WsHub is the hub that stores all the clients
@@ -95,9 +100,7 @@ func (combat *WsCombat) UpdatedLastUserAttackTimestamp() {
 
 // SendMessage sends a message to the client
 func (combat *WsCombat) SendMessage(message WsMessage) {
-	jsonMessage, _ := json.Marshal(message)
-	stringJson := string(jsonMessage)
-	combat.Connection.WriteJSON(stringJson)
+	combat.Connection.WriteJSON(message)
 }
 
 // Listen is the function that listens for messages from the client
@@ -106,6 +109,10 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 	defer func() {
 		// Remove the combat from the hub, so the gym can be challenged again
 		hub.Unregister(combat.GymID)
+
+		// Mark the combat as closed
+		gymIdMongo, _ := primitive.ObjectIDFromHex(combat.GymID)
+		models.FinishGymChallenge(gymIdMongo, combat.PlayerID)
 	}()
 
 	// --- Independent goroutine to check if the client is inactive ---
@@ -119,7 +126,13 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				if time.Now().Unix()-combat.LastMessageTimestamp > 30 {
+				// If the last message received is older than 5 minutes, close the connection
+				if time.Now().Unix()-combat.LastMessageTimestamp > 300 {
+					combat.SendMessage(WsMessage{
+						Type:    "COMBAT_TIMEOUT",
+						Message: "You have been inactive for too long, the combat has ended",
+					})
+
 					combat.Connection.Close()
 					return
 				}
@@ -174,6 +187,17 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 		case "USER_ATTACK":
 			handleReceiveAttack(combat)
+			combat.UpdatedLastReceivedMessageTimestamp()
+
+		case "USER_USE_ITEM":
+			handleUseItem(combat, wsMessage)
+			combat.UpdatedLastReceivedMessageTimestamp()
+
+		case "USER_ESCAPE_COMBAT":
+			handleEscapeCombat(combat)
+
+		case "USER_CHANGE_LOOMIE":
+			handleChangeLoomie(combat, wsMessage)
 			combat.UpdatedLastReceivedMessageTimestamp()
 		}
 	}

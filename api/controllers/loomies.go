@@ -21,9 +21,17 @@ import (
 // generateLoomies "private" function to generate loomies for the user
 func generateLoomies(userId string, userCoordinates interfaces.Coordinates) error {
 	errors := map[string]error{
-		"USER_NOT_FOUND":            errors.New("User was not found"),
-		"SERVER_BASE_LOOMIES_ERROR": errors.New("Error getting the base loomies. Please try again later."),
-		"SERVER_UPDATE_TIMES_ERROR": errors.New("Error updating the user times. Please try again later."),
+		"USER_NOT_FOUND":                errors.New("User was not found"),
+		"SERVER_BASE_LOOMIES_ERROR":     errors.New("Error getting the base loomies. Please try again later."),
+		"SERVER_UPDATE_TIMES_ERROR":     errors.New("Error updating the user times. Please try again later."),
+		"SERVER_OUTDATED_LOOMIES_ERROR": errors.New("Error removing the outdated loomies. Please try again later."),
+	}
+
+	// Remove the expired loomies before generating new ones
+	err := models.RemoveNearExpiredLoomies(userCoordinates)
+
+	if err != nil {
+		return errors["SERVER_OUTDATED_LOOMIES_ERROR"]
 	}
 
 	// 1. Get the user doc from the database to validate the generation times
@@ -121,6 +129,7 @@ func HandleNearLoomies(c *gin.Context) {
 
 	// 1. Try to generate new loomies
 	id, _ := c.Get("userid")
+	userMongoId, _ := primitive.ObjectIDFromHex(id.(string))
 	err := generateLoomies(id.(string), coordinates)
 
 	if err != nil {
@@ -139,7 +148,7 @@ func HandleNearLoomies(c *gin.Context) {
 	}
 
 	// 2. Return the loomies near the user coordinates
-	wildLoomies, err := models.GetNearWildLoomies(coordinates)
+	wildLoomies, err := models.GetNearWildLoomies(coordinates, userMongoId)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -266,8 +275,8 @@ func HandleFuseLoomies(c *gin.Context) {
 		minLvl = loomiesDocs[0].Level
 	}
 
-	// Increment the available experience by 30% of the experience of the loomie with the lowest level
-	availableExperience += utils.GetRequiredExperience(minLvl) * 0.30
+	// Increment the available experience by 120% of the experience of the loomie with the lowest level
+	availableExperience += utils.GetRequiredExperience(minLvl) * 1.2
 
 	// We reset the Loomie experience because that experience is already considered in the availableExperience variable
 	loomieToUpdate.Experience = 0

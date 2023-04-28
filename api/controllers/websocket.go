@@ -1,16 +1,19 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/PedroChaparro/loomies-backend/combat"
+	"github.com/PedroChaparro/loomies-backend/configuration"
 	"github.com/PedroChaparro/loomies-backend/interfaces"
 	"github.com/PedroChaparro/loomies-backend/models"
 	"github.com/PedroChaparro/loomies-backend/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // The upgrader is used to upgrade the http connection to a websocket connection
@@ -32,8 +35,79 @@ func HandleCombatRegister(c *gin.Context) {
 		return
 	}
 
-	// Create a token to authenticate the user with the websocket endpoint
+	// Check the gym is near the user coordinates
+	gymDoc, err := models.GetGymFromID(payload.GymID)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the gym. Please try again later."})
+		return
+	}
+
+	// Check the gym is near the user coordinates
+	if !utils.IsNear(interfaces.Coordinates{
+		Latitude:  gymDoc.Latitude,
+		Longitude: gymDoc.Longitude,
+	}, interfaces.Coordinates{
+		Latitude:  payload.Latitude,
+		Longitude: payload.Longitude,
+	}) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym is not near the user coordinates"})
+		return
+	}
+
+	// Get the user and the gym from the database
 	userID, _ := c.Get("userid")
+	userMongoID, _ := primitive.ObjectIDFromHex(userID.(string))
+	userDoc, _ := models.GetUserById(userID.(string))
+	gymDoc, _ = models.GetGymFromID(payload.GymID)
+
+	// Check the user is not the gym owner
+	if userDoc.Id == gymDoc.Owner {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You can't challenge your own gym"})
+		return
+	}
+
+	// Check the user and the gym have a loomie team
+	if len(userDoc.LoomieTeam) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You must have at least one loomie in your team to start a combat."})
+		return
+	}
+
+	if len(gymDoc.Protectors) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym doesn't have any protector loomies. Try with another gym."})
+		return
+	}
+
+	// Check the user is not in combat
+	_, err = models.GetActiveCombatByUseId(userMongoID)
+
+	if err == nil {
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": true, "message": "You are already in combat"})
+		return
+	}
+
+	if err != mongo.ErrNoDocuments {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the active combat. Please try again later."})
+		return
+	}
+
+	// Check the user has not challenged the gym recently
+	lastUserChallenge, err := models.GetLastGymChallengeTimestamp(gymDoc.Id, userMongoID)
+	gymsChallengesTimeout := configuration.GetCombatChallengeTimeout()
+	previousAttackTime := time.Unix(lastUserChallenge.Timestamp, 0)
+	nextValidChallenge := previousAttackTime.Add(time.Duration(gymsChallengesTimeout) * time.Minute)
+
+	if err != nil && err != mongo.ErrNoDocuments {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the last gym challenge. Please try again later."})
+		return
+	}
+
+	if time.Now().Before(nextValidChallenge) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You have already challenged this gym recently. Please try again later"})
+		return
+	}
+
+	// Create a token to authenticate the user with the websocket endpoint
 	token, err := utils.CreateWsToken(userID.(string), payload.GymID, payload.Latitude, payload.Longitude)
 
 	if err != nil {
@@ -62,24 +136,11 @@ func HandleCombatInit(c *gin.Context) {
 		return
 	}
 
-	// Check the gym is near the user coordinates
+	// Get the gym from the database
 	gymDoc, err := models.GetGymFromID(claims.GymID)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to get the gym. Please try again later."})
-		return
-	}
-
-	isNear := utils.IsNear(interfaces.Coordinates{
-		Latitude:  gymDoc.Latitude,
-		Longitude: gymDoc.Longitude,
-	}, interfaces.Coordinates{
-		Latitude:  claims.Latitude,
-		Longitude: claims.Longitude,
-	})
-
-	if !isNear {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": true, "message": "You are not near the gym. Please go to the gym to start the combat."})
 		return
 	}
 
@@ -122,6 +183,7 @@ func HandleCombatInit(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 
 	if err != nil {
+		fmt.Println(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to upgrade the connection to a websocket connection"})
 		return
 	}
@@ -136,16 +198,27 @@ func HandleCombatInit(c *gin.Context) {
 	}
 
 	Combat := &combat.WsCombat{
+		PlayerID:             user.Id,
 		GymID:                claims.GymID,
 		Connection:           conn,
 		LastMessageTimestamp: time.Now().Unix(),
 		PlayerLoomies:        userCombatLoomies,
+		AlivePlayerLoomies:   len(userCombatLoomies),
 		GymLoomies:           gymCombatLoomies,
+		AliveGymLoomies:      len(gymCombatLoomies),
 		CurrentGymLoomie:     &gymCombatLoomies[0],
 		CurrentPlayerLoomie:  &userCombatLoomies[0],
 		FoughtGymLoomies:     make(map[primitive.ObjectID][]*interfaces.CombatLoomie),
 		Dodges:               make(chan bool, 1),
 		Close:                make(chan bool, 1),
+	}
+
+	// Update the last user challenge
+	err = models.UpdateLastGymChallengeTimestamp(gymDoc.Id, user.Id)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Unable to update the last gym challenge. Please try again later."})
+		return
 	}
 
 	// Register the connection on the hub
@@ -154,10 +227,12 @@ func HandleCombatInit(c *gin.Context) {
 	// Send the initial loomies to the client
 	Combat.SendMessage(combat.WsMessage{
 		Type:    "start",
-		Message: "The combat has started with the following loomies",
+		Message: "The combat has started.",
 		Payload: gin.H{
-			"player": Combat.CurrentPlayerLoomie,
-			"gym":    Combat.CurrentGymLoomie,
+			"player_loomie":      Combat.CurrentPlayerLoomie,
+			"alive_user_loomies": Combat.AlivePlayerLoomies,
+			"gym_loomie":         Combat.CurrentGymLoomie,
+			"alive_gym_loomies":  Combat.AliveGymLoomies,
 		},
 	})
 

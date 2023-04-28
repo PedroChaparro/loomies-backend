@@ -35,4 +35,5 @@ func SetupRoutes(engine *gin.Engine) {
 
 	// Items
 	engine.GET("/user/items", middlewares.MustProvideAccessToken(), controllers.HandleGetItems)
+	engine.POST("/items/use", middlewares.MustProvideAccessToken(), controllers.HandleUseItem)
 }
