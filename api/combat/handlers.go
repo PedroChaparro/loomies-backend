@@ -109,6 +109,11 @@ func handleSendAttack(combat *WsCombat) {
 			}
 		}
 
+		// 2 Seconds timeout between loomie changes
+		currentTimestamp := time.Now().Unix()
+		combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(2 * time.Second).Unix()
+		time.Sleep(2 * time.Second)
+
 		// Notify the user that the current player loomie was changed
 		combat.SendMessage(WsMessage{
 			Type:    "UPDATE_USER_LOOMIE",
@@ -222,6 +227,11 @@ func handleReceiveAttack(combat *WsCombat) {
 				break
 			}
 		}
+
+		// 2 Seconds timeout between loomie changes
+		currentTimestamp := time.Now().Unix()
+		combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(2 * time.Second).Unix()
+		time.Sleep(2 * time.Second)
 
 		// Notify the user that the current gym loomie was changed
 		combat.SendMessage(WsMessage{
