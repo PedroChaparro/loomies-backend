@@ -473,12 +473,12 @@ func TestFuseLoomiesErrors(t *testing.T) {
 	var loomie1, loomie2 interfaces.CaughtLoomie
 
 	err := models.CaughtLoomiesCollection.FindOne(ctx, bson.M{
-		"serial": 1,
+		"serial": 2,
 	}).Decode(&loomie1)
 	c.NoError(err)
 
 	err = models.CaughtLoomiesCollection.FindOne(ctx, bson.M{
-		"serial": 2,
+		"serial": 7,
 	}).Decode(&loomie2)
 	c.NoError(err)
 
@@ -551,10 +551,10 @@ func TestFuseLoomiesErrors(t *testing.T) {
 	// -------------------------
 	// 5. Try to fuse loomies that are not of the same type
 	// -------------------------
-	// Get another loomie if type 1 (To the next test)
+	// Get another loomie if type 2 (To the next test)
 	var loomie3 interfaces.CaughtLoomie
 	err = models.CaughtLoomiesCollection.FindOne(ctx, bson.M{
-		"serial": 1,
+		"serial": 2,
 	}, options.FindOne().SetSkip(1)).Decode(&loomie3)
 	c.NoError(err)
 
@@ -641,7 +641,7 @@ func TestFuseLoomiesSuccess(t *testing.T) {
 	// Get 2 loomies of the same type
 	var loomies []interfaces.CaughtLoomie
 	res, err := models.CaughtLoomiesCollection.Find(ctx, bson.M{
-		"serial": 1,
+		"serial": 2,
 	}, options.Find().SetLimit(2))
 
 	c.NoError(err)
