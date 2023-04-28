@@ -144,6 +144,7 @@ func handleReceiveAttack(combat *WsCombat) {
 	// Ignore spamming attacks
 	isUserInCooldown := time.Now().After(time.Unix(combat.LastUserAttackTimestamp, 0).Add(1 * time.Second))
 	isCombatInCooldown := time.Now().After(time.Unix(combat.NextValidAttackTimestamp, 0))
+
 	if !isUserInCooldown || !isCombatInCooldown {
 		return
 	}
@@ -629,6 +630,10 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 			"loomie": combat.CurrentPlayerLoomie,
 		},
 	})
+
+	// Add a 2 seconds timeout to the combat
+	currentTimestamp := time.Now().Unix()
+	combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(2 * time.Second).Unix()
 }
 
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
