@@ -627,3 +627,83 @@ func TestFuseLoomiesErrors(t *testing.T) {
 	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
+
+// TestFuseLoomiesSuccess Test the success scenario for /loomies/fuse
+func TestFuseLoomiesSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Get 2 loomies of the same type
+	var loomies []interfaces.CaughtLoomie
+	res, err := models.CaughtLoomiesCollection.Find(ctx, bson.M{
+		"serial": 1,
+	}, options.Find().SetLimit(2))
+
+	c.NoError(err)
+	c.NoError(res.All(ctx, &loomies))
+
+	// Update the loomies owner
+	_, err = models.CaughtLoomiesCollection.UpdateMany(ctx, bson.M{
+		"_id": bson.M{
+			"$in": []primitive.ObjectID{loomies[0].Id, loomies[1].Id},
+		},
+	}, bson.M{
+		"$set": bson.M{
+			"owner": randomUser.Id,
+		},
+	})
+	c.NoError(err)
+
+	// Add the loomies to the user array
+	_, err = models.UserCollection.UpdateOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	}, bson.M{
+		"$push": bson.M{
+			"loomies": bson.M{
+				"$each": []primitive.ObjectID{loomies[0].Id, loomies[1].Id},
+			},
+		},
+	})
+	c.NoError(err)
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.POST("/loomies/fuse", middlewares.MustProvideAccessToken(), HandleFuseLoomies)
+
+	// -------------------------
+	// 1. Fuse the loomies
+	// -------------------------
+	// Upddate the loomies state
+	_, err = models.CaughtLoomiesCollection.UpdateMany(ctx, bson.M{
+		"_id": bson.M{
+			"$in": []primitive.ObjectID{loomies[0].Id, loomies[1].Id},
+		},
+	}, bson.M{
+		"$set": bson.M{
+			"is_busy": false,
+		},
+	})
+
+	w, req := tests.SetupPayloadedRequest("/loomies/fuse", "POST", map[string]interface{}{
+		"loomie_id_1": loomies[0].Id.Hex(),
+		"loomie_id_2": loomies[1].Id.Hex(),
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(200, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal("Loomies fused successfully", response["message"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
+}
