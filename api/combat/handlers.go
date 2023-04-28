@@ -53,6 +53,11 @@ func handleSendAttack(combat *WsCombat) {
 	gymLoomie := combat.CurrentGymLoomie
 	playerLoomie := combat.CurrentPlayerLoomie
 
+	// Ignore the attack if there is an active timeout
+	if combat.NextValidAttackTimestamp > time.Now().Unix() {
+		return
+	}
+
 	// Send the dodge message to the client if the attack was dodged
 	if wasAttackDodged {
 		combat.SendMessage(WsMessage{
@@ -111,7 +116,7 @@ func handleSendAttack(combat *WsCombat) {
 
 		// 2 Seconds timeout between loomie changes
 		currentTimestamp := time.Now().Unix()
-		combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(2 * time.Second).Unix()
+		combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(3 * time.Second).Unix()
 		time.Sleep(2 * time.Second)
 
 		// Notify the user that the current player loomie was changed
@@ -233,7 +238,7 @@ func handleReceiveAttack(combat *WsCombat) {
 
 		// 2 Seconds timeout between loomie changes
 		currentTimestamp := time.Now().Unix()
-		combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(2 * time.Second).Unix()
+		combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(3 * time.Second).Unix()
 		time.Sleep(2 * time.Second)
 
 		// Notify the user that the current gym loomie was changed
@@ -633,7 +638,7 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 
 	// Add a 2 seconds timeout to the combat
 	currentTimestamp := time.Now().Unix()
-	combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(2 * time.Second).Unix()
+	combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(3 * time.Second).Unix()
 }
 
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
