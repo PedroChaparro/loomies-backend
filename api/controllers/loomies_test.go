@@ -458,3 +458,172 @@ func TestLoomieCaptureSuccess(t *testing.T) {
 	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
+
+// TestFuseLoomiesErrors tests the /loomies/fuse endpoint with a bad request
+func TestFuseLoomiesErrors(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Get two random loomies from the database (Limit to 2 to avoid errors)
+	var loomie1, loomie2 interfaces.CaughtLoomie
+
+	err := models.CaughtLoomiesCollection.FindOne(ctx, bson.M{
+		"serial": 1,
+	}).Decode(&loomie1)
+	c.NoError(err)
+
+	err = models.CaughtLoomiesCollection.FindOne(ctx, bson.M{
+		"serial": 2,
+	}).Decode(&loomie2)
+	c.NoError(err)
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.POST("/loomies/fuse", middlewares.MustProvideAccessToken(), HandleFuseLoomies)
+
+	// -------------------------
+	// 1. Try to fuse loomies with no JSON body
+	// -------------------------
+	w, req := tests.SetupPayloadedRequest("/loomies/fuse", "POST", nil, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("JSON body is null or invalid", response["message"])
+
+	// -------------------------
+	// 2. Try to fuse loomies with no loomie_id
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/loomies/fuse", "POST", map[string]interface{}{}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Both loomies ids are required", response["message"])
+
+	// -------------------------
+	// 3. Try to fuse the same loomie
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/loomies/fuse", "POST", map[string]interface{}{
+		"loomie_id_1": loomie1.Id.Hex(),
+		"loomie_id_2": loomie1.Id.Hex(),
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("You can't fuse the same loomie", response["message"])
+
+	// -------------------------
+	// 4. Try to fuse loomies that the user doesn't own
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/loomies/fuse", "POST", map[string]interface{}{
+		"loomie_id_1": loomie1.Id.Hex(),
+		"loomie_id_2": loomie2.Id.Hex(),
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("You should own both loomies to fuse them", response["message"])
+
+	// -------------------------
+	// 5. Try to fuse loomies that are not of the same type
+	// -------------------------
+	// Get another loomie if type 1 (To the next test)
+	var loomie3 interfaces.CaughtLoomie
+	err = models.CaughtLoomiesCollection.FindOne(ctx, bson.M{
+		"serial": 1,
+	}, options.FindOne().SetSkip(1)).Decode(&loomie3)
+	c.NoError(err)
+
+	// Update the loomies owner
+	_, err = models.CaughtLoomiesCollection.UpdateMany(ctx, bson.M{
+		"_id": bson.M{
+			"$in": []primitive.ObjectID{loomie1.Id, loomie2.Id, loomie3.Id},
+		},
+	}, bson.M{
+		"$set": bson.M{
+			"owner": randomUser.Id,
+		},
+	})
+	c.NoError(err)
+
+	// Add the loomies to the user array
+	_, err = models.UserCollection.UpdateOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	}, bson.M{
+		"$push": bson.M{
+			"loomies": bson.M{
+				"$each": []primitive.ObjectID{loomie1.Id, loomie2.Id, loomie3.Id},
+			}},
+	})
+	c.NoError(err)
+
+	w, req = tests.SetupPayloadedRequest("/loomies/fuse", "POST", map[string]interface{}{
+		"loomie_id_1": loomie1.Id.Hex(),
+		"loomie_id_2": loomie2.Id.Hex(),
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Both loomies should be of the same type", response["message"])
+
+	// -------------------------
+	// 6. Try to fuse loomies that are busy
+	// -------------------------
+	_, err = models.CaughtLoomiesCollection.UpdateMany(ctx, bson.M{
+		"_id": bson.M{
+			"$in": []primitive.ObjectID{loomie1.Id, loomie3.Id},
+		},
+	}, bson.M{
+		"$set": bson.M{
+			"is_busy": true,
+		},
+	})
+	c.NoError(err)
+
+	w, req = tests.SetupPayloadedRequest("/loomies/fuse", "POST", map[string]interface{}{
+		"loomie_id_1": loomie1.Id.Hex(),
+		"loomie_id_2": loomie3.Id.Hex(),
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(409, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Both loomies should not be busy", response["message"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
+}

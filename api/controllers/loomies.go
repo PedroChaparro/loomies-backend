@@ -201,12 +201,18 @@ func HandleFuseLoomies(c *gin.Context) {
 	var req interfaces.FuseLoomiesReq
 
 	if err := c.BindJSON(&req); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request. Ensuure you are sendint a JSON body with the required fields"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "JSON body is null or invalid"})
 		return
 	}
 
 	if req.LoomieId1 == "" || req.LoomieId2 == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Both loomies ids are required"})
+		return
+	}
+
+	// Check the loomies are different
+	if req.LoomieId1 == req.LoomieId2 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You can't fuse the same loomie"})
 		return
 	}
 
