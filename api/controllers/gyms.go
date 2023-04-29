@@ -270,8 +270,20 @@ func HandleUpdateProtectors(c *gin.Context) {
 	// Check the loomies are not busy
 	for _, loomie := range loomies {
 		if loomie.IsBusy {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "All the loomies must be free to protect the gym"})
-			return
+			// Permit busy loomies if they are already protecting the gym\
+			isCurrentProtector := false
+
+			for _, protector := range gymDoc.Protectors {
+				if protector == loomie.Id {
+					isCurrentProtector = true
+					continue
+				}
+			}
+
+			if !isCurrentProtector {
+				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "All the loomies must be free to protect the gym"})
+				return
+			}
 		}
 	}
 
