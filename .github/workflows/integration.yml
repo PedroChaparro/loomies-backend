@@ -72,5 +72,5 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./api/coverage.out
-          flags: ci,unittest,integration,e2e
+          flags: ci
           fail_ci_if_error: true
