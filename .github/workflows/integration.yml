@@ -66,3 +66,16 @@ jobs:
           cd api
           cp .env controllers/.env
           go test ./...
+      
+      - name: ☂️ Generate the coverage report
+        run: |
+          cd api
+          go test -coverprofile=coverage.out ./...
+      
+      - name: 📊 Upload the coverage report
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./api/coverage.out
+          flags: ci,unittest,integration,e2e
+          fail_ci_if_error: true
