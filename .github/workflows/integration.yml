@@ -60,16 +60,11 @@ jobs:
           npm install
           npm run bulk 
           npm run update:rewards
-
-      - name: 🧪 Run tests
-        run: |
-          cd api
-          cp .env controllers/.env
-          go test ./...
       
       - name: ☂️ Generate the coverage report
         run: |
           cd api
+          cp .env controllers/.env
           go test -coverprofile=coverage.out ./...
       
       - name: 📊 Upload the coverage report
