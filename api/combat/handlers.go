@@ -617,12 +617,12 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 	})
 }
 
-// handleLoomiesTeamUser handles the obtaining of the team of loomies.
-func handleLoomiesTeamUser(combat *WsCombat, message WsMessage) {
+// handleGetUserTeam handles the obtaining of the team of loomies.
+func handleGetUserTeam(combat *WsCombat, message WsMessage) {
 	// Send the message to the user
 	combat.SendMessage(WsMessage{
 		Type:    "USER_LOOMIE_TEAM",
-		Message: "Loomies team is:",
+		Message: "These are your current loomies",
 		Payload: map[string]interface{}{
 			"loomies": combat.PlayerLoomies,
 		},

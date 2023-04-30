@@ -201,7 +201,7 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 			combat.UpdatedLastReceivedMessageTimestamp()
 
 		case "USER_GET_LOOMIE_TEAM":
-			handleLoomiesTeamUser(combat, wsMessage)
+			handleGetUserTeam(combat, wsMessage)
 			combat.UpdatedLastReceivedMessageTimestamp()
 		}
 	}
