@@ -354,3 +354,104 @@ func TestUseItemErrors(t *testing.T) {
 	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.Nil(err)
 }
+
+// TestUseItemSuccess tests the success case of `/items/use` endpoint
+func TestUseItemSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Get the unknown beverage item
+	var unknownBeverage interfaces.Item
+	err := models.ItemsCollection.FindOne(ctx, bson.M{
+		"serial": 7,
+	}).Decode(&unknownBeverage)
+	c.NoError(err)
+
+	// Get a loomie from the database
+	var loomie interfaces.CaughtLoomie
+	err = models.CaughtLoomiesCollection.FindOne(ctx, bson.M{}).Decode(&loomie)
+	c.NoError(err)
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.POST("/items/use", middlewares.MustProvideAccessToken(), HandleUseItem)
+
+	// -------------------------
+	// Test 1: Valid request
+	// -------------------------
+	// Add the item to the user inventory
+	_, err = models.UserCollection.UpdateOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	},
+		bson.M{
+			"$push": bson.M{
+				"items": bson.M{
+					"item_collection": "items",
+					"item_id":         unknownBeverage.Id,
+					"item_quantity":   2,
+				},
+			}})
+	c.NoError(err)
+
+	// Add the loomie to the user loomies
+	_, err = models.UserCollection.UpdateOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	}, bson.M{
+		"$push": bson.M{
+			"loomies": loomie.Id,
+		},
+	})
+	c.NoError(err)
+
+	// Update the loomie owner
+	_, err = models.CaughtLoomiesCollection.UpdateOne(ctx, bson.M{
+		"_id": loomie.Id,
+	}, bson.M{
+		"$set": bson.M{
+			"owner": randomUser.Id,
+		},
+	})
+	c.NoError(err)
+
+	// Make the request
+	w, req := tests.SetupPayloadedRequest("/items/use", "POST", map[string]interface{}{
+		"loomie_id": loomie.Id,
+		"item_id":   unknownBeverage.Id,
+	}, tests.CustomHeader{}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(200, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal("Item was successfully used", response["message"])
+
+	// Check the user inventory
+	var user interfaces.User
+	err = models.UserCollection.FindOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	}).Decode(&user)
+	c.NoError(err)
+	c.Equal(1, len(user.Items))
+	c.Equal(unknownBeverage.Id, user.Items[0].ItemId)
+	c.Equal(1, user.Items[0].ItemQuantity)
+
+	// Check the loomie
+	var finalLoomie interfaces.CaughtLoomie
+	err = models.CaughtLoomiesCollection.FindOne(ctx, bson.M{
+		"_id": loomie.Id,
+	}).Decode(&finalLoomie)
+	c.NoError(err)
+	c.Equal(loomie.Level+1, finalLoomie.Level)
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.Nil(err)
+}
