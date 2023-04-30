@@ -509,9 +509,9 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	// Login with a random user
 	randomUser, loginResponse := loginWithRandomUser()
 
-	// Get an existing gym
+	// Get an existing gym from the end of the database collection
 	var gym interfaces.Gym
-	err := models.GymsCollection.FindOne(ctx, bson.M{}).Decode(&gym)
+	err := models.GymsCollection.FindOne(ctx, bson.M{}, options.FindOne().SetSort(bson.M{"$natural": -1})).Decode(&gym)
 	c.NoError(err)
 
 	// Setup the router
