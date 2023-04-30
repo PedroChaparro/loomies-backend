@@ -11,6 +11,8 @@ import (
 	"github.com/PedroChaparro/loomies-backend/tests"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // TestGymDetailsSuccess Tests the `/gyms/:id` endpoint
@@ -493,6 +495,209 @@ func TestClaimRewardsBadRequest(t *testing.T) {
 	c.Equal("You already claimed the rewards for this gym", response["message"])
 
 	// Delete the user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
+}
+
+// TestUpdateProtectorsErrors Tests the `/gyms/update-protectors“ endpoint with a bad request
+func TestUpdateProtectorsErrors(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Get an existing gym
+	var gym interfaces.Gym
+	err := models.GymsCollection.FindOne(ctx, bson.M{}).Decode(&gym)
+	c.NoError(err)
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.POST("/gyms/update-protectors", middlewares.MustProvideAccessToken(), HandleUpdateProtectors)
+
+	// -------------------------
+	// 1. Check with an empty payload
+	// -------------------------
+	w, req := tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", nil, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("JSON payload is invalid or missing", response["message"])
+
+	// -------------------------
+	// 2. Check with empty protectors aray
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+		"gym_id":     gym.Id.Hex(),
+		"protectors": []string{},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("You must add at least one protector", response["message"])
+
+	// -------------------------
+	// 3. Check with more than 6 protectors
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+		"gym_id": gym.Id.Hex(),
+		"protectors": []string{
+			"protector1",
+			"protector2",
+			"protector3",
+			"protector4",
+			"protector5",
+			"protector6",
+			"protector7",
+		},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("You can't add more than 6 protectors", response["message"])
+
+	// -------------------------
+	// 4. Check with non-valid gym id
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+		"gym_id":     "non-valid-id",
+		"protectors": []string{"protector1"},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("The gym id is not valid", response["message"])
+
+	// -------------------------
+	// 5. Check with non-existing gym id
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+		"gym_id":     primitive.NewObjectID().Hex(),
+		"protectors": []string{"protector1"},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(404, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("The gym was not found", response["message"])
+
+	// -------------------------
+	// 6. Check with a gym that is not owned by the user
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+		"gym_id":     gym.Id.Hex(),
+		"protectors": []string{"protector1"},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(403, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("You don't own this gym", response["message"])
+
+	// -------------------------
+	// 7. Check with invalid protectors ids
+	// -------------------------
+	// Update the gym owner id
+	_, err = models.GymsCollection.UpdateOne(ctx, bson.M{"_id": gym.Id}, bson.M{"$set": bson.M{"owner": randomUser.Id}})
+	c.NoError(err)
+
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+		"gym_id":     gym.Id.Hex(),
+		"protectors": []string{"non-valid-id", "non-valid-id2"},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Some of the loomie ids were not valid", response["message"])
+
+	// -------------------------
+	// 8. Check with loomies that are not owned by the user
+	// -------------------------
+	var loomies []interfaces.CaughtLoomie
+	cursor, err := models.CaughtLoomiesCollection.Find(ctx, bson.M{}, options.Find().SetLimit(6))
+	c.NoError(err)
+	err = cursor.All(ctx, &loomies)
+	c.NoError(err)
+	c.Equal(6, len(loomies))
+
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+		"gym_id":     gym.Id.Hex(),
+		"protectors": []string{loomies[0].Id.Hex(), loomies[1].Id.Hex(), loomies[2].Id.Hex(), loomies[3].Id.Hex(), loomies[4].Id.Hex(), loomies[5].Id.Hex()},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(403, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("You don't own all the loomies", response["message"])
+
+	// -------------------------
+	// 9. Check with busy loomies
+	// -------------------------
+	// Update the owner of the loomies
+	_, err = models.CaughtLoomiesCollection.UpdateMany(ctx, bson.M{"_id": bson.M{
+		"$in": []primitive.ObjectID{loomies[0].Id, loomies[1].Id, loomies[2].Id, loomies[3].Id, loomies[4].Id, loomies[5].Id},
+	}}, bson.M{"$set": bson.M{"owner": randomUser.Id}})
+	c.NoError(err)
+
+	// Update the busy status of one of the loomies
+	_, err = models.CaughtLoomiesCollection.UpdateOne(ctx, bson.M{"_id": loomies[0].Id}, bson.M{"$set": bson.M{"is_busy": true}})
+	c.NoError(err)
+
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+		"gym_id":     gym.Id.Hex(),
+		"protectors": []string{loomies[0].Id.Hex(), loomies[1].Id.Hex(), loomies[2].Id.Hex(), loomies[3].Id.Hex(), loomies[4].Id.Hex(), loomies[5].Id.Hex()},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("All the loomies must be free to protect the gym", response["message"])
+
+	// Remove the user
 	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
