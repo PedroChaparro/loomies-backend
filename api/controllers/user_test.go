@@ -849,3 +849,71 @@ func TestUpdateLoomieTeamErrors(t *testing.T) {
 	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
+
+// TestUpdateLoomieTeamSuccess tests the success case for the `/user/loomie-team` endpoint
+func TestUpdateLoomieTeamSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Get 6 loomies from the database
+	var loomies []interfaces.CaughtLoomie
+	cursor, err := models.CaughtLoomiesCollection.Find(ctx, bson.D{}, options.Find().SetLimit(6))
+	c.NoError(err)
+	err = cursor.All(ctx, &loomies)
+	c.NoError(err)
+	c.Equal(6, len(loomies))
+
+	// Update the loomies owner
+	_, err = models.CaughtLoomiesCollection.UpdateMany(ctx, bson.M{
+		"_id": bson.M{
+			"$in": []primitive.ObjectID{loomies[0].Id, loomies[1].Id, loomies[2].Id, loomies[3].Id, loomies[4].Id, loomies[5].Id},
+		},
+	}, bson.M{
+		"$set": bson.M{
+			"owner":   randomUser.Id,
+			"is_busy": false,
+		},
+	})
+	c.NoError(err)
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.PUT("/user/loomie-team", middlewares.MustProvideAccessToken(), HandleUpdateLoomieTeam)
+
+	// -------------------------
+	// Test 1: Update loomie team
+	// -------------------------
+	w, req := tests.SetupPayloadedRequest("/user/loomie-team", "PUT", map[string]interface{}{
+		"loomie_team": []interface{}{loomies[0].Id, loomies[1].Id, loomies[2].Id, loomies[3].Id, loomies[4].Id, loomies[5].Id},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(http.StatusOK, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal("The loomie team has been updated successfully", response["message"])
+
+	// Check the loomie team in the database
+	var finalUser interfaces.User
+	err = models.UserCollection.FindOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	}).Decode(&finalUser)
+	c.NoError(err)
+
+	c.Equal(6, len(finalUser.LoomieTeam))
+	for index := range finalUser.LoomieTeam {
+		c.Equal(loomies[index].Id, finalUser.LoomieTeam[index])
+	}
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
+}
