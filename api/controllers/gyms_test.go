@@ -516,12 +516,12 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 
 	// Setup the router
 	router := tests.SetupGinRouter()
-	router.POST("/gyms/update-protectors", middlewares.MustProvideAccessToken(), HandleUpdateProtectors)
+	router.PUT("/gyms/update-protectors", middlewares.MustProvideAccessToken(), HandleUpdateProtectors)
 
 	// -------------------------
 	// 1. Check with an empty payload
 	// -------------------------
-	w, req := tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", nil, tests.CustomHeader{
+	w, req := tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", nil, tests.CustomHeader{
 		Name:  "Access-Token",
 		Value: loginResponse["accessToken"],
 	})
@@ -535,7 +535,7 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	// -------------------------
 	// 2. Check with empty protectors aray
 	// -------------------------
-	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", map[string]interface{}{
 		"gym_id":     gym.Id.Hex(),
 		"protectors": []string{},
 	}, tests.CustomHeader{
@@ -552,7 +552,7 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	// -------------------------
 	// 3. Check with more than 6 protectors
 	// -------------------------
-	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", map[string]interface{}{
 		"gym_id": gym.Id.Hex(),
 		"protectors": []string{
 			"protector1",
@@ -577,7 +577,7 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	// -------------------------
 	// 4. Check with non-valid gym id
 	// -------------------------
-	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", map[string]interface{}{
 		"gym_id":     "non-valid-id",
 		"protectors": []string{"protector1"},
 	}, tests.CustomHeader{
@@ -594,7 +594,7 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	// -------------------------
 	// 5. Check with non-existing gym id
 	// -------------------------
-	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", map[string]interface{}{
 		"gym_id":     primitive.NewObjectID().Hex(),
 		"protectors": []string{"protector1"},
 	}, tests.CustomHeader{
@@ -611,7 +611,7 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	// -------------------------
 	// 6. Check with a gym that is not owned by the user
 	// -------------------------
-	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", map[string]interface{}{
 		"gym_id":     gym.Id.Hex(),
 		"protectors": []string{"protector1"},
 	}, tests.CustomHeader{
@@ -632,7 +632,7 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	_, err = models.GymsCollection.UpdateOne(ctx, bson.M{"_id": gym.Id}, bson.M{"$set": bson.M{"owner": randomUser.Id}})
 	c.NoError(err)
 
-	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", map[string]interface{}{
 		"gym_id":     gym.Id.Hex(),
 		"protectors": []string{"non-valid-id", "non-valid-id2"},
 	}, tests.CustomHeader{
@@ -656,7 +656,7 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	c.NoError(err)
 	c.Equal(6, len(loomies))
 
-	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", map[string]interface{}{
 		"gym_id":     gym.Id.Hex(),
 		"protectors": []string{loomies[0].Id.Hex(), loomies[1].Id.Hex(), loomies[2].Id.Hex(), loomies[3].Id.Hex(), loomies[4].Id.Hex(), loomies[5].Id.Hex()},
 	}, tests.CustomHeader{
@@ -683,7 +683,7 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	_, err = models.CaughtLoomiesCollection.UpdateOne(ctx, bson.M{"_id": loomies[0].Id}, bson.M{"$set": bson.M{"is_busy": true}})
 	c.NoError(err)
 
-	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "POST", map[string]interface{}{
+	w, req = tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", map[string]interface{}{
 		"gym_id":     gym.Id.Hex(),
 		"protectors": []string{loomies[0].Id.Hex(), loomies[1].Id.Hex(), loomies[2].Id.Hex(), loomies[3].Id.Hex(), loomies[4].Id.Hex(), loomies[5].Id.Hex()},
 	}, tests.CustomHeader{
@@ -696,6 +696,94 @@ func TestUpdateProtectorsErrors(t *testing.T) {
 	c.Equal(400, w.Code)
 	c.Equal(true, response["error"])
 	c.Equal("All the loomies must be free to protect the gym", response["message"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
+}
+
+// TestUpdateProtectorsSuccess Tests the `/gyms/update-protectors“ endpoint with valid data
+func TestUpdateProtectorsSuccess(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Get an existing gym
+	var gym interfaces.Gym
+	err := models.GymsCollection.FindOne(ctx, bson.M{}).Decode(&gym)
+	c.NoError(err)
+
+	// Get 6 caught loomies
+	var loomies []interfaces.CaughtLoomie
+	cursor, err := models.CaughtLoomiesCollection.Find(ctx, bson.M{}, options.Find().SetLimit(6))
+	c.NoError(err)
+	err = cursor.All(ctx, &loomies)
+	c.NoError(err)
+	c.Equal(6, len(loomies))
+
+	// Update the owner and busy state of the loomies
+	_, err = models.CaughtLoomiesCollection.UpdateMany(ctx,
+		bson.M{"_id": bson.M{
+			"$in": []primitive.ObjectID{loomies[0].Id, loomies[1].Id, loomies[2].Id, loomies[3].Id, loomies[4].Id, loomies[5].Id},
+		}},
+		bson.M{"$set": bson.M{"owner": randomUser.Id, "is_busy": false}})
+	c.NoError(err)
+
+	// Update the gym owner
+	_, err = models.GymsCollection.UpdateOne(ctx, bson.M{"_id": gym.Id}, bson.M{"$set": bson.M{"owner": randomUser.Id}})
+	c.NoError(err)
+
+	// Update the busy state of one of the loomies and set it as a protector
+	_, err = models.CaughtLoomiesCollection.UpdateOne(ctx, bson.M{"_id": loomies[0].Id}, bson.M{"$set": bson.M{"is_busy": true}})
+	c.NoError(err)
+
+	_, err = models.GymsCollection.UpdateOne(ctx, bson.M{"_id": gym.Id}, bson.M{"$set": bson.M{"protectors": []primitive.ObjectID{loomies[0].Id}}})
+	c.NoError(err)
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.PUT("/gyms/update-protectors", middlewares.MustProvideAccessToken(), HandleUpdateProtectors)
+
+	// -------------------------
+	// Send the request
+	// -------------------------
+	w, req := tests.SetupPayloadedRequest("/gyms/update-protectors", "PUT", map[string]interface{}{
+		"gym_id":     gym.Id.Hex(),
+		"protectors": []string{loomies[0].Id.Hex(), loomies[1].Id.Hex(), loomies[2].Id.Hex(), loomies[3].Id.Hex(), loomies[4].Id.Hex(), loomies[5].Id.Hex()},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(200, w.Code)
+	c.Equal(false, response["error"])
+	c.Equal("Gym protectors were successfully updated", response["message"])
+
+	// Check the gym protectors
+	err = models.GymsCollection.FindOne(ctx, bson.M{"_id": gym.Id}).Decode(&gym)
+	c.NoError(err)
+	c.Equal(6, len(gym.Protectors))
+
+	for index := range gym.Protectors {
+		c.Equal(loomies[index].Id, gym.Protectors[index])
+	}
+
+	// Check the loomies busy state
+	cursor, err = models.CaughtLoomiesCollection.Find(ctx, bson.M{"_id": bson.M{"$in": gym.Protectors}})
+	c.NoError(err)
+	err = cursor.All(ctx, &loomies)
+	c.NoError(err)
+	c.Equal(6, len(loomies))
+
+	for index := range loomies {
+		c.Equal(true, loomies[index].IsBusy)
+	}
 
 	// Remove the user
 	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
