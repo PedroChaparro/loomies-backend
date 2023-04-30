@@ -199,6 +199,10 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 		case "USER_CHANGE_LOOMIE":
 			handleChangeLoomie(combat, wsMessage)
 			combat.UpdatedLastReceivedMessageTimestamp()
+
+		case "USER_LOOMIES_TEAM":
+			handleLoomiesTeamUser(combat, wsMessage)
+			combat.UpdatedLastReceivedMessageTimestamp()
 		}
 	}
 }

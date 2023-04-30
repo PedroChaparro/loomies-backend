@@ -617,6 +617,18 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 	})
 }
 
+// handleLoomiesTeamUser handles the obtaining of the team of loomies.
+func handleLoomiesTeamUser(combat *WsCombat, message WsMessage) {
+	// Send the message to the user
+	combat.SendMessage(WsMessage{
+		Type:    "LOOMIES_TEAM",
+		Message: "Loomies team is:",
+		Payload: map[string]interface{}{
+			"loomies": combat.PlayerLoomies,
+		},
+	})
+}
+
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
 func handleClearDodgeChannel(combat *WsCombat) {
 	for len(combat.Dodges) > 0 {
