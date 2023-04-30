@@ -718,3 +718,134 @@ func TestGetLoomieTeamSuccess(t *testing.T) {
 	err := tests.DeleteUser(randomUser.Email, randomUser.Id)
 	c.NoError(err)
 }
+
+// TestUpdateLoomieTeamErrors Test the error cases for /user/loomie-team endpoint
+func TestUpdateLoomieTeamErrors(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.PUT("/user/loomie-team", middlewares.MustProvideAccessToken(), HandleUpdateLoomieTeam)
+
+	// -------------------------
+	// Test 1: Test with nil payload
+	// -------------------------
+	w, req := tests.SetupPayloadedRequest("/user/loomie-team", "PUT", nil, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("JSON payload is invalid or missing", response["message"])
+
+	// -------------------------
+	// Test 2: Test with invalid team length
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/user/loomie-team", "PUT", map[string]interface{}{
+		"loomie_team": []interface{}{},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("The team cannot have more than 6 members or less than 1", response["message"])
+
+	w, req = tests.SetupPayloadedRequest("/user/loomie-team", "PUT", map[string]interface{}{
+		"loomie_team": []interface{}{"id1", "id2", "id3", "id4", "id5", "id6", "id7"},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("The team cannot have more than 6 members or less than 1", response["message"])
+
+	// -------------------------
+	// Test 3: Test with invalid loomie id
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/user/loomie-team", "PUT", map[string]interface{}{
+		"loomie_team": []interface{}{"invalid-1", "invalid-2", "invalid-3", "invalid-4", "invalid-5", "invalid-6"},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("Error parsing one of the loomies ids", response["message"])
+
+	// -------------------------
+	// Test 4: Test with loomies that are not owned by the user
+	// -------------------------
+	// Get 6 loomies from the database
+	var loomies []interfaces.CaughtLoomie
+	cursor, err := models.CaughtLoomiesCollection.Find(ctx, bson.D{}, options.Find().SetLimit(6))
+	c.NoError(err)
+	err = cursor.All(ctx, &loomies)
+	c.NoError(err)
+	c.Equal(6, len(loomies))
+
+	w, req = tests.SetupPayloadedRequest("/user/loomie-team", "PUT", map[string]interface{}{
+		"loomie_team": []interface{}{loomies[0].Id, loomies[1].Id, loomies[2].Id, loomies[3].Id, loomies[4].Id, loomies[5].Id},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(http.StatusBadRequest, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("You must own all the loomies in the team", response["message"])
+
+	// -------------------------
+	// Test 5: Test with busy loomies
+	// -------------------------
+	// Update the loomies owner
+	_, err = models.CaughtLoomiesCollection.UpdateMany(ctx, bson.M{
+		"_id": bson.M{
+			"$in": []primitive.ObjectID{loomies[0].Id, loomies[1].Id, loomies[2].Id, loomies[3].Id, loomies[4].Id, loomies[5].Id},
+		},
+	}, bson.M{
+		"$set": bson.M{
+			"owner":   randomUser.Id,
+			"is_busy": true,
+		},
+	})
+	c.NoError(err)
+
+	w, req = tests.SetupPayloadedRequest("/user/loomie-team", "PUT", map[string]interface{}{
+		"loomie_team": []interface{}{loomies[0].Id, loomies[1].Id, loomies[2].Id, loomies[3].Id, loomies[4].Id, loomies[5].Id},
+	}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(http.StatusConflict, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("All the loomies must be available to be added to the team", response["message"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.NoError(err)
+}
