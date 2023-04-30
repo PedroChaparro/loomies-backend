@@ -1185,3 +1185,21 @@ components:
         was_reward_claimed: 
           type: boolean
           example: false
+    Capture:
+      type: object
+      properties:
+        was_captured:
+          type: boolean
+        error:
+          type: boolean
+        message:
+          type: string
+    NotCapture:
+      type: object
+      properties:
+        was_captured:
+          type: boolean
+        error:
+          type: boolean
+        message:
+          type: string
