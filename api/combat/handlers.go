@@ -621,7 +621,7 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 func handleLoomiesTeamUser(combat *WsCombat, message WsMessage) {
 	// Send the message to the user
 	combat.SendMessage(WsMessage{
-		Type:    "LOOMIES_TEAM",
+		Type:    "USER_LOOMIE_TEAM",
 		Message: "Loomies team is:",
 		Payload: map[string]interface{}{
 			"loomies": combat.PlayerLoomies,
