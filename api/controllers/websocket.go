@@ -51,7 +51,7 @@ func HandleCombatRegister(c *gin.Context) {
 		Latitude:  payload.Latitude,
 		Longitude: payload.Longitude,
 	}) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym is not near the user coordinates"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You are too far away from the gym"})
 		return
 	}
 
