@@ -13,7 +13,7 @@ func HandleNearGyms(c *gin.Context) {
 	bodyCoord := interfaces.Coordinates{}
 
 	if err := c.BindJSON(&bodyCoord); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "JSON payload is invalid or missing"})
 		return
 	}
 
