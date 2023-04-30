@@ -49,7 +49,7 @@ func HandleUseItem(c *gin.Context) {
 	var req interfaces.UseNotCombatItemReq
 
 	if err := c.BindJSON(&req); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request. A JSON is needed"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "JSON payload is invalid or missing"})
 		return
 	}
 
@@ -59,7 +59,7 @@ func HandleUseItem(c *gin.Context) {
 	}
 
 	if req.ItemId == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "An Item is required"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "An item is required"})
 		return
 	}
 
@@ -102,7 +102,7 @@ func HandleUseItem(c *gin.Context) {
 	}
 
 	if !(item.Quantity > 0) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "User doesn't have enough items"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You don't have enough of this item"})
 		return
 	}
 

@@ -189,3 +189,168 @@ func TestGetUserItemsBadRequest(t *testing.T) {
 	c.Equal(true, response["error"])
 	c.Equal("User was not found", response["message"])
 }
+
+// TestUseItemErrors Test the `/items/use` endpoint with errors
+func TestUseItemErrors(t *testing.T) {
+	var response map[string]interface{}
+	c := require.New(t)
+	ctx := context.Background()
+	defer ctx.Done()
+
+	// Login with a random user
+	randomUser, loginResponse := loginWithRandomUser()
+
+	// Get items from the database
+	var unknownBeverage interfaces.Item
+	err := models.ItemsCollection.FindOne(ctx, bson.M{
+		"serial": 7,
+	}).Decode(&unknownBeverage)
+	c.Nil(err)
+
+	var smallAidKit interfaces.Item
+	err = models.ItemsCollection.FindOne(ctx, bson.M{
+		"serial": 2,
+	}).Decode(&smallAidKit)
+	c.Nil(err)
+
+	// Get one random loomie from the database
+	var loomie interfaces.CaughtLoomie
+	err = models.CaughtLoomiesCollection.FindOne(ctx, bson.M{}).Decode(&loomie)
+	c.Nil(err)
+
+	// Setup the router
+	router := tests.SetupGinRouter()
+	router.POST("/items/use", middlewares.MustProvideAccessToken(), HandleUseItem)
+
+	// -------------------------
+	// Test 1: Test with nil payload
+	// -------------------------
+	w, req := tests.SetupPayloadedRequest("/items/use", "POST", nil, tests.CustomHeader{}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("JSON payload is invalid or missing", response["message"])
+
+	// -------------------------
+	// Test 2: Test with empty loomie_id field
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/items/use", "POST", map[string]interface{}{
+		"loomie_id": "",
+		"item_id":   unknownBeverage.Id,
+	}, tests.CustomHeader{}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("A Loomie is required", response["message"])
+
+	// -------------------------
+	// Test 3: Test with empty item_id field
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/items/use", "POST", map[string]interface{}{
+		"loomie_id": loomie.Id,
+		"item_id":   "",
+	}, tests.CustomHeader{}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("An item is required", response["message"])
+
+	// -------------------------
+	// Test 4: Test with an item that the user doesn't own
+	// -------------------------
+	w, req = tests.SetupPayloadedRequest("/items/use", "POST", map[string]interface{}{
+		"loomie_id": loomie.Id,
+		"item_id":   unknownBeverage.Id,
+	}, tests.CustomHeader{}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("You don't own the given item", response["message"])
+
+	// -------------------------
+	// Test 5: Test with a non-supported item
+	// -------------------------
+	// Add the item to the user inventory
+	_, err = models.UserCollection.UpdateOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	}, bson.M{
+		"$push": bson.M{
+			"items": bson.M{
+				"item_collection": "items",
+				"item_id":         smallAidKit.Id,
+				"item_quantity":   13,
+			},
+		},
+	})
+	c.NoError(err)
+
+	// Make the request
+	w, req = tests.SetupPayloadedRequest("/items/use", "POST", map[string]interface{}{
+		"loomie_id": loomie.Id,
+		"item_id":   smallAidKit.Id,
+	}, tests.CustomHeader{}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(404, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("The given item was not found or is a combat item", response["message"])
+
+	// -------------------------
+	// Test 6: Test with not enough items
+	// -------------------------
+	// Add the item to the user inventory
+	_, err = models.UserCollection.UpdateOne(ctx, bson.M{
+		"_id": randomUser.Id,
+	}, bson.M{
+		"$push": bson.M{
+			"items": bson.M{
+				"item_collection": "items",
+				"item_id":         unknownBeverage.Id,
+				"item_quantity":   0,
+			},
+		}})
+	c.NoError(err)
+
+	// Make the request
+	w, req = tests.SetupPayloadedRequest("/items/use", "POST", map[string]interface{}{
+		"loomie_id": loomie.Id,
+		"item_id":   unknownBeverage.Id,
+	}, tests.CustomHeader{}, tests.CustomHeader{
+		Name:  "Access-Token",
+		Value: loginResponse["accessToken"],
+	})
+
+	router.ServeHTTP(w, req)
+	json.Unmarshal(w.Body.Bytes(), &response)
+	c.Equal(400, w.Code)
+	c.Equal(true, response["error"])
+	c.Equal("You don't have enough of this item", response["message"])
+
+	// Remove the user
+	err = tests.DeleteUser(randomUser.Email, randomUser.Id)
+	c.Nil(err)
+}
