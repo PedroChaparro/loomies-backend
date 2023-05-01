@@ -220,7 +220,7 @@ func HandleUpdateProtectors(c *gin.Context) {
 
 	_, err := primitive.ObjectIDFromHex(payload.GymId)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym id not valid"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym id is not valid"})
 		return
 	}
 
@@ -262,7 +262,7 @@ func HandleUpdateProtectors(c *gin.Context) {
 	}
 
 	if len(loomies) != len(payload.Protectors) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You don't own all the loomies"})
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": true, "message": "You don't own all the loomies"})
 		return
 	}
 

@@ -376,7 +376,7 @@ func HandleUpdateLoomieTeam(c *gin.Context) {
 
 	if err := c.BindJSON(&form); err != nil {
 		fmt.Println(err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request. The JSON payload is not valid"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "JSON payload is invalid or missing"})
 		return
 	}
 
