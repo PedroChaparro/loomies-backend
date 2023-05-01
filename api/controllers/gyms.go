@@ -294,10 +294,17 @@ func HandleUpdateProtectors(c *gin.Context) {
 		return
 	}
 
+	// --- Update the busy state of the previous protectors ---
+	err = models.UpdateLoomiesBusyState(gymDoc.Protectors, false)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Error updating the busy state of the previous protectors, please try again later"})
+		return
+	}
+
 	// --- Update the loomies ---
 	err = models.UpdateLoomiesBusyState(loomiesMongoIds, true)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when updating loomies, please try again later"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Error updating the busy state of the new protectors, please try again later"})
 		return
 	}
 
