@@ -47,3 +47,8 @@ type UseNotCombatItemReq struct {
 	ItemId   string `json:"item_id"`
 	LoomieId string `json:"loomie_id"`
 }
+
+type UpdateGymProtectorsReq struct {
+	Protectors []string `json:"protectors"`
+	GymId      string   `json:"gym_id"`
+}

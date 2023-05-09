@@ -26,6 +26,8 @@ The following are the supported messages types that are exchanged between the cl
 | `UPDATE_GYM_LOOMIE`      | The current gym Loomie was changed                                                                                    | Server | Client |
 | `UPDATE_GYM_LOOMIE_HP`   | The current gym Loomie was attacked by the user Loomie                                                                | Server | Client |
 | `USER_HAS_WON`           | All the gym Loomies were defeated                                                                                     | Server | Client |
+| `USER_GET_LOOMIE_TEAM`   | Get loomies team from user                                                                                            | Client | Server |
+| `USER_LOOMIE_TEAM`       | Loomies team response                                                                                                 | Server | Client |
 
 ## Payloads
 

@@ -191,3 +191,129 @@ func HandleGetGym(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Details of the gym were successfully obtained", "gym": response})
 }
+
+// HandleUpdateProtectors Handles the request to update the protectors of a gym
+func HandleUpdateProtectors(c *gin.Context) {
+	// --- Initial validations ---
+	// Check the payload is valid
+	var payload interfaces.UpdateGymProtectorsReq
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "JSON payload is invalid or missing"})
+		return
+	}
+
+	// Check there is at least one protector
+	if len(payload.Protectors) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You must add at least one protector"})
+		return
+	}
+
+	// Check there is no more than 6 protectors
+	if len(payload.Protectors) > 6 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You can't add more than 6 protectors"})
+		return
+	}
+
+	// --- Database validations ---
+	userId, _ := c.Get("userid")
+	userMongoId, _ := primitive.ObjectIDFromHex(userId.(string))
+
+	_, err := primitive.ObjectIDFromHex(payload.GymId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym id is not valid"})
+		return
+	}
+
+	// Check the gym exists
+	gymDoc, err := models.GetGymFromID(payload.GymId)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "message": "The gym was not found"})
+			return
+		}
+
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when getting gym, please try again later"})
+		return
+	}
+
+	// Check the user owns the gym
+	if gymDoc.Owner != userMongoId {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": true, "message": "You don't own this gym"})
+		return
+	}
+
+	// Check the user owns all the loomies
+	var loomiesMongoIds []primitive.ObjectID
+
+	for _, loomieId := range payload.Protectors {
+		loomieMongoId, err := primitive.ObjectIDFromHex(loomieId)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Some of the loomie ids were not valid"})
+			return
+		}
+
+		loomiesMongoIds = append(loomiesMongoIds, loomieMongoId)
+	}
+
+	loomies, err := models.GetLoomiesByIds(loomiesMongoIds, userMongoId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when getting loomies, please try again later"})
+		return
+	}
+
+	if len(loomies) != len(payload.Protectors) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": true, "message": "You don't own all the loomies"})
+		return
+	}
+
+	// --- Logic validation ---
+	// Check the loomies are not busy
+	for _, loomie := range loomies {
+		if loomie.IsBusy {
+			// Permit busy loomies if they are already protecting the gym\
+			isCurrentProtector := false
+
+			for _, protector := range gymDoc.Protectors {
+				if protector == loomie.Id {
+					isCurrentProtector = true
+					continue
+				}
+			}
+
+			if !isCurrentProtector {
+				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "All the loomies must be free to protect the gym"})
+				return
+			}
+		}
+	}
+
+	// --- Update the gym ---
+	err = models.UpdateGymProtectors(gymDoc.Id, loomiesMongoIds)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when updating gym, please try again later"})
+		return
+	}
+
+	// --- Update the busy state of the previous protectors ---
+	err = models.UpdateLoomiesBusyState(gymDoc.Protectors, false)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Error updating the busy state of the previous protectors, please try again later"})
+		return
+	}
+
+	// --- Update the loomies ---
+	err = models.UpdateLoomiesBusyState(loomiesMongoIds, true)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Error updating the busy state of the new protectors, please try again later"})
+		return
+	}
+
+	// Remove the loomies from the loomie team of the player (just in case)
+	err = models.RemoveFromLoomieTeam(userMongoId, loomiesMongoIds)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "message": "Internal error when updating the loomie team, please try again later"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"error": false, "message": "Gym protectors were successfully updated"})
+}

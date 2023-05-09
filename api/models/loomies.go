@@ -12,6 +12,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var memoizedLoomiesTypes map[primitive.ObjectID]string = make(map[primitive.ObjectID]string)
+var memoizedLoomiesRarities map[primitive.ObjectID]string = make(map[primitive.ObjectID]string)
+
 // GetBaseLoomies returns the base loomies
 func GetBaseLoomies() ([]interfaces.BaseLoomiesWithPopulatedRarity, error) {
 	baseLoomies := []interfaces.BaseLoomiesWithPopulatedRarity{}
@@ -178,9 +181,9 @@ func InsertWildLoomie(loomie interfaces.WildLoomie) (interfaces.WildLoomie, bool
 }
 
 // GetNearWildLoomies returns the wild loomies that are near the coordinates
-func GetNearWildLoomies(coordinates interfaces.Coordinates, userId primitive.ObjectID) ([]interfaces.WildLoomie, error) {
+func GetNearWildLoomies(coordinates interfaces.Coordinates, userId primitive.ObjectID) ([]interfaces.PopulatedWildLoomie, error) {
 	zoneLoomies := []interfaces.WildLoomie{}
-	loomies := []interfaces.WildLoomie{}
+	loomies := []interfaces.PopulatedWildLoomie{}
 
 	// Get the zones that are near the current zone
 	nearZonesCoordinates := utils.GetNearZonesCoordinates(coordinates)
@@ -220,7 +223,7 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates, userId primitive.Obj
 	cursor, err := ZonesCollection.Aggregate(context.Background(), []bson.M{matchFilter, lookupIntoLoomies, aggProject})
 
 	if err != nil {
-		return []interfaces.WildLoomie{}, err
+		return []interfaces.PopulatedWildLoomie{}, err
 	}
 
 	for cursor.Next(context.Background()) {
@@ -237,7 +240,45 @@ func GetNearWildLoomies(coordinates interfaces.Coordinates, userId primitive.Obj
 
 		// If the loomie is not expired, add it to the list (Just in case)
 		if currentTime.Before(loomieDeadline) {
-			loomies = append(loomies, loomie)
+			// ---- ---- ---- ----
+			// Get the loomie types as a string
+			loomieTypes := []string{}
+			for _, loomieType := range loomie.Types {
+				_, ok := memoizedLoomiesTypes[loomieType]
+				if !ok {
+					var typeDoc interfaces.LoomieType
+					err := LoomieTypesCollection.FindOne(context.Background(), bson.M{"_id": loomieType}).Decode(&typeDoc)
+
+					if err != nil {
+						return []interfaces.PopulatedWildLoomie{}, err
+					}
+
+					memoizedLoomiesTypes[loomieType] = typeDoc.Name
+					loomieTypes = append(loomieTypes, typeDoc.Name)
+				} else {
+					loomieTypes = append(loomieTypes, memoizedLoomiesTypes[loomieType])
+				}
+			}
+
+			// ---- ---- ---- ----
+			// Get the loomie's rarity as a string
+			loomieRarity := ""
+			_, ok := memoizedLoomiesRarities[loomie.Rarity]
+			if !ok {
+				var rarityDoc interfaces.LoomieRarity
+				err := LoomieRaritiesCollection.FindOne(context.Background(), bson.M{"_id": loomie.Rarity}).Decode(&rarityDoc)
+
+				if err != nil {
+					return []interfaces.PopulatedWildLoomie{}, err
+				}
+
+				memoizedLoomiesRarities[loomie.Rarity] = rarityDoc.Name
+				loomieRarity = rarityDoc.Name
+			} else {
+				loomieRarity = memoizedLoomiesRarities[loomie.Rarity]
+			}
+
+			loomies = append(loomies, *loomie.Populate(loomieTypes, loomieRarity))
 		}
 	}
 

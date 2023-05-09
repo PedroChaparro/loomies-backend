@@ -23,6 +23,8 @@ type WsCombat struct {
 	LastMessageTimestamp int64
 	// Keep track of the last attack timestamp to avoid spamming
 	LastUserAttackTimestamp int64
+	// Next valid timestamps to add timeouts after some events
+	NextValidAttackTimestamp int64
 	// Keep track of the alive user and gym loomies
 	AlivePlayerLoomies int
 	AliveGymLoomies    int
@@ -152,8 +154,11 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 			case <-combat.Close:
 				return
 			case <-ticker.C:
-				handleClearDodgeChannel(combat)
-				handleSendAttack(combat)
+				// Send the attack if there is no active timeout
+				if time.Now().Unix() >= combat.NextValidAttackTimestamp {
+					handleClearDodgeChannel(combat)
+					handleSendAttack(combat)
+				}
 			}
 
 			// Reset the ticker and pick a new random interval
@@ -198,6 +203,10 @@ func (combat *WsCombat) Listen(hub *WsHub) {
 
 		case "USER_CHANGE_LOOMIE":
 			handleChangeLoomie(combat, wsMessage)
+			combat.UpdatedLastReceivedMessageTimestamp()
+
+		case "USER_GET_LOOMIE_TEAM":
+			handleGetUserTeam(combat, wsMessage)
 			combat.UpdatedLastReceivedMessageTimestamp()
 		}
 	}

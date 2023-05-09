@@ -51,7 +51,7 @@ func HandleCombatRegister(c *gin.Context) {
 		Latitude:  payload.Latitude,
 		Longitude: payload.Longitude,
 	}) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "The gym is not near the user coordinates"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You are too far away from the gym"})
 		return
 	}
 
@@ -198,19 +198,20 @@ func HandleCombatInit(c *gin.Context) {
 	}
 
 	Combat := &combat.WsCombat{
-		PlayerID:             user.Id,
-		GymID:                claims.GymID,
-		Connection:           conn,
-		LastMessageTimestamp: time.Now().Unix(),
-		PlayerLoomies:        userCombatLoomies,
-		AlivePlayerLoomies:   len(userCombatLoomies),
-		GymLoomies:           gymCombatLoomies,
-		AliveGymLoomies:      len(gymCombatLoomies),
-		CurrentGymLoomie:     &gymCombatLoomies[0],
-		CurrentPlayerLoomie:  &userCombatLoomies[0],
-		FoughtGymLoomies:     make(map[primitive.ObjectID][]*interfaces.CombatLoomie),
-		Dodges:               make(chan bool, 1),
-		Close:                make(chan bool, 1),
+		PlayerID:                 user.Id,
+		GymID:                    claims.GymID,
+		Connection:               conn,
+		LastMessageTimestamp:     time.Now().Unix(),
+		NextValidAttackTimestamp: 0,
+		PlayerLoomies:            userCombatLoomies,
+		AlivePlayerLoomies:       len(userCombatLoomies),
+		GymLoomies:               gymCombatLoomies,
+		AliveGymLoomies:          len(gymCombatLoomies),
+		CurrentGymLoomie:         &gymCombatLoomies[0],
+		CurrentPlayerLoomie:      &userCombatLoomies[0],
+		FoughtGymLoomies:         make(map[primitive.ObjectID][]*interfaces.CombatLoomie),
+		Dodges:                   make(chan bool, 1),
+		Close:                    make(chan bool, 1),
 	}
 
 	// Update the last user challenge
