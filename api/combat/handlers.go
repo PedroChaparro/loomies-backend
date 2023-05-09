@@ -53,6 +53,11 @@ func handleSendAttack(combat *WsCombat) {
 	gymLoomie := combat.CurrentGymLoomie
 	playerLoomie := combat.CurrentPlayerLoomie
 
+	// Ignore the attack if there is an active timeout
+	if combat.NextValidAttackTimestamp > time.Now().Unix() {
+		return
+	}
+
 	// Send the dodge message to the client if the attack was dodged
 	if wasAttackDodged {
 		combat.SendMessage(WsMessage{
@@ -85,6 +90,7 @@ func handleSendAttack(combat *WsCombat) {
 			Message: fmt.Sprintf("Your loomie %s was weakened", playerLoomie.Name),
 			Payload: map[string]interface{}{
 				"loomie_id":          weakenedLoomieId,
+				"damage":             calculatedAttack,
 				"alive_user_loomies": combat.AlivePlayerLoomies,
 			},
 		})
@@ -107,6 +113,11 @@ func handleSendAttack(combat *WsCombat) {
 				break
 			}
 		}
+
+		// 2 Seconds timeout between loomie changes
+		currentTimestamp := time.Now().Unix()
+		combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(3 * time.Second).Unix()
+		time.Sleep(2 * time.Second)
 
 		// Notify the user that the current player loomie was changed
 		combat.SendMessage(WsMessage{
@@ -136,7 +147,10 @@ func handleSendAttack(combat *WsCombat) {
 // handleReceiveAttack handles the "USER_ATTACK" message type to receive an attack from the player
 func handleReceiveAttack(combat *WsCombat) {
 	// Ignore spamming attacks
-	if !time.Now().After(time.Unix(combat.LastUserAttackTimestamp, 0).Add(1 * time.Second)) {
+	isUserInCooldown := time.Now().After(time.Unix(combat.LastUserAttackTimestamp, 0).Add(1 * time.Second))
+	isCombatInCooldown := time.Now().After(time.Unix(combat.NextValidAttackTimestamp, 0))
+
+	if !isUserInCooldown || !isCombatInCooldown {
 		return
 	}
 
@@ -198,6 +212,7 @@ func handleReceiveAttack(combat *WsCombat) {
 			Message: fmt.Sprintf("Enemy loomie %s was weakened", gymLoomie.Name),
 			Payload: map[string]interface{}{
 				"loomie_id":         weakenedLoomie.Id,
+				"damage":            calculatedAttack,
 				"alive_gym_loomies": combat.AliveGymLoomies,
 			},
 		})
@@ -220,6 +235,11 @@ func handleReceiveAttack(combat *WsCombat) {
 				break
 			}
 		}
+
+		// 2 Seconds timeout between loomie changes
+		currentTimestamp := time.Now().Unix()
+		combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(3 * time.Second).Unix()
+		time.Sleep(2 * time.Second)
 
 		// Notify the user that the current gym loomie was changed
 		combat.SendMessage(WsMessage{
@@ -615,6 +635,10 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 			"loomie": combat.CurrentPlayerLoomie,
 		},
 	})
+
+	// Add a 2 seconds timeout to the combat
+	currentTimestamp := time.Now().Unix()
+	combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(3 * time.Second).Unix()
 }
 
 // handleGetUserTeam handles the obtaining of the team of loomies.
