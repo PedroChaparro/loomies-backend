@@ -36,20 +36,7 @@ jobs:
         run: |
           cd api
           docker-compose up -d
-          echo "MONGO_USER = root" >> .env
-          echo "MONGO_PASSWORD = development" >> .env
-          echo "MONGO_HOSTS = 127.0.0.1:27017" >> .env
-          echo "MONGO_DATABASE = loomies" >> .env
-          echo "REFRESH_TOKEN_SECRET = dummy_refresh_secret" >> .env
-          echo "ACCESS_TOKEN_SECRET = dummy_access_secret" >> .env
-          echo "WS_TOKEN_SECRET" = dummy_ws_secret >> .env
-          echo "GAME_ZONE_RADIUS" = 0.0035 >> .env
-          echo "GAME_MIN_LOOMIES_GENERATION_TIMEOUT" = 5 >> .env
-          echo "GAME_MAX_LOOMIES_GENERATION_TIMEOUT" = 12 >> .env
-          echo "GAME_MIN_LOOMIES_GENERATION_AMOUNT" = 2 >> .env
-          echo "GAME_MAX_LOOMIES_GENERATION_AMOUNT" = 12 >> .env
-          echo "GAME_LOOMIES_GENERATION_RADIUS" = 0.00175 >> .env
-          echo "GAME_MAX_LOOMIES_PER_ZONE" = 12 >> .env
+          cp .env.example .env
           echo "EMAIL_MAIL" = ${{ secrets.EMAIL_MAIL }} >> .env
           echo "EMAIL_PASSWORD" = ${{ secrets.EMAIL_PASSWORD }} >> .env
 

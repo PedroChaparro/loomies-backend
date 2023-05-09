@@ -641,6 +641,18 @@ func handleChangeLoomie(combat *WsCombat, message WsMessage) {
 	combat.NextValidAttackTimestamp = time.Unix(currentTimestamp, 0).Add(3 * time.Second).Unix()
 }
 
+// handleGetUserTeam handles the obtaining of the team of loomies.
+func handleGetUserTeam(combat *WsCombat, message WsMessage) {
+	// Send the message to the user
+	combat.SendMessage(WsMessage{
+		Type:    "USER_LOOMIE_TEAM",
+		Message: "These are your current loomies",
+		Payload: map[string]interface{}{
+			"loomies": combat.PlayerLoomies,
+		},
+	})
+}
+
 // handleClearDodgeChannel Clears the dodge channel to avoid collisions between attacks
 func handleClearDodgeChannel(combat *WsCombat) {
 	for len(combat.Dodges) > 0 {

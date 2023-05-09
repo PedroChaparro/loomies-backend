@@ -594,6 +594,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FailResponse"
+  /gyms/update-protectors: 
+    put: 
+      tags: [ Gyms ]
+      description: Update the protectors of the given gym
+      security: 
+        - basicAuth: [Access-Token]
+      requestBody: 
+        content: 
+          application/json: 
+            schema: 
+              type: object
+              properties:
+                protectors: 
+                  type: array
+                  items: 
+                    type: string
+                    example: "6429dc69f1c17765c6a205fd"
+                gym_id: 
+                  type: string
+                  example: "6430de771308bd471bcaf643"
+        required: true
+      responses: 
+        "200": 
+          description: There wasn't any error and the gym protectors were updated successfully. 
+          content: 
+            application/json: 
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": 
+          description: There was an error with the payload. Refer to the response message for more details. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "401":
+          description: The access token wasn't provided or isn't valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "403":
+          description: You don't own the gym. 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
+        "404":
+          description: No gyms were found near the user coordinates.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailResponse"
   # --- --- ---
   # Loomies routes
   /loomies/near: 
@@ -762,10 +814,6 @@ paths:
           description: There wasn't any error.
           content: 
             application/json: 
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Capture'
-                  - $ref: '#/components/schemas/NotCapture'
               examples:
                 car:
                   summary: Capture
@@ -1137,3 +1185,21 @@ components:
         was_reward_claimed: 
           type: boolean
           example: false
+    Capture:
+      type: object
+      properties:
+        was_captured:
+          type: boolean
+        error:
+          type: boolean
+        message:
+          type: string
+    NotCapture:
+      type: object
+      properties:
+        was_captured:
+          type: boolean
+        error:
+          type: boolean
+        message:
+          type: string

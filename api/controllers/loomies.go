@@ -135,7 +135,7 @@ func HandleNearLoomies(c *gin.Context) {
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 
-		if strings.Split(err.Error(), "_")[0] == "USER" {
+		if strings.Split(err.Error(), " ")[0] == "User" {
 			statusCode = http.StatusBadRequest
 		}
 
@@ -176,12 +176,6 @@ func HandleNearLoomies(c *gin.Context) {
 // HandleValidateLoomieExists Handle the request to validate if a loomie exists
 func HandleValidateLoomieExists(c *gin.Context) {
 	loomie_id := c.Param("id")
-
-	if loomie_id == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "No Loomie ID was provided"})
-		return
-	}
-
 	_, err := models.GetWildLoomieById(loomie_id)
 
 	if err != nil {
@@ -207,12 +201,18 @@ func HandleFuseLoomies(c *gin.Context) {
 	var req interfaces.FuseLoomiesReq
 
 	if err := c.BindJSON(&req); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Bad request. Ensuure you are sendint a JSON body with the required fields"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "JSON body is null or invalid"})
 		return
 	}
 
 	if req.LoomieId1 == "" || req.LoomieId2 == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "Both loomies ids are required"})
+		return
+	}
+
+	// Check the loomies are different
+	if req.LoomieId1 == req.LoomieId2 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": true, "message": "You can't fuse the same loomie"})
 		return
 	}
 
@@ -456,16 +456,16 @@ func HandleCaptureLoomie(c *gin.Context) {
 		}
 
 		c.IndentedJSON(http.StatusOK, gin.H{
-			"error":   false,
-			"capture": was_captured,
-			"message": "Loomie caught",
+			"error":        false,
+			"was_captured": was_captured,
+			"message":      "The loomie was captured",
 		})
 		return
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{
-		"error":   false,
-		"capture": was_captured,
-		"message": "The Loomie was not caught. Try again!",
+		"error":        false,
+		"was_captured": was_captured,
+		"message":      "The Loomie was not caught. Try again!",
 	})
 }

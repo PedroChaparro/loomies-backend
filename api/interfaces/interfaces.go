@@ -219,6 +219,24 @@ type WildLoomie struct {
 	CapturedBy  []primitive.ObjectID `json:"captured_by"     bson:"captured_by"`
 }
 
+type PopulatedWildLoomie struct {
+	Id          primitive.ObjectID   `json:"_id,omitempty"       bson:"_id,omitempty"`
+	Serial      int                  `json:"serial"      bson:"serial"`
+	Name        string               `json:"name"      bson:"name"`
+	Types       []string             `json:"types"     bson:"types"`
+	Rarity      string               `json:"rarity"     bson:"rarity"`
+	HP          int                  `json:"hp"     bson:"hp"`
+	Attack      int                  `json:"attack"     bson:"attack"`
+	Defense     int                  `json:"defense"     bson:"defense"`
+	ZoneId      primitive.ObjectID   `json:"zone_id"     bson:"zone_id"`
+	Latitude    float64              `json:"latitude"     bson:"latitude"`
+	Longitude   float64              `json:"longitude"     bson:"longitude"`
+	GeneratedAt int64                `json:"generated_at"     bson:"generated_at"`
+	Level       int                  `json:"level"     bson:"level"`
+	Experience  float64              `json:"experience"     bson:"experience"`
+	CapturedBy  []primitive.ObjectID `json:"captured_by"     bson:"captured_by"`
+}
+
 type AuthenticationCode struct {
 	Id        primitive.ObjectID `json:"_id,omitempty"       bson:"_id,omitempty"`
 	Type      string             `json:"type"      bson:"type"`
@@ -267,6 +285,26 @@ type WsTokenClaims struct {
 	GymID     string  `json:"gym_id"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
+}
+
+func (wildLoomie *WildLoomie) Populate(typesArray []string, rarity string) *PopulatedWildLoomie {
+	return &PopulatedWildLoomie{
+		Id:          wildLoomie.Id,
+		Name:        wildLoomie.Name,
+		Serial:      wildLoomie.Serial,
+		Types:       typesArray,
+		Rarity:      rarity,
+		HP:          wildLoomie.HP,
+		Attack:      wildLoomie.Attack,
+		Defense:     wildLoomie.Defense,
+		ZoneId:      wildLoomie.ZoneId,
+		Latitude:    wildLoomie.Latitude,
+		Longitude:   wildLoomie.Longitude,
+		GeneratedAt: wildLoomie.GeneratedAt,
+		Level:       wildLoomie.Level,
+		Experience:  wildLoomie.Experience,
+		CapturedBy:  wildLoomie.CapturedBy,
+	}
 }
 
 // ToGymProtector Converts a caught loomie to a gym protector keeping only the relevant fields

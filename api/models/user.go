@@ -464,6 +464,24 @@ func ReplaceLoomieTeam(userId primitive.ObjectID, loomiesIds []primitive.ObjectI
 	return err
 }
 
+// RemoveFromLoomieTeam Removes the given loomies from the loomie team array of the given user
+func RemoveFromLoomieTeam(userId primitive.ObjectID, loomiesIds []primitive.ObjectID) error {
+	// Update the user document to add the item to the inventory
+	_, err := UserCollection.UpdateOne(
+		context.TODO(),
+		bson.D{{Key: "_id", Value: userId}},
+		bson.D{
+			{Key: "$pull", Value: bson.D{
+				{Key: "loomie_team", Value: bson.D{
+					{Key: "$in", Value: loomiesIds},
+				}},
+			}},
+		},
+	)
+
+	return err
+}
+
 // AddToUserLoomies Adds a loomie to the user's loomies
 func AddToUserLoomies(user interfaces.User, loomie_id primitive.ObjectID) error {
 	filter := bson.D{{Key: "_id", Value: user.Id}}
